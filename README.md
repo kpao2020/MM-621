@@ -10,7 +10,6 @@ You can use *Markdown* syntax to format your writing on GitHub.
 
 ## Projects
 
-* **Project Orato:** A web-based, voice-first interview practice platform for students.
 * *[TBD]*
 
 ---
