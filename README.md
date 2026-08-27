@@ -20,7 +20,7 @@ You can use *Markdown* syntax to format your writing on GitHub.
 * [Demo 2](demo/8-25-2026-b.js)
 
 * [View Demo 2 in Action](https://kpao2020.github.io/MM-621/index.html)
-
+*(Ctrl+Click or Cmd+Click to open in a new tab)*
 ---
 
 ## Journal
