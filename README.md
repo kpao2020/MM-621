@@ -19,7 +19,7 @@ You can use *Markdown* syntax to format your writing on GitHub.
 * [Demo 1](demo/8-25-2026.js)
 * [Demo 2](demo/8-25-2026-b.js)
 
-* [View Demo 2 in Action](demo/index.html) - This will open index.html
+* [View Demo 2 in Action](https://kpao2020.github.io/MM-621/index.html)
 
 ---
 
@@ -34,4 +34,6 @@ Here is my journal:
 
 ## Image
 
-Hey check out this **cool** ![dog!](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtyBNUs55TQZAznWqtd3gqP6VT67IpqmjoOA38S9Sk0g&s=10) 
+Hey check out this **cool** 
+
+![image of a dog](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtyBNUs55TQZAznWqtd3gqP6VT67IpqmjoOA38S9Sk0g&s=10) 
