@@ -34,4 +34,4 @@ Here is my journal:
 
 ## Image
 
-Hey check out this **cool** ![dog!](https://encrypted-tbn2.gstatic.com/licensed-image?q=tbn:ANd9GcRU4aVibVyRp9tXznAREWC8OfKTzwP2TexxRqTiY7EnmYu_Gaa3Srg2ZdxyeH_ykwiFflbN_C5WLtZvGCs(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtyBNUs55TQZAznWqtd3gqP6VT67IpqmjoOA38S9Sk0g&s=10)) 
+Hey check out this **cool** ![dog!](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtyBNUs55TQZAznWqtd3gqP6VT67IpqmjoOA38S9Sk0g&s=10) 
