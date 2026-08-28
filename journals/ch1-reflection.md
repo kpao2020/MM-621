@@ -13,6 +13,7 @@ Fig 1. Example of a confusing door
 
 Norman explains that 
 > Two of the most important characteristics of good design are discoverability and understanding (Norman, 2013, p. 3). 
+
 This stood out to me because a well-designed door should make it obvious what I am supposed to do without requiring trial and error.
 
 #### Human-Centered Design in the Wild
@@ -20,7 +21,9 @@ This stood out to me because a well-designed door should make it obvious what I 
 One concept that really stood out to me was **Human-Centered Design (HCD)**. Good design should provide clear clues about what people are supposed to do, completely eliminating guesswork.
 
 Norman describes HCD as 
-> an approach that puts human needs, capabilities, and behavior first (Norman, 2013, p. 8). This made me think about how designers should consider the actual person using a product instead of assuming that everyone will understand it the way the designer intended.
+> an approach that puts human needs, capabilities, and behavior first (Norman, 2013, p. 8). 
+
+This made me think about how designers should consider the actual person using a product instead of assuming that everyone will understand it the way the designer intended.
 
 I immediately related this to a **laptop backpack** I tried:
 
