@@ -27,8 +27,8 @@ You can use *Markdown* syntax to format your writing on GitHub.
 
 Here is my journal:
 
-* [Test](journal/8-20-26.md)
-* [Chapter 1 Self Reflection](journal/ch1-reflection.md)
+* [Test](journals/8-20-26.md)
+* [Chapter 1 Self Reflection](journals/ch1-reflection.md)
 
 ---
 
