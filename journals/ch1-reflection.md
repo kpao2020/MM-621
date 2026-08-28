@@ -9,6 +9,7 @@ It's no joke that Chapter 1 of *The Design of Everyday Things* is a marathon rea
 Sometimes, the design itself creates the confusion. Don Norman uses doors as a prime example (as compared to a complex jetliner cockpit) because we've all shared the same experience: pushing a door that was supposed to be pulled, or pulling one that was supposed to be pushed. It seems like a minor inconvenience, but it perfectly illustrates the importance of intuitive design. And yes, never blame the user!
 
 ![example of confusing door](../images/door_300.jpg)
+
 Fig 1. Example of a confusing door 
 
 Norman explains that 
