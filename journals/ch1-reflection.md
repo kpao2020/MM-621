@@ -19,7 +19,7 @@ This stood out to me because a well-designed door should make it obvious what I 
 
 #### Human-Centered Design in the Wild
 
-One concept that really stood out to me was **Human-Centered Design (HCD)**. Good design should provide clear clues about what people are supposed to do, completely eliminating guesswork.
+The concept of **Human-Centered Design (HCD)** is very important. Good design should provide clear clues about what people are supposed to do, completely eliminating guesswork.
 
 Norman describes HCD as 
 > an approach that puts human needs, capabilities, and behavior first (Norman, 2013, p. 8). 
