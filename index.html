@@ -1,12 +1,91 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>My p5 Sketch</title>
-</head>
+<!doctype html>
+<html lang="en">
 
-<body>
-  <script src="https://cdn.jsdelivr.net/npm/p5@1.11.10/lib/p5.min.js"></script>
-  <script src="demo/8-27-2026-c.js"></script>
-</body>
-</html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Ken Pao's MM-621 creative coding portfolio.">
+    <title>Ken Pao — MM-621</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.11.10/lib/p5.min.js" defer>
+    </script>
+    <script src="script.js" defer>
+    </script>
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header>
+      <div class="wrap nav">
+        <a class="logo-link" href="index.html">
+          <img class="logo" src="images/logo_200.jpg" alt="Ken Pao logo">
+        </a>
+        <nav aria-label="Primary navigation">
+          <a href="demo/index.html">Demos</a>
+          <a
+          href="journals/index.html">Journals</a>
+          <a href="projects/index.html">Projects</a>
+          <a
+          href="README.md">README</a>
+        </nav>
+      </div>
+    </header>
+    <main id="main">
+      <div class="wrap hero">
+        <div>
+          <div class="eyebrow">Interaction Design Studio II - Fall 2026</div>
+          <h1>A small hub of creative coding things.</h1>
+          <p class="intro">Welcome to my MM-621 workspace. Explore experiments, reflections, and projects as they take
+            shape.</p>
+            <div class="button-row">
+              <a class="button" href="demo/index.html">Explore my work ↓</a>
+              <a class="button alt"
+                href="README.md">Read the README</a>
+              </div>
+            </div>
+            <div class="sketch-card" aria-label="Interactive p5.js sketch preview">
+              <div class="label">
+                <span>LIVE SKETCH</span>
+                <span>PRESS A KEY</span>
+              </div>
+              <div id="sketch">
+              </div>
+            </div>
+          </div>
+          <section class="home-links">
+            <div class="wrap">
+              <div class="section-heading">
+                <h2>Browse my work</h2>
+              </div>
+              <div class="grid">
+                <article class="card">
+                  <span class="number">01 / EXPERIMENTS</span>
+                  <h3>Demos</h3>
+                  <p>p5.js studies exploring color, movement, conditionals, and interaction.</p>
+                  <a class="card-link"
+                    href="demo/index.html">See all demos →</a>
+                  </article>
+                  <article class="card">
+                    <span class="number">02 / REFLECTIONS</span>
+                    <h3>Journals</h3>
+                    <p>Notes connecting class readings to everyday design.</p>
+                    <a class="card-link"
+                      href="journals/index.html">Read the journals →</a>
+                    </article>
+                    <article class="card">
+                      <span class="number">03 / LARGER WORKS</span>
+                      <h3>Projects</h3>
+                      <p>A growing collection of larger experiments and finished work.</p>
+                      <a class="card-link"
+                        href="projects/index.html">View projects →</a>
+                      </article>
+                    </div>
+                  </div>
+                </section>
+              </main>
+              <footer>
+                <div class="wrap">© <span id="year">2026</span> Ken Pao · MM-621</div>
+              </footer>
+            </body>
+
+          </html>
