@@ -20,7 +20,7 @@ let blueSpeedX = -3;
 let blueSpeedY = -2;
 
 function setup() {
-    createCanvas(400, 400);
+    createCanvas(400, 400).parent('sketch-stage');
 
     colorRed = color(235, 0, 0);
     colorOrange = color(235, 155, 0);
@@ -82,4 +82,4 @@ function draw() {
     ellipse(blueX, blueY, 100);
     
     // console.log(mouseY);
-}      
+}

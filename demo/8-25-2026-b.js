@@ -14,7 +14,7 @@ let ballSize;
 let bgR, bgG, bgB;
 
 function setup() {
-    createCanvas(400, 400);
+    createCanvas(400, 400).parent('sketch-stage');
 
     colorR = 0;
     colorG = 0;
