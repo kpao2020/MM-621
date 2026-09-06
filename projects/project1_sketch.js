@@ -2,17 +2,35 @@
   Name: Ken Pao
   Class: MM-621
   Project: Space Travel
-  Note: Code authored by Ken Pao, and debugged with AI assistance.
+  Note: Code authored by Ken Pao, with AI assistance on research and debugging.
 */
 
 // Global variables for the starfield simulation
 // Note: use 'const' in front of variables to prevent accidental reassignment
 const stars = [];
-const STAR_COUNT = 520;
+const STAR_COUNT = 500;
 const SLOW_TRAVEL_SPEED = 0.0015;
 const FAST_TRAVEL_SPEED = 0.012;
 const SPEED_EASING = 0.05; // smooth speed transition
 const STEER_AMOUNT = 0.01; // how much the stars move based on mouse position
+
+// Head-Up-Display (HUD) state for the speed / warp indicator
+let warpLevel = 0;
+
+// Rocket - a 3D-style custom object
+const rocket = {
+  active: false,
+  x: 0,
+  y: 0,
+  z: 1,
+  angle: 0,
+  velocityX: 0,
+  velocityY: 0,
+  depthSpeed: 0,
+  speed: 0,
+  baseScale: 1,
+  nextAppearance: 0
+};
 
 // p5.js setup function to initialize the canvas and stars
 function setup() {
@@ -24,11 +42,17 @@ function setup() {
   for (let i = 0; i < STAR_COUNT; i += 1) {
     stars.push(createStar(true));
   }
+
+  // Wait 3-7 seconds before the first rocket appears
+  rocket.nextAppearance = millis() + random(3000, 7000);
 }
 
 // p5.js draw function to continuously render the starfield
 function draw() {
   drawStarfield();
+  updateRocket();
+  drawRocket();
+  drawHUD();
 }
 
 // Function to draw the starfield based on the current state of stars and mouse position
@@ -77,6 +101,7 @@ function drawStarfield() {
       star.y = newStar.y;
       star.z = newStar.z;
       star.speed = newStar.speed;
+      star.travelSpeed = newStar.travelSpeed;
       star.tint = newStar.tint;
       continue; // skip drawing this star since it has been recycled
     }
@@ -91,6 +116,135 @@ function drawStarfield() {
     fill(205 + star.tint, 25, 100, alpha);
     circle(screenX, screenY, size);
   }
+}
+
+// Smooth the HUD indicator between cruise and warp states
+function drawHUD() {
+  // this move the bar 8% each frame for wrap drive speed
+  const targetWarpLevel = mouseIsPressed ? 1 : 0;
+  warpLevel = lerp(warpLevel, targetWarpLevel, 0.08);
+
+  const panelWidth = min(180, width * 0.42);
+  const panelX = width - panelWidth - 24;
+  const panelY = 24;
+  const barWidth = panelWidth - 24;
+  const status = warpLevel > 0.5 ? 'WARP DRIVE' : 'CRUISE';
+
+  push(); // push and pop to isolate HUD from other things on screen
+  noStroke();
+
+  // Soft panel background
+  fill(235, 55, 8, 62);
+  rect(panelX, panelY, panelWidth, 42, 8);
+
+  // Status label
+  fill(220, 15, 96, 88);
+  textAlign(LEFT, CENTER);
+  textSize(10);
+  text(status, panelX + 12, panelY + 11);
+
+  // Speed bar (empty)
+  fill(220, 30, 35, 75);
+  rect(panelX + 12, panelY + 25, barWidth, 4, 2);
+  
+  // Speed bar (filled based on warpLevel)
+  fill(195 + warpLevel * 135, 70, 100, 92);
+  rect(panelX + 12, panelY + 25, barWidth * warpLevel, 4, 2);
+
+  pop();
+}
+
+// Start a rocket fly-by at a random time, location, depth, and direction
+function updateRocket() {
+  // create/spawn a rocket
+  if (!rocket.active && millis() >= rocket.nextAppearance) {
+    rocket.active = true;
+    rocket.x = random(-0.75, 0.75);
+    rocket.y = random(-0.75, 0.75);
+    rocket.z = random(0.85, 1.1);
+
+    // The rocket travels at a random angle through world space
+    rocket.angle = random(TWO_PI);
+    rocket.speed = random(0.0015, 0.004);
+    rocket.velocityX = cos(rocket.angle) * rocket.speed;
+    rocket.velocityY = sin(rocket.angle) * rocket.speed;
+
+    // Moving toward the viewer makes the rocket grow through perspective
+    rocket.depthSpeed = random(0.0018, 0.0035);
+    rocket.baseScale = random(0.65, 1.15);
+  }
+
+  // if no rocket, exit this function
+  if (!rocket.active) {
+    return;
+  }
+
+  // if there is a rocket, move it
+  rocket.x += rocket.velocityX;
+  rocket.y += rocket.velocityY;
+  rocket.z -= rocket.depthSpeed;
+
+  const position = getRocketScreenPosition();
+
+  if (
+    rocket.z < 0.05 ||
+    position.x < -120 ||
+    position.x > width + 120 ||
+    position.y < -120 ||
+    position.y > height + 120
+  ) {
+    rocket.active = false;
+    rocket.nextAppearance = millis() + random(5000, 13000);
+  }
+}
+
+// Convert the rocket's 3D-style coordinates into 2D canvas coordinates
+function getRocketScreenPosition() {
+  return {
+    x: width / 2 + (rocket.x / rocket.z) * width,
+    y: height / 2 + (rocket.y / rocket.z) * height
+  };
+}
+
+// Draw the rocket with perspective: closer rockets are larger and brighter
+function drawRocket() {
+  // if no rocket, exit this function
+  if (!rocket.active) {
+    return;
+  }
+
+  const position = getRocketScreenPosition();
+  const perspectiveScale = map(rocket.z, 1.1, 0.05, 0.45, 2.8, true);
+  const rocketAlpha = map(rocket.z, 1.1, 0.05, 45, 100, true);
+
+  push(); // push and pop to isolate rocket from other things on screen
+  translate(position.x, position.y);
+  rotate(rocket.angle);
+  scale(rocket.baseScale * perspectiveScale);
+
+  // Engine glow and flame
+  noStroke();
+  fill(35, 80, 100, rocketAlpha * 0.18);
+  ellipse(-28, 0, 70, 30);
+  fill(15, 85, 100, rocketAlpha * 0.9);
+  triangle(-25, 0, -52, -9, -52, 9);
+  fill(48, 75, 100, rocketAlpha * 0.95);
+  triangle(-25, 0, -44, -5, -44, 5);
+
+  // Rocket body and nose
+  fill(215, 12, 94, rocketAlpha * 0.96);
+  ellipse(0, 0, 52, 18);
+  fill(205, 16, 100, rocketAlpha * 0.98);
+  triangle(16, -9, 34, 0, 16, 9);
+
+  // Window and fins
+  fill(195, 55, 95, rocketAlpha * 0.95);
+  circle(5, -1, 9);
+  fill(345, 65, 92, rocketAlpha * 0.95);
+  triangle(-9, 8, 6, 8, -2, 17);
+  triangle(-9, -8, 6, -8, -2, -17);
+
+  pop();
 }
 
 // create a new star if isNew = true, otherwise recycle an existing star
