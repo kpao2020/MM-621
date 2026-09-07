@@ -14,6 +14,11 @@ const FAST_TRAVEL_SPEED = 0.012;
 const SPEED_EASING = 0.05; // smooth speed transition
 const STEER_AMOUNT = 0.01; // how much the stars move based on mouse position
 
+// Keep the rocket's starting point inside a central screen area so it is
+// visible immediately instead of appearing close to an edge.
+const ROCKET_SPAWN_X_RANGE = 0.25; // center 50% area x-axis
+const ROCKET_SPAWN_Y_RANGE = 0.25; // center 50% area y-axis
+
 // Head-Up-Display (HUD) state for the speed / warp indicator
 let warpLevel = 0;
 
@@ -23,6 +28,7 @@ const rocket = {
   x: 0,
   y: 0,
   z: 1,
+  pitch: 0,
   angle: 0,
   velocityX: 0,
   velocityY: 0,
@@ -159,13 +165,22 @@ function updateRocket() {
   // create/spawn a rocket
   if (!rocket.active && millis() >= rocket.nextAppearance) {
     rocket.active = true;
-    rocket.x = random(-0.75, 0.75);
-    rocket.y = random(-0.75, 0.75);
-    rocket.z = random(0.85, 1.1);
+    // x and y are normalized world coordinates, so these smaller ranges
+    // create a center box around the middle of the canvas.
+    rocket.x = random(-ROCKET_SPAWN_X_RANGE, ROCKET_SPAWN_X_RANGE);
+    rocket.y = random(-ROCKET_SPAWN_Y_RANGE, ROCKET_SPAWN_Y_RANGE);
+    rocket.z = random(0.95, 1.1);
 
     // The rocket travels at a random angle through world space
     rocket.angle = random(TWO_PI);
-    rocket.speed = random(0.0015, 0.004);
+
+    // The rocket's pitch is a random angle, which tilts the rocket 60 degrees 
+    // up or down. This gives the rocket a more dynamic 3D appearance.
+    rocket.pitch = radians(random(-60, 60));
+
+    // A slightly slower lateral speed gives the viewer more time to notice
+    // the rocket before it travels off-screen.
+    rocket.speed = random(0.0012, 0.0028);
     rocket.velocityX = cos(rocket.angle) * rocket.speed;
     rocket.velocityY = sin(rocket.angle) * rocket.speed;
 
@@ -194,7 +209,7 @@ function updateRocket() {
     position.y > height + 120
   ) {
     rocket.active = false;
-    rocket.nextAppearance = millis() + random(5000, 13000);
+    rocket.nextAppearance = millis() + random(1000, 5000);
   }
 }
 
@@ -206,43 +221,82 @@ function getRocketScreenPosition() {
   };
 }
 
-// Draw the rocket with perspective: closer rockets are larger and brighter
+// Draw a 3D alike rocket with perspective: closer view = larger and brighter.
+// The rocket is drawn along its local +x axis, then rotated to match its
+// direction of travel. Layering the underside, highlights, and fin thickness
+// gives the 2D canvas a small 3D-model feel.
 function drawRocket() {
   // if no rocket, exit this function
   if (!rocket.active) {
     return;
   }
 
-  const position = getRocketScreenPosition();
-  const perspectiveScale = map(rocket.z, 1.1, 0.05, 0.45, 2.8, true);
-  const rocketAlpha = map(rocket.z, 1.1, 0.05, 45, 100, true);
+  const position = getRocketScreenPosition(); // canvas coordinates of the rocket x,y
+  const perspectiveScale = map(rocket.z, 1.1, 0.05, 0.45, 2.8, true); // size scale based on rocket.z
+  const rocketAlpha = map(rocket.z, 1.1, 0.05, 45, 100, true); // brightness
 
   push(); // push and pop to isolate rocket from other things on screen
   translate(position.x, position.y);
-  rotate(rocket.angle);
-  scale(rocket.baseScale * perspectiveScale);
+  
+  // The nose points along +x, so the whole model tilts with its flight angle.
+  rotate(rocket.angle); // rotate the rocket to match its direction of travel
+  
+  shearY(sin(rocket.pitch) * 0.6); // shearY tilts the rocket nose up or down based on its pitch angle
+  
+  scale(cos(rocket.pitch), 1); // scaleX shrinks the rocket's width based on its pitch angle
+  
+  scale(rocket.baseScale * perspectiveScale); // scale the rocket based on its baseScale and perspectiveScale
 
   // Engine glow and flame
   noStroke();
   fill(35, 80, 100, rocketAlpha * 0.18);
-  ellipse(-28, 0, 70, 30);
+  ellipse(-32, 0, 82, 34);
   fill(15, 85, 100, rocketAlpha * 0.9);
-  triangle(-25, 0, -52, -9, -52, 9);
+  triangle(-23, 0, -58, -10, -58, 10);
   fill(48, 75, 100, rocketAlpha * 0.95);
-  triangle(-25, 0, -44, -5, -44, 5);
+  triangle(-23, 0, -49, -5, -49, 5);
 
-  // Rocket body and nose
-  fill(215, 12, 94, rocketAlpha * 0.96);
-  ellipse(0, 0, 52, 18);
+  // Dark offset layers make the body and fins feel thick instead of flat.
+  fill(220, 28, 35, rocketAlpha * 0.9);
+  ellipse(0, 5, 56, 20);
+  triangle(14, -4, 36, 5, 14, 14);
+
+  // Back fins: the lower fin is slightly darker to suggest depth.
+  fill(345, 72, 48, rocketAlpha * 0.95);
+  triangle(-11, 7, 8, 9, -3, 21);
+  fill(345, 55, 76, rocketAlpha * 0.98);
+  triangle(-11, -8, 8, -7, -3, -18);
+
+  // Engine nozzle and inner glow
+  fill(220, 24, 30, rocketAlpha * 0.95);
+  ellipse(-23, 2, 15, 18);
+  fill(215, 18, 72, rocketAlpha * 0.95);
+  ellipse(-25, 0, 10, 12);
+
+  // Rounded body and nose cone. The offset dark layer above acts as the
+  // lower edge of the cylindrical fuselage.
+  fill(215, 12, 94, rocketAlpha * 0.98);
+  ellipse(0, 0, 56, 20);
   fill(205, 16, 100, rocketAlpha * 0.98);
-  triangle(16, -9, 34, 0, 16, 9);
+  triangle(14, -10, 36, 0, 14, 10);
 
-  // Window and fins
-  fill(195, 55, 95, rocketAlpha * 0.95);
-  circle(5, -1, 9);
-  fill(345, 65, 92, rocketAlpha * 0.95);
-  triangle(-9, 8, 6, 8, -2, 17);
-  triangle(-9, -8, 6, -8, -2, -17);
+  // Nose-cone underside and a bright top-plane highlight.
+  fill(205, 20, 70, rocketAlpha * 0.72);
+  triangle(14, 0, 36, 0, 14, 10);
+  fill(45, 12, 100, rocketAlpha * 0.65);
+  ellipse(0, -4, 42, 7);
+
+  // A small body seam reinforces the cylindrical form.
+  fill(190, 34, 75, rocketAlpha * 0.8);
+  rect(10, -8, 3, 16, 2);
+
+  // Window with a dark rim and a reflected highlight.
+  fill(220, 38, 38, rocketAlpha * 0.95);
+  circle(3, 0, 11);
+  fill(195, 58, 94, rocketAlpha * 0.98);
+  circle(3, -1, 8);
+  fill(200, 12, 100, rocketAlpha * 0.75);
+  circle(1, -3, 3);
 
   pop();
 }
