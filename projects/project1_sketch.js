@@ -2,320 +2,1395 @@
   Name: Ken Pao
   Class: MM-621
   Project: Space Travel
-  Note: Code authored by Ken Pao, with AI assistance on research and debugging.
+  
+  Description: 
+    Space Travel is a simple 2D game where the player controls a spaceship to collect stars, 
+    land on planets, while trying to avoid asteroids and the sun. 
+    The game uses p5.js for rendering graphics and Matter.js for physics simulation.
+
+    - p5.js      = drawing, images, user interface, keyboard / mouse input
+    - Matter.js  = physics bodies, movement, and collision detection
+
+    - try to keep things simple and intend to NO sound effects.
+
+  Note: This project is intended for educational purposes
+        in the context of the MM-621 class project.
+
+  Credits:
+    - Adobe Stock Images for images
+
+  References:
+    - Pythagorean Theorem reference: https://gamedev.stackexchange.com/questions/60078/how-do-i-calculate-speed-given-x-y-components-of-a-velocity-vector
+    - Spread operator reference: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax
 */
 
-// Global variables for the starfield simulation
-// Note: use 'const' in front of variables to prevent accidental reassignment
-const stars = [];
-const STAR_COUNT = 500;
-const SLOW_TRAVEL_SPEED = 0.0015;
-const FAST_TRAVEL_SPEED = 0.012;
-const SPEED_EASING = 0.05; // smooth speed transition
-const STEER_AMOUNT = 0.01; // how much the stars move based on mouse position
+// ============================================================
+// 1. GAME VARIABLES
+// - use const to avoid accidental changes to these values.
+// ============================================================
 
-// Keep the rocket's starting point inside a central screen area so it is
-// visible immediately instead of appearing close to an edge.
-const ROCKET_SPAWN_X_RANGE = 0.25; // center 50% area x-axis
-const ROCKET_SPAWN_Y_RANGE = 0.25; // center 50% area y-axis
+const GAME_TIME = 60;           // Total game time in seconds (1 min).
+const SHIP_SIZE = 42;           // Matter collision diameter for the spaceship.
+const SHIP_SPEED = 0.00055;     // Force applied to the spaceship each frame.
+const SHIP_MAX_SPEED = 7;       // Maximum spaceship velocity.
 
-// Head-Up-Display (HUD) state for the speed / warp indicator
-let warpLevel = 0;
+const STAR_POINTS = 1;          // Score for collecting a star.
+const PLANET_POINTS = 5;        // Score for landing on a planet.
+const ASTEROID_POINTS = -1;     // Score when hit by an asteroid.
+const SUN_POINTS = -3;          // Score when hitting the sun.
 
-// Rocket - a 3D-style custom object
-const rocket = {
-  active: false,
-  x: 0,
-  y: 0,
-  z: 1,
-  pitch: 0,
-  angle: 0,
-  velocityX: 0,
-  velocityY: 0,
-  depthSpeed: 0,
-  speed: 0,
-  baseScale: 1,
-  nextAppearance: 0
+const ASTEROID_RADIUS = 25;     // Constant asteroid collision radius.
+const ASTEROID_SPEED = 0.35;    // Constant asteroid speed.
+const COLLISION_COOLDOWN = 800; // Cooldown timer in (0.8 sec) before the same object can score again.
+
+const BACKGROUND_COUNT = 3;     // Number of background images (for random switching).
+
+let nextPlanetSpawnTime = 0;    // Time in millis when the next planet should spawn.
+let nextStarId = 0;             // Unique ID for each star to prevent repeated scoring.
+let shipScaredUntil = 0;        // Hold time in millis when spaceship hit asteroid.
+// ============================================================
+// 2. ASSET FILES
+// ============================================================
+
+const BG_FILES = [
+  "../images/bg1.jpg",
+  "../images/bg2.jpg",
+  "../images/bg3.jpg"
+];
+
+const ASTEROID_FILES = [
+  "../images/asteroid1.png",
+  "../images/asteroid2.png"
+];
+
+const PLANET_FILES = [
+  "../images/planet1.png",
+  "../images/planet2.png",
+  "../images/planet3.png"
+];
+
+const SHIP_FILE = "../images/spaceship.png";
+const STAR_FILE = "../images/star.png";
+const SUN_FILE = "../images/sun.png";
+
+// ============================================================
+// 3. IMAGE VARIABLES
+// - Assets are filled during async setup() for p5.js v2
+// ============================================================
+
+let bgImages = [];
+let asteroidImgs = [];
+let planetImgs = [];
+
+let shipImg = null;
+let starImg = null;
+let sunImg = null;
+
+let assetLoadError = null;
+
+// ============================================================
+// 4. MATTER.JS VARIABLES
+// ============================================================
+let Engine = Matter.Engine,
+    World = Matter.World,
+    Body = Matter.Body,       // Modify existing body objects
+    Bodies = Matter.Bodies;   // Create new body objects
+
+let engine;
+let world;
+
+let shipBody;
+let starBodies = [];
+let planetBodies = [];
+let asteroidBodies = [];
+let sunBody;
+
+// ============================================================
+// 5. GAME STATE
+// "start" = game-start screen
+// "play"  = game-play screen
+// "end"   = game-over screen
+// ============================================================
+
+let gameState = "start";
+
+let score = 0;
+let timeLeft = GAME_TIME;
+let gameStartMillis = 0;
+
+let selectedBackground = 0;
+
+// Store which arrow keys are currently being held.
+let keys = {
+  up: false,
+  down: false,
+  left: false,
+  right: false
 };
 
-// p5.js setup function to initialize the canvas and stars
-function setup() {
-  createCanvas(windowWidth, windowHeight);
-  colorMode(HSB, 360, 100, 100, 100); // Use HSB color mode for easier color manipulation for space theme
-  noStroke();
+// Prevent an object from awarding points repeatedly.
+let collectedObjects = new Set();
 
-  // initialize stars with random positions and z values (depth)
-  for (let i = 0; i < STAR_COUNT; i += 1) {
-    stars.push(createStar(true));
+// Prevent rapid repeated planet/asteroid/sun scoring.
+let collisionCooldown = new Map();
+
+// ============================================================
+// 6. ASSET LOADING
+// - p5.js v2: use async/await instead of preload().
+// ============================================================
+
+async function loadOptionalImage(path, label) {
+  try {
+    // loadImage() returns a Promise in the p5.js 2.x async workflow.
+    return await loadImage(path);
+  } catch (error) {
+    // Log the error and stop game.
+    throw new Error(`${label} failed to load: ${path}`);
+  }
+}
+
+async function loadAssets() {
+  // Load all backgrounds.
+  bgImages = await Promise.all(
+    BG_FILES.map((file, index) =>
+      loadOptionalImage(file, `Background ${index + 1}`)
+    )
+  );
+
+  // Load the 2 asteroid images.
+  asteroidImgs = await Promise.all(
+    ASTEROID_FILES.map((file, index) =>
+      loadOptionalImage(file, `asteroid${index + 1}.png`)
+    )
+  );  
+
+  // Load the three planet images.
+  planetImgs = await Promise.all(
+    PLANET_FILES.map((file, index) =>
+      loadOptionalImage(file, `planet${index + 1}.png`)
+    )
+  );
+
+  // Load individual object images.
+  shipImg = await loadOptionalImage(SHIP_FILE, "spaceship.png");
+  starImg = await loadOptionalImage(STAR_FILE, "star.png");
+  sunImg = await loadOptionalImage(SUN_FILE, "sun.png");
+}
+
+// ============================================================
+// 7. p5.js SETUP
+// ============================================================
+
+async function setup() {
+  // Use browser window width for responsive design.
+  createCanvas(windowWidth, windowHeight);
+
+  // Load images before creating the game world.
+  // if any image fails to load, the game will not start and 
+  // display an error message in console.log.
+  try {
+    await loadAssets();
+  } catch (error) {
+    assetLoadError = error.message;
+    console.error(assetLoadError);
+    return;
   }
 
-  // Wait 3-7 seconds before the first rocket appears
-  rocket.nextAppearance = millis() + random(3000, 7000);
+  // Create the Matter.js physics engine.
+  engine = Engine.create();
+
+  // Get the physics world from the engine.
+  world = engine.world;
+
+  // NOTE: Do not use Engine.run(engine) because p5.js draw() loop handles
+  //       how input and physics updates at each frame.
+  // Engine.run(engine);
+  
+  // Space has no normal gravity.
+  engine.gravity.x = 0;
+  engine.gravity.y = 0;
+
+  // Setup collision handling.
+  setupCollisionEvents();
+
+  // Create the initial game world.
+  createGameWorld();
+
+  // Use a system font for the interface.
+  textFont("system-ui");
 }
 
-// p5.js draw function to continuously render the starfield
+// ============================================================
+// 8. CREATE / RESET GAME WORLD
+// ============================================================
+
+function createGameWorld() {
+  // Clear Matter bodies before starting a new game.
+  clearMatterWorld();
+
+  // Clear matter.js body variables and initialize score and timer.
+  starBodies = [];
+  planetBodies = [];
+  asteroidBodies = [];
+  sunBody = null;
+
+  score = 0;
+  timeLeft = GAME_TIME;
+
+  collectedObjects.clear();
+  collisionCooldown.clear();
+
+  // Pick one of the available background images at random.
+  selectedBackground = floor(random(BACKGROUND_COUNT));
+
+  // ----------------------------------------------------------
+  // SPACESHIP
+  // - just a simple circle for physical collision detection, 
+  //   and use p5.js image for the visual spaceship.
+  // ----------------------------------------------------------
+
+  shipBody = Bodies.circle(
+    width / 2,                 // Start X position in center.
+    height / 2,                // Start Y position in center.
+    SHIP_SIZE / 2,             // Spaceship radius.
+    {
+      label: "ship",           // Used to identify spaceship.
+      frictionAir: 0.08,       // Slows the ship naturally.
+      restitution: 0.2,        // Small bounce.
+      inertia: Infinity        // Prevents unwanted rotation.
+    }
+  );
+
+  World.add(world, shipBody);
+
+  // ----------------------------------------------------------
+  // GAME OBJECTS
+  // ----------------------------------------------------------
+
+  // Create 1 to 3 stars randomly.
+  const starCount = floor(random(1, 4));  // Randomly choose 1, 2, or 3 stars.
+
+  for (let i = 0; i < starCount; i++) {
+    createStar();
+  }
+
+  // Create 1 planet randomly between 5 to 15 seconds.
+  nextPlanetSpawnTime = millis() + random(5000, 15000);
+  
+  // Create 1 to 2 asteroids randomly.
+  const asteroidCount = floor(random(1, 3));
+
+  for (let i = 0; i < asteroidCount; i++) {
+    createAsteroid(i);
+  }
+
+  // Create 1 sun.
+  createSun();
+}
+
+// ============================================================
+// 9. CLEAR MATTER WORLD
+// ============================================================
+
+function clearMatterWorld() {
+  if (!world) return;
+
+  // Remove all bodies from the current Matter world.
+  World.clear(world, false);
+
+  // Clear engine state before rebuilding the world.
+  Engine.clear(engine);
+}
+
+// ============================================================
+// 10. CREATE STAR
+// ============================================================
+
+function createStar() {
+  // Keep the star away from the center where the ship starts.
+  const pos = randomSafePosition(100, 18); // 18 = star collision radius.
+
+  const body = Bodies.circle(
+    pos.x,
+    pos.y,
+    18,                         // Collision radius.
+    {
+      label: "star",
+      isSensor: true,           // Detect collision without physical bouncing.
+      isStatic: true            // Star itself does not move.
+    }
+  );
+
+  // Keep track of the star's unique ID to prevent repeated scoring.
+  body.gameId = `star-${nextStarId++}`;
+
+  World.add(world, body);
+  starBodies.push(body);
+}
+
+// ============================================================
+// 11. CREATE PLANET
+// ============================================================
+
+function updatePlanetSpawns() {
+  // Only one planet may exist at a time.
+  if (
+    planetBodies.length === 0 &&            // check if any planets exist
+    millis() >= nextPlanetSpawnTime         // check if it's time to spawn a new planet
+  ) {
+    let planetIndex = floor(random(0, 3));  // Randomly choose planet image 0, 1, or 2.
+    createPlanet(planetIndex);
+  }
+}
+
+function createPlanet(index) {
+  const pos = randomSafePosition(130, 45); // 45 = planet collision radius.
+
+  const body = Bodies.circle(
+    pos.x,
+    pos.y,
+    45,                         // Collision radius.
+    {
+      label: `planet-${index}`,
+      isStatic: true,           // Planets do not move.
+      restitution: 0.1          // Small bounce if the ship hits the planet.
+    }
+  );
+
+  // Custom properties make it easier to identify the planet.
+  body.gameId = `planet-${index}`;
+  body.planetIndex = index;
+
+  World.add(world, body);
+  planetBodies.push(body);
+}
+
+// ============================================================
+// 12. CREATE ASTEROID
+// ============================================================
+
+// Helper function for create asteroid
+function chooseAsteroidEntrySide(previousSide) {
+  let side = floor(random(4));
+
+  while (side === previousSide) {
+    side = floor(random(4));
+  }
+
+  return side;
+}
+
+// Helper function for remove asteroid
+function removeAsteroid(body) {
+  World.remove(world, body);
+
+  asteroidBodies = asteroidBodies.filter(
+    asteroid => asteroid !== body
+  );
+
+  collisionCooldown.delete(body.gameId);
+
+  // Replace the asteroid using a different entry boundary.
+  createAsteroid(body.asteroidIndex, body.entrySide);
+}
+
+// Create Asteroid
+function createAsteroid(index, previousEntrySide = -1) {
+  const side = chooseAsteroidEntrySide(previousEntrySide);
+  const margin = ASTEROID_RADIUS + 5;
+
+  let start;
+  let target;
+
+  if (side === 0) {
+    // Enter from left and exit right.
+    start = {
+      x: -margin,
+      y: random(100, height - margin)
+    };
+
+    target = {
+      x: width + margin,
+      y: random(100, height - margin)
+    };
+  } else if (side === 1) {
+    // Enter from right and exit left.
+    start = {
+      x: width + margin,
+      y: random(100, height - margin)
+    };
+
+    target = {
+      x: -margin,
+      y: random(100, height - margin)
+    };
+  } else if (side === 2) {
+    // Enter from top and exit bottom.
+    start = {
+      x: random(margin, width - margin),
+      y: -margin
+    };
+
+    target = {
+      x: random(margin, width - margin),
+      y: height + margin
+    };
+  } else {
+    // Enter from bottom and exit top.
+    start = {
+      x: random(margin, width - margin),
+      y: height + margin
+    };
+
+    target = {
+      x: random(margin, width - margin),
+      y: -margin
+    };
+  }
+
+  const body = Bodies.circle(
+    start.x,
+    start.y,
+    ASTEROID_RADIUS,
+    {
+      label: `asteroid-${index}`,
+      frictionAir: 0,
+      restitution: 1,
+      inertia: Infinity
+    }
+  );
+
+  body.gameId = `asteroid-${index}`;
+  body.asteroidIndex = index;
+  body.entrySide = side;
+
+  World.add(world, body);
+
+  const dx = target.x - start.x;
+  const dy = target.y - start.y;
+  const distance = sqrt(dx * dx + dy * dy);
+
+  Body.setVelocity(body, {
+    x: (dx / distance) * ASTEROID_SPEED,
+    y: (dy / distance) * ASTEROID_SPEED
+  });
+
+  asteroidBodies.push(body);
+}
+
+// ============================================================
+// 13. CREATE SUN
+// ============================================================
+
+function createSun() {
+  const pos = randomSafePosition(170, 65); // 65 = sun collision radius.
+
+  sunBody = Bodies.circle(
+    pos.x,
+    pos.y,
+    65,                         // Collision radius.
+    {
+      label: "sun",
+      isStatic: true,           // Sun does not move.
+      restitution: 0            // No bounce when spaceship hits the sun.
+    }
+  );
+
+  sunBody.gameId = "sun";
+
+  World.add(world, sunBody);
+}
+
+// ============================================================
+// 14. p5.js DRAW LOOP
+// - 60 Frame Per Second (FPS) is the default frame rate for p5.js.
+// ============================================================
+
 function draw() {
-  drawStarfield();
-  updateRocket();
-  drawRocket();
-  drawHUD();
+  // Check if any asset failed to load before starting the game.
+  if (assetLoadError) {
+    background(10, 10, 20);
+
+    fill(255, 80, 80);
+    textAlign(CENTER, CENTER);
+    textSize(24);
+    text("GAME CANNOT START", width / 2, height / 2 - 30);
+
+    fill(255);
+    textSize(16);
+    text(assetLoadError, width / 2, height / 2 + 10);
+
+    return;
+  }
+
+  if (gameState === "start") {
+    drawStartPage();
+    return;
+  }
+
+  if (gameState === "play") {
+    updateGame();
+    drawGame();
+    return;
+  }
+
+  if (gameState === "end") {
+    drawEndPage();
+  }
 }
 
-// Function to draw the starfield based on the current state of stars and mouse position
-function drawStarfield() {
-  background(235, 75, 5); // dark background for space
+// ============================================================
+// 15. GAME UPDATE
+// Physics and game logic are updated here.
+// ============================================================
 
-  // steerX and steerY are map mouse position values -1,0,1
-  const steerX = map(mouseX, 0, width, -1, 1, true);
-  const steerY = map(mouseY, 0, height, -1, 1, true);
+function updateGame() {
+  updateShipMovement();
 
-  // centerX and centerY are the center of the canvas
-  const centerX = width / 2;
-  const centerY = height / 2;
+  // Keep asteroid speed and direction stable.
+  keepAsteroidsStraight();
 
-  for (const star of stars) {
-    // Calculate the previous position of the star based on its z value (depth)
-    const previousX = centerX + (star.x / star.z) * width;
-    const previousY = centerY + (star.y / star.z) * height;
+  // Keep Matter.js physics match p5.js draw loop frame rate,
+  // This is necessary because p5.js draw() runs at 60 FPS, 
+  // prevent Matter.js from updating at a different rate.
+  Engine.update(engine, 1000 / 60);
 
-    // Ease toward slow or fast travel based only on the mouseIsPressed.
-    const targetSpeed = mouseIsPressed
-      ? FAST_TRAVEL_SPEED + star.speed // fast when mouse is pressed
-      : SLOW_TRAVEL_SPEED + star.speed * 0.15; // slow when mouse is NOT pressed
+  updateTimer();              // Update the game countdown timer.
+  updatePlanetSpawns();       // Spawn planets at random intervals.
+  updateAsteroidBoundaries(); // Update asteroid when reach boundary.
+  
+  if (timeLeft <= 0) {        // end the game when the timer reaches zero.
+    endGame();
+  }
+}
 
-    // lerp will move current speed to target speed gradually, 5% each frame, 
-    // creating a smooth transition effect
-    star.travelSpeed = lerp(star.travelSpeed, targetSpeed, SPEED_EASING);
-    
-    // update new star position based on its travel speed and mouse steering
-    star.z -= star.travelSpeed;
-    star.x -= steerX * STEER_AMOUNT;
-    star.y -= steerY * STEER_AMOUNT;
+// ============================================================
+// 16. SHIP MOVEMENT
+// ============================================================
 
-    // Calculate the current position of the star after star x,y,z update, 
-    // as well as its size and alpha values based on its z value (depth)
-    const screenX = centerX + (star.x / star.z) * width;
-    const screenY = centerY + (star.y / star.z) * height;
-    const size = map(star.z, 1, 0, 0.5, 5.5); // size of the star, 0.5 = smallest, 5.5 = largest
-    const alpha = map(star.z, 1, 0, 20, 100); // alpha of the star, 20 = most transparent, 100 = most opaque
+function updateShipMovement() {
+  // Skip if no spaceship.
+  if (!shipBody) return;
 
-    // recycle the star if it is too close to the view (z < 0.04) or if it is outside the canvas bounds
-    if (star.z < 0.04 || screenX < -20 || screenX > width + 20 || screenY < -20 || screenY > height + 20) {
-      const newStar = createStar(false);
+  // Hold spaceship if hit asteroid for shipScaredUntil timer
+  if (millis() < shipScaredUntil) {
+    Body.setVelocity(shipBody, {
+      x: 0,
+      y: 0
+    });
 
-      star.x = newStar.x;
-      star.y = newStar.y;
-      star.z = newStar.z;
-      star.speed = newStar.speed;
-      star.travelSpeed = newStar.travelSpeed;
-      star.tint = newStar.tint;
-      continue; // skip drawing this star since it has been recycled
+    return;
+  }
+
+  let dx = 0;
+  let dy = 0;
+
+  if (keys.left) dx -= 1;
+  if (keys.right) dx += 1;
+  if (keys.up) dy -= 1;
+  if (keys.down) dy += 1;
+
+  // Prevent diagonal movement from being faster.
+  const directionLength = sqrt(dx * dx + dy * dy);
+
+  if (directionLength > 0) {
+    dx /= directionLength;
+    dy /= directionLength;
+
+    // Move directly in the requested direction.
+    Body.setVelocity(shipBody, {
+      x: dx * SHIP_MAX_SPEED,
+      y: dy * SHIP_MAX_SPEED
+    });
+  } else {
+    // Stop immediately when no arrow key is pressed.
+    Body.setVelocity(shipBody, {
+      x: 0,
+      y: 0
+    });
+  }
+
+  Body.setAngularVelocity(shipBody, 0);
+
+  // Prevent the ship from leaving the canvas.
+  let x = constrain(
+    shipBody.position.x,
+    SHIP_SIZE / 2,
+    width - SHIP_SIZE / 2
+  );
+
+  let y = constrain(
+    shipBody.position.y,
+    SHIP_SIZE / 2,
+    height - SHIP_SIZE / 2
+  );
+
+  Body.setPosition(shipBody, { x, y });
+}
+
+// ============================================================
+// 17. ASTEROID MOVEMENT
+// ============================================================
+
+function keepAsteroidsStraight() {
+  for (const asteroid of asteroidBodies) {
+    // Remove any accumulated force.
+    asteroid.force.x = 0;
+    asteroid.force.y = 0;
+
+    const vx = asteroid.velocity.x;
+    const vy = asteroid.velocity.y;
+
+    // Pythagorean Theorem : speed = sqrt(vx^2 + vy^2)
+    const speed = sqrt(vx * vx + vy * vy);
+
+    if (speed > 0) {
+      // Keep the current direction but force a constant speed.
+      Body.setVelocity(asteroid, {
+        x: (vx / speed) * ASTEROID_SPEED,
+        y: (vy / speed) * ASTEROID_SPEED
+      });
+    }
+  }
+}
+
+// Helper function for update asteroid when it reaches boundary
+function updateAsteroidBoundaries() {
+  // ... = flatten nested arrays of asteroidBodies
+  for (const asteroid of [...asteroidBodies]) {
+    const radius = asteroid.circleRadius || ASTEROID_RADIUS;
+    let hasExited = false;
+
+    if (asteroid.entrySide === 0 && asteroid.position.x > width + radius) {
+      hasExited = true;
     }
 
-    // draw star trail line
-    stroke(205 + star.tint, 25, 100, alpha * 0.7);
-    strokeWeight(max(0.5, size * 0.45));
-    line(previousX, previousY, screenX, screenY);
+    if (asteroid.entrySide === 1 && asteroid.position.x < -radius) {
+      hasExited = true;
+    }
 
-    // draw star as a cirle
-    noStroke();
-    fill(205 + star.tint, 25, 100, alpha);
-    circle(screenX, screenY, size);
+    if (asteroid.entrySide === 2 && asteroid.position.y > height + radius) {
+      hasExited = true;
+    }
+
+    if (asteroid.entrySide === 3 && asteroid.position.y < -radius) {
+      hasExited = true;
+    }
+
+    if (hasExited) {
+      removeAsteroid(asteroid);
+    }
   }
 }
 
-// Smooth the HUD indicator between cruise and warp states
-function drawHUD() {
-  // this move the bar 8% each frame for wrap drive speed
-  const targetWarpLevel = mouseIsPressed ? 1 : 0;
-  warpLevel = lerp(warpLevel, targetWarpLevel, 0.08);
+// ============================================================
+// 18. TIMER
+// ============================================================
 
-  const panelWidth = min(180, width * 0.42);
-  const panelX = width - panelWidth - 24;
-  const panelY = 24;
-  const barWidth = panelWidth - 24;
-  const status = warpLevel > 0.5 ? 'WARP DRIVE' : 'CRUISE';
+function updateTimer() {
+  // Calculate how many whole seconds have passed.
+  const elapsed = floor((millis() - gameStartMillis) / 1000);
 
-  push(); // push and pop to isolate HUD from other things on screen
+  // Never allow the timer to become negative.
+  timeLeft = max(0, GAME_TIME - elapsed);
+}
+
+function formatTime(seconds) {
+  const minutes = floor(seconds / 60);
+  const secs = seconds % 60;
+
+  // Example: 9 seconds becomes "0:09".
+  return `${minutes}:${String(secs).padStart(2, "0")}`;
+}
+
+// ============================================================
+// 19. MATTER COLLISION EVENTS
+// ============================================================
+
+function setupCollisionEvents() {
+  Matter.Events.on(engine, "collisionStart", function(event) {
+    for (const pair of event.pairs) {
+      const bodyA = pair.bodyA;
+      const bodyB = pair.bodyB;
+
+      // Check both directions because either body can be A or B.
+      handleCollision(bodyA, bodyB);
+      handleCollision(bodyB, bodyA);
+    }
+  });
+}
+
+function handleCollision(a, b) {
+  // If game not in play, skip.
+  if (gameState !== "play") return;
+
+  // Handle ship collisons with stars, planets, asteroids, and sun.
+  if (a.label === "ship") {
+    if (b.label === "star") {
+      collectStar(b);
+    } else if (b.label.startsWith("planet-")) {
+      landOnPlanet(b);
+    } else if (b.label.startsWith("asteroid-")) {
+      hitAsteroid(b);
+    } else if (b.label === "sun") {
+      hitSun(b);
+    }
+
+    return;
+  }
+
+  // Handle asteroid collisions with stars, planets, and the sun.
+  if (a.label.startsWith("asteroid-")) {
+    if (b.label === "star") {
+      collectStar(b);
+      removeAsteroid(a);
+    } else if (b.label.startsWith("planet-")) {
+      landOnPlanet(b);
+      removeAsteroid(a);
+    } else if (b.label === "sun") {
+      hitSun(b);
+      removeAsteroid(a);
+    }
+  }
+}
+
+// ============================================================
+// 20. COLLISION SCORE COOLDOWN
+// - Prevents rapid repeated scoring from the same object.
+// ============================================================
+
+function canScore(id) {
+  const now = millis();
+
+  // First collision with this object is allowed immediately.
+  if (!collisionCooldown.has(id)) {
+    collisionCooldown.set(id, now);
+    return true;
+  }
+
+  // Allow another score after 800 ms.
+  if (now - collisionCooldown.get(id) > COLLISION_COOLDOWN) {
+    collisionCooldown.set(id, now);
+    return true;
+  }
+
+  return false;
+}
+
+// ============================================================
+// 21. COLLECT STAR
+// ============================================================
+
+function collectStar(body) {
+  const id = body.gameId;
+
+  // A star can only be collected once.
+  if (collectedObjects.has(id)) return;
+
+  collectedObjects.add(id);
+  score += STAR_POINTS;
+
+  // Remove the star from the physics world.
+  World.remove(world, body);
+
+  // Remove it from the drawing array as well.
+  starBodies = starBodies.filter(item => item !== body);
+
+  // Immediately replace the collected star.
+  createStar();
+}
+
+// ============================================================
+// 22. PLANET / ASTEROID / SUN SCORE
+// ============================================================
+
+function landOnPlanet(body) {
+  if (!canScore(body.gameId)) return;
+
+  score += PLANET_POINTS;
+
+  // Rmove planet from Matter physics world and p5.js drawing array.
+  World.remove(world, body);
+
+  planetBodies = planetBodies.filter(item => item !== body);
+
+  collisionCooldown.delete(body.gameId);
+
+  // Schedule the next planet 5–15 seconds later.
+  nextPlanetSpawnTime = millis() + random(5000, 15000);
+}
+
+function hitAsteroid(body) {
+  if (canScore(body.gameId)) {
+    score += ASTEROID_POINTS;
+  }
+
+  // Briefly stop the ship when hit.
+  shipScaredUntil = millis() + 600;
+
+  removeAsteroid(body);
+}
+
+function hitSun(body) {
+  if (!canScore(body.gameId)) return;
+
+  score += SUN_POINTS;
+
+  // Remove the sun from Matter physics world and p5.js drawing array.
+  World.remove(world, body);
+
+  sunBody = null;
+
+  collisionCooldown.delete(body.gameId);
+
+  // Immediately replace the sun at another safe location.
+  createSun();
+}
+
+// ============================================================
+// 23. GAME START / END / RESTART
+// ============================================================
+
+function startGame() {
+  createGameWorld();
+
+  // Record game-start time.
+  gameStartMillis = millis();
+
+  gameState = "play";
+}
+
+function endGame() {
+  // Game mode should be in "play" to transition to "end" mode.
+  // Skip if the game is not in "play" mode.
+  if (gameState !== "play") return;
+
+  gameState = "end";
+
+  // Stop the ship when the timer reaches zero.
+  Body.setVelocity(shipBody, { x: 0, y: 0 });
+  Body.setAngularVelocity(shipBody, 0);
+}
+
+function restartGame() {
+  createGameWorld();
+
+  gameStartMillis = millis(); // Reset the game timer.
+
+  gameState = "play";
+}
+
+// ============================================================
+// 24. START PAGE
+// ============================================================
+
+function drawStartPage() {
+  drawSpaceBackground();
+
+  push();
+
+  textAlign(CENTER, CENTER);
+
+  fill(255);
+  textSize(min(width, height) * 0.08);
+  textStyle(BOLD);
+  text("SPACE TRAVEL", width / 2, height * 0.35);
+
+  textStyle(NORMAL);
+  textSize(18);
+  fill(220, 230, 255);
+
+  text(
+    "Use ↑ ↓ ← → to fly through space",
+    width / 2,
+    height * 0.46
+  );
+
+  drawButton(
+    width / 2,
+    height * 0.60,
+    220,                        // Button width.
+    60,                         // Button height.
+    "START GAME"
+  );
+
+  textSize(14);
+  fill(180, 190, 220);
+
+  text(
+    "STAR +1     PLANET +5     ASTEROID -1     SUN -3",
+    width / 2,
+    height * 0.72
+  );
+
+  pop();
+}
+
+// ============================================================
+// 25. GAME DRAWING
+// ============================================================
+
+function drawGame() {
+  drawSpaceBackground();
+
+  // Draw order matters:
+  // background first, objects next, interface last.
+  drawSun();
+  drawPlanets();
+  drawAsteroids();
+  drawStars();
+  drawShip();
+
+  drawTopBar();
+}
+
+// ============================================================
+// 26. SPACE BACKGROUND
+// ============================================================
+
+function drawSpaceBackground() {
+  const img = bgImages[selectedBackground];
+
+  imageMode(CORNER);
+
+  // Cover the entire canvas while keeping the image's aspect ratio.
+  const scale = max(width / img.width, height / img.height);
+  const w = img.width * scale;
+  const h = img.height * scale;
+
+  image(
+    img,
+    (width - w) / 2,
+    (height - h) / 2,
+    w,
+    h
+  );
+
+  // Dark overlay keeps white UI text readable.
+  push();
   noStroke();
+  fill(0, 0, 20, 75);         // Last value = 75% transparency.
+  rect(0, 0, width, height);  // Just a simple rectangle cover entire canvas.
+  pop();
+}
 
-  // Soft panel background
-  fill(235, 55, 8, 62);
-  rect(panelX, panelY, panelWidth, 42, 8);
+// ============================================================
+// 27. DRAW IMAGE PRESERVE ASPECT RATIO (HELPER FUNCTION)
+// ============================================================
 
-  // Status label
-  fill(220, 15, 96, 88);
+function drawImagePreserveAspect(img, x, y, maxSize) {
+  const scale = maxSize / max(img.width, img.height);
+
+  image(
+    img,
+    x,
+    y,
+    img.width * scale,
+    img.height * scale
+  );
+}
+
+// ============================================================
+// 28. TOP INFORMATION BAR
+// ============================================================
+
+function drawTopBar() {
+  push();
+
+  noStroke();
+  fill(0, 0, 20, 190);
+  rect(0, 0, width, 70);
+
+  // Game title.
   textAlign(LEFT, CENTER);
-  textSize(10);
-  text(status, panelX + 12, panelY + 11);
+  fill(255);
+  textStyle(BOLD);
+  textSize(22);
+  text("SPACE TRAVEL", 25, 35);
 
-  // Speed bar (empty)
-  fill(220, 30, 35, 75);
-  rect(panelX + 12, panelY + 25, barWidth, 4, 2);
-  
-  // Speed bar (filled based on warpLevel)
-  fill(195 + warpLevel * 135, 70, 100, 92);
-  rect(panelX + 12, panelY + 25, barWidth * warpLevel, 4, 2);
+  // Timer.
+  textAlign(CENTER, CENTER);
+  textSize(24);
+
+  // Make the timer easier to notice during the final 10 seconds.
+  fill(timeLeft <= 10 ? 255 : 220);
+  text(formatTime(timeLeft), width / 2, 35);
+
+  // Score.
+  textAlign(RIGHT, CENTER);
+  fill(255);
+  text(`SCORE: ${score}`, width - 25, 35);
 
   pop();
 }
 
-// Start a rocket fly-by at a random time, location, depth, and direction
-function updateRocket() {
-  // create/spawn a rocket
-  if (!rocket.active && millis() >= rocket.nextAppearance) {
-    rocket.active = true;
-    // x and y are normalized world coordinates, so these smaller ranges
-    // create a center box around the middle of the canvas.
-    rocket.x = random(-ROCKET_SPAWN_X_RANGE, ROCKET_SPAWN_X_RANGE);
-    rocket.y = random(-ROCKET_SPAWN_Y_RANGE, ROCKET_SPAWN_Y_RANGE);
-    rocket.z = random(0.95, 1.1);
+// ============================================================
+// 29. DRAW SPACESHIP
+// ============================================================
 
-    // The rocket travels at a random angle through world space
-    rocket.angle = random(TWO_PI);
+function drawShip() {
+  if (!shipBody) return;
 
-    // The rocket's pitch is a random angle, which tilts the rocket 60 degrees 
-    // up or down. This gives the rocket a more dynamic 3D appearance.
-    rocket.pitch = radians(random(-60, 60));
+  push();
+  imageMode(CENTER);
 
-    // A slightly slower lateral speed gives the viewer more time to notice
-    // the rocket before it travels off-screen.
-    rocket.speed = random(0.0012, 0.0028);
-    rocket.velocityX = cos(rocket.angle) * rocket.speed;
-    rocket.velocityY = sin(rocket.angle) * rocket.speed;
+  // spaceship image = 300x116
+  drawImagePreserveAspect(
+    shipImg,
+    shipBody.position.x,
+    shipBody.position.y,
+    SHIP_SIZE * 1.7
+  );
+  pop();
+}
 
-    // Moving toward the viewer makes the rocket grow through perspective
-    rocket.depthSpeed = random(0.0018, 0.0035);
-    rocket.baseScale = random(0.65, 1.15);
-  }
+// ============================================================
+// 30. DRAW STAR
+// ============================================================
 
-  // if no rocket, exit this function
-  if (!rocket.active) {
-    return;
-  }
-
-  // if there is a rocket, move it
-  rocket.x += rocket.velocityX;
-  rocket.y += rocket.velocityY;
-  rocket.z -= rocket.depthSpeed;
-
-  const position = getRocketScreenPosition();
-
-  if (
-    rocket.z < 0.05 ||
-    position.x < -120 ||
-    position.x > width + 120 ||
-    position.y < -120 ||
-    position.y > height + 120
-  ) {
-    rocket.active = false;
-    rocket.nextAppearance = millis() + random(1000, 5000);
+function drawStars() {
+  for (const body of starBodies) {
+    push();
+    imageMode(CENTER);
+    translate(body.position.x, body.position.y);
+    rotate(frameCount * 0.03);      // Slowly rotate the star for animation effect.
+    
+    // star image = 100x100
+    drawImagePreserveAspect(
+      starImg,
+      0,
+      0,
+      42
+    );
+    pop();
   }
 }
 
-// Convert the rocket's 3D-style coordinates into 2D canvas coordinates
-function getRocketScreenPosition() {
-  return {
-    x: width / 2 + (rocket.x / rocket.z) * width,
-    y: height / 2 + (rocket.y / rocket.z) * height
-  };
+// ============================================================
+// 31. DRAW PLANETS
+// ============================================================
+
+function drawPlanets() {
+  for (const body of planetBodies) {
+    push();
+    imageMode(CENTER);
+
+    // Planet 1 = 200x205
+    // Planet 2 = 200x200
+    // Planet 3 = 200x198
+    drawImagePreserveAspect(
+      planetImgs[body.planetIndex],
+      body.position.x,
+      body.position.y,
+      100
+    );
+    pop();
+  }
 }
 
-// Draw a 3D alike rocket with perspective: closer view = larger and brighter.
-// The rocket is drawn along its local +x axis, then rotated to match its
-// direction of travel. Layering the underside, highlights, and fin thickness
-// gives the 2D canvas a small 3D-model feel.
-function drawRocket() {
-  // if no rocket, exit this function
-  if (!rocket.active) {
-    return;
+// ============================================================
+// 32. DRAW ASTEROIDS
+// ============================================================
+
+function drawAsteroids() {
+  for (const body of asteroidBodies) {
+    push();
+    imageMode(CENTER);
+
+    // asteroid 1 = 200x133
+    // asteroid 2 = 200x151
+    drawImagePreserveAspect(
+      asteroidImgs[body.asteroidIndex],
+      body.position.x,
+      body.position.y,
+      55
+    );
+    pop();
   }
+}
 
-  const position = getRocketScreenPosition(); // canvas coordinates of the rocket x,y
-  const perspectiveScale = map(rocket.z, 1.1, 0.05, 0.45, 2.8, true); // size scale based on rocket.z
-  const rocketAlpha = map(rocket.z, 1.1, 0.05, 45, 100, true); // brightness
+// ============================================================
+// 33. DRAW SUN
+// ============================================================
 
-  push(); // push and pop to isolate rocket from other things on screen
-  translate(position.x, position.y);
-  
-  // The nose points along +x, so the whole model tilts with its flight angle.
-  rotate(rocket.angle); // rotate the rocket to match its direction of travel
-  
-  shearY(sin(rocket.pitch) * 0.6); // shearY tilts the rocket nose up or down based on its pitch angle
-  
-  scale(cos(rocket.pitch), 1); // scaleX shrinks the rocket's width based on its pitch angle
-  
-  scale(rocket.baseScale * perspectiveScale); // scale the rocket based on its baseScale and perspectiveScale
+function drawSun() {
+  if (!sunBody) return;
+ 
+  push();
+  imageMode(CENTER);
 
-  // Engine glow and flame
+  // sun image = 300x296
+  drawImagePreserveAspect(
+    sunImg,
+    sunBody.position.x,
+    sunBody.position.y,
+    140
+  );
+  pop();
+}
+
+// ============================================================
+// 34. END PAGE
+// ============================================================
+
+function drawEndPage() {
+  drawSpaceBackground();
+
+  push();
+
+  textAlign(CENTER, CENTER);
+
+  fill(255);
+  textStyle(BOLD);
+  textSize(min(width, height) * 0.08);
+  text("TIME'S UP", width / 2, height * 0.32);
+
+  textStyle(NORMAL);
+  textSize(22);
+  fill(210, 220, 245);
+  text("FINAL SCORE", width / 2, height * 0.47);
+
+  textStyle(BOLD);
+  textSize(64);
+  fill(255);
+  text(score, width / 2, height * 0.56);
+
+  textStyle(NORMAL);
+  textSize(18);
+  fill(190, 200, 225);
+
+  text(
+    "Press R or click RESTART to play again",
+    width / 2,
+    height * 0.67
+  );
+
+  drawButton(
+    width / 2,
+    height * 0.78,
+    220,
+    60,
+    "RESTART"
+  );
+
+  pop();
+}
+
+// ============================================================
+// 35. BUTTON
+// ============================================================
+
+function drawButton(x, y, w, h, label) {
+  push();
+
+  rectMode(CENTER);
   noStroke();
-  fill(35, 80, 100, rocketAlpha * 0.18);
-  ellipse(-32, 0, 82, 34);
-  fill(15, 85, 100, rocketAlpha * 0.9);
-  triangle(-23, 0, -58, -10, -58, 10);
-  fill(48, 75, 100, rocketAlpha * 0.95);
-  triangle(-23, 0, -49, -5, -49, 5);
 
-  // Dark offset layers make the body and fins feel thick instead of flat.
-  fill(220, 28, 35, rocketAlpha * 0.9);
-  ellipse(0, 5, 56, 20);
-  triangle(14, -4, 36, 5, 14, 14);
+  // Check whether the mouse is currently over the button.
+  const hovering =
+    mouseX > x - w / 2 &&
+    mouseX < x + w / 2 &&
+    mouseY > y - h / 2 &&
+    mouseY < y + h / 2;
 
-  // Back fins: the lower fin is slightly darker to suggest depth.
-  fill(345, 72, 48, rocketAlpha * 0.95);
-  triangle(-11, 7, 8, 9, -3, 21);
-  fill(345, 55, 76, rocketAlpha * 0.98);
-  triangle(-11, -8, 8, -7, -3, -18);
+  // Change button appearance on hover.
+  if (hovering) {
+    fill(80, 120, 255, 230);
+  } else {
+    fill(40, 70, 150, 220);
+  }
 
-  // Engine nozzle and inner glow
-  fill(220, 24, 30, rocketAlpha * 0.95);
-  ellipse(-23, 2, 15, 18);
-  fill(215, 18, 72, rocketAlpha * 0.95);
-  ellipse(-25, 0, 10, 12);
+  rect(x, y, w, h, 12);
 
-  // Rounded body and nose cone. The offset dark layer above acts as the
-  // lower edge of the cylindrical fuselage.
-  fill(215, 12, 94, rocketAlpha * 0.98);
-  ellipse(0, 0, 56, 20);
-  fill(205, 16, 100, rocketAlpha * 0.98);
-  triangle(14, -10, 36, 0, 14, 10);
-
-  // Nose-cone underside and a bright top-plane highlight.
-  fill(205, 20, 70, rocketAlpha * 0.72);
-  triangle(14, 0, 36, 0, 14, 10);
-  fill(45, 12, 100, rocketAlpha * 0.65);
-  ellipse(0, -4, 42, 7);
-
-  // A small body seam reinforces the cylindrical form.
-  fill(190, 34, 75, rocketAlpha * 0.8);
-  rect(10, -8, 3, 16, 2);
-
-  // Window with a dark rim and a reflected highlight.
-  fill(220, 38, 38, rocketAlpha * 0.95);
-  circle(3, 0, 11);
-  fill(195, 58, 94, rocketAlpha * 0.98);
-  circle(3, -1, 8);
-  fill(200, 12, 100, rocketAlpha * 0.75);
-  circle(1, -3, 3);
+  fill(255);
+  textAlign(CENTER, CENTER);
+  textStyle(BOLD);
+  textSize(18);
+  text(label, x, y);
 
   pop();
 }
 
-// create a new star if isNew = true, otherwise recycle an existing star
-function createStar(isNew) {
-  const speed = random(0.001, 0.008); // 0.001 = slowest, 0.008 = fastest; this value changes only when the star is recycled
+// ============================================================
+// 36. MOUSE INPUT
+// - only for the start and end pages, not during gameplay.
+// ============================================================
 
+function mousePressed() {
+  if (gameState === "start") {
+    // Start button bounds:
+    // 220 wide x 60 high, centered at 60% canvas height.
+    if (
+      mouseX > width / 2 - 110 &&
+      mouseX < width / 2 + 110 &&
+      mouseY > height * 0.60 - 30 &&
+      mouseY < height * 0.60 + 30
+    ) {
+      startGame();
+    }
+  } else if (gameState === "end") {
+    // Restart button bounds.
+    if (
+      mouseX > width / 2 - 110 &&
+      mouseX < width / 2 + 110 &&
+      mouseY > height * 0.78 - 30 &&
+      mouseY < height * 0.78 + 30
+    ) {
+      restartGame();
+    }
+  }
+}
+
+// ============================================================
+// 37. KEYBOARD INPUT
+// ============================================================
+
+function keyPressed() {
+  // Remember when an arrow key is pressed.
+  // console.log(keyCode);
+  // Up = 38, Down = 40, Left = 37, Right = 39
+  if (keyCode === 38) keys.up = true;
+  if (keyCode === 40) keys.down = true;
+  if (keyCode === 37) keys.left = true;
+  if (keyCode === 39) keys.right = true;
+
+  // R restarts the game after game over.
+  if ((key === "r" || key === "R") && gameState === "end") {
+    restartGame();
+  }
+
+  // Prevent the browser from scrolling with arrow keys.
+  if (
+    keyCode === 38 ||
+    keyCode === 40 ||
+    keyCode === 37 ||
+    keyCode === 39
+  ) {
+    return false;
+  }
+}
+
+function keyReleased() {
+  // Stop applying force when the arrow key is released.
+  if (keyCode === 38) keys.up = false;
+  if (keyCode === 40) keys.down = false;
+  if (keyCode === 37) keys.left = false;
+  if (keyCode === 39) keys.right = false;
+
+  return false;
+}
+
+// Prevent a key from remaining stuck if the browser loses focus.
+window.addEventListener("blur", function () {
+  keys.up = false;
+  keys.down = false;
+  keys.left = false;
+  keys.right = false;
+});
+
+// ============================================================
+// 38. RANDOM SAFE POSITION
+// Keeps objects away from the starting ship position.
+// ============================================================
+
+function randomSafePosition(minDistanceFromCenter, objectRadius) {
+  let pos;
+
+  // try 100 times to find a safe position that does not overlap with existing objects.
+  for (let attempts = 0; attempts < 100; attempts++) {
+    pos = {
+      x: random(objectRadius + 30, width - objectRadius - 30),    // 30 = leave space for the left/right boundary.
+      y: random(objectRadius + 80, height - objectRadius - 30)    // 80 = leave space for the top bar.
+    };
+
+    // Keep the object away from the ship's starting location (center).
+    if (
+      dist(
+        pos.x,
+        pos.y,
+        width / 2,
+        height / 2
+      ) < minDistanceFromCenter
+    ) {
+      continue;
+    }
+
+    // "..." = Spread operator to combine all existing bodies into one array.
+    // i.e. starBodies = [star1, star2, star3]
+    //      planetBodies = [planet1]
+    //      asteroidBodies = [asteroid1, asteroid2]
+    // This is to "flatten" the arrays into a single array of all existing bodies
+    // from nested arrays.
+    // ref: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax
+
+    const existingBodies = [
+      shipBody,
+      ...starBodies,
+      ...planetBodies,
+      ...asteroidBodies,
+      sunBody
+    ].filter(body => body);
+
+    // Check if the new object overlaps with any existing objects.
+    let overlapsAnotherObject = false;
+
+    for (const body of existingBodies) {
+      // all game objects are circles, so we can use their circleRadius for collision detection.
+      // console.log(body);
+      const otherRadius = body.circleRadius || 0; // Use 0 if the body has no circleRadius.
+
+      const requiredDistance =                    // Minimum distance to avoid overlap.
+        objectRadius + otherRadius + 40;
+
+      // use p5.js dist() function to calculate the distance between two points.
+      // dist(x1, y1, x2, y2)
+      if (
+        dist(                  
+          pos.x,
+          pos.y,
+          body.position.x,
+          body.position.y
+        ) < requiredDistance
+      ) {
+        overlapsAnotherObject = true;   // once a overlap found, we can stop checking other objects.
+        break;
+      }
+    }
+
+    if (!overlapsAnotherObject) {       // If no overlap found, return the "safe" position.
+      return pos;
+    }
+  }
+
+  // Fallback to a random position.
   return {
-    x: random(-1, 1), // -1 = left, 0 = center, 1 = right (in decimal)
-    y: random(-1, 1), // -1 = top, 0 = center, 1 = bottom (in decimal)
-    z: isNew ? random(0.05, 1) : 1, // 0.05 = closest to view, 1 = farest to view, recycled when z < 0.04
-    speed, // per-star speed variation; this value changes only when the star is recycled
-    travelSpeed: SLOW_TRAVEL_SPEED + speed * 0.15, // current speed of the star, which eases toward slow or fast travel based on mouseIsPressed
-    tint: random(-25, 35) // neg values = blueish, pos values = purplish, 0 = white
+    x: floor(random(50, width - 50)),   // 50 = leave space for the left/right boundary.
+    y: floor(random(100, height - 50))  // 100 = leave space for the top bar and bottom boundary.
   };
 }
 
-// make canvas responsive to window resizing
+// ============================================================
+// 39. MATTER VELOCITY HELPER
+// This keeps all Matter calls easy to find while learning.
+// ============================================================
+
+function BodySetVelocity(body, velocity) {
+  // Set the object's current velocity directly.
+  Body.setVelocity(body, velocity);
+}
+
+// ============================================================
+// 40. RESPONSIVE CANVAS
+// ============================================================
+
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
+
+  // Keep the ship inside the visible canvas after resizing.
+  if (shipBody) {
+    Body.setPosition(shipBody, {
+      x: constrain(shipBody.position.x, 50, width - 50),
+      y: constrain(shipBody.position.y, 100, height - 50)
+    });
+  }
 }

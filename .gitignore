@@ -23,8 +23,6 @@
 hs_err_pid*
 replay_pid*
 
-# Private Codex project tracking
-projects/agents.md
-projects/memory.md
-projects/project.log
-projects/resume.md
+.DS_Store
+
+projects/old_project1_sketch.js

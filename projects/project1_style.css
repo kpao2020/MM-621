@@ -12,15 +12,3 @@ body {
 canvas {
     display: block;
 }
-
-.hint {
-    position: fixed;
-    top: 1.25rem;
-    left: 1.5rem;
-    color: rgba(220, 231, 255, .78);
-    font-size: .78rem;
-    letter-spacing: .12em;
-    /* text-transform: uppercase; */
-    pointer-events: none;
-    text-shadow: 0 0 12px #617cff;
-}
