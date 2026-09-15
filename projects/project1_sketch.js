@@ -41,18 +41,18 @@ const ASTEROID_POINTS = -1;     // Score when hit by an asteroid.
 const SUN_POINTS = -3;          // Score when hitting the sun.
 
 // All objects are "circles" - to keep things simple.
-const SHIP_SIZE = 38;           // Matter collision diameter for the spaceship.
+const SHIP_SIZE = 50;           // Matter collision diameter for the spaceship.
 const STAR_RADIUS = 18;         // Constant star collision radius.
 const PLANET_RADIUS = 45;       // Constant planet collision radius.
 const ASTEROID_RADIUS = 25;     // Constant asteroid collision radius.
-const SUN_RADIUS = 65;          // Constant sun collision raidus.
+const SUN_RADIUS = 65;          // Constant sun collision radius.
 const OBJECT_GAP = 25;          // Extra spacing between objects. (avoid overlap)
 const EDGE_PADDING = 30;        // Edge padding prevent objects create on canvas edge.
 
 // Note: Stars, Planets, Sun = static objects, do not move.
-const SHIP_MAX_SPEED = 12;      // Max spaceship speed.
+const SHIP_MAX_SPEED = 10;      // Max spaceship speed.
 const ASTEROID_MIN_SPEED = 1;   // Min asteroid speed.
-const ASTEROID_MAX_SPEED = 6;   // Max asteroid speed.
+const ASTEROID_MAX_SPEED = 5;   // Max asteroid speed.
 const COLLISION_COOLDOWN = 800; // Cooldown timer in (0.8 sec) before the same object can score again.
 
 const MIN_STARS = 1;            // Min number of stars during game play.
@@ -128,6 +128,9 @@ let sunBody;
 // "end"   = game-over screen
 // ============================================================
 
+const TOP_BAR_HEIGHT = 70;
+const TOP_BAR_GAP = 10;
+const PLAY_AREA_TOP = TOP_BAR_HEIGHT + TOP_BAR_GAP;
 const BUTTON_WIDTH = 220;
 const BUTTON_HEIGHT = 60;
 
@@ -200,6 +203,9 @@ async function loadAssets() {
 async function setup() {
   // Use browser window width for responsive design.
   createCanvas(windowWidth, windowHeight);
+
+  // Use degree mode
+  angleMode(DEGREES);
 
   // Load images before creating the game world.
   // if any image fails to load, the game will not start and 
@@ -335,7 +341,7 @@ function createStar() {
   const body = Bodies.circle(
     pos.x,
     pos.y,
-    STAR_RADIUS,                         // Collision radius.
+    STAR_RADIUS,                // Collision radius.
     {
       label: "star",
       isSensor: true,           // Detect collision without physical bouncing.
@@ -371,7 +377,7 @@ function createPlanet(index) {
   const body = Bodies.circle(
     pos.x,
     pos.y,
-    PLANET_RADIUS,                         // Collision radius.
+    PLANET_RADIUS,              // Collision radius.
     {
       label: `planet-${index}`,
       isStatic: true,           // Planets do not move.
@@ -422,56 +428,53 @@ function removeAsteroid(body) {
 function createAsteroid(id, previousEntrySide = -1) {
   const side = chooseAsteroidEntrySide(previousEntrySide);
   const margin = ASTEROID_RADIUS + 5;
-
+  
   let start;
-  let target;
+  let travelDirection;
+
+  // random() returns a number between 0 and 1
+  // random() < 0.5 ? -1 : 1 basically randomly determine -1 or +1
+  // travelAngle returns either -70 to -20 or +20 to +70 degrees
+  const travelAngle = random(20,70) * (random() < 0.5 ? -1 : 1);
 
   // 0 = left, 1 = right, 2 = top, 3 = bottom
   if (side === 0) {
-    // Enter from left and exit right.
+    // Enter from left.
     start = {
       x: -margin,
-      y: random(100, height - margin)
+      y: random(PLAY_AREA_TOP + ASTEROID_RADIUS, height - margin)
     };
 
-    target = {
-      x: width + margin,
-      y: random(100, height - margin)
-    };
+    travelDirection = travelAngle;
+
   } else if (side === 1) {
-    // Enter from right and exit left.
+    // Enter from right.
     start = {
       x: width + margin,
-      y: random(100, height - margin)
+      y: random(PLAY_AREA_TOP + ASTEROID_RADIUS, height - margin)
     };
 
-    target = {
-      x: -margin,
-      y: random(100, height - margin)
-    };
+    travelDirection = travelAngle + 180;
+
   } else if (side === 2) {
-    // Enter from top and exit bottom.
+    // Enter from top.
     start = {
       x: random(margin, width - margin),
-      y: -margin
+      y: PLAY_AREA_TOP + ASTEROID_RADIUS
     };
 
-    target = {
-      x: random(margin, width - margin),
-      y: height + margin
-    };
+    travelDirection = travelAngle + 90;
+
   } else {
     // side === 3
-    // Enter from bottom and exit top.
+    // Enter from bottom.
     start = {
       x: random(margin, width - margin),
       y: height + margin
     };
 
-    target = {
-      x: random(margin, width - margin),
-      y: -margin
-    };
+    travelDirection = travelAngle - 90;
+
   }
 
   const body = Bodies.circle(
@@ -489,8 +492,9 @@ function createAsteroid(id, previousEntrySide = -1) {
   body.gameId = `asteroid-${id}`;
   body.asteroidId = id;
   body.entrySide = side;
+  body.isOnScreen = false;
 
-  // Randomly pick 1 of the astroid image
+  // Randomly pick 1 of the asteroid image
   body.asteroidIndex = floor(random(asteroidImgs.length));
 
   // Randomly assign a speed to each asteroid
@@ -501,16 +505,9 @@ function createAsteroid(id, previousEntrySide = -1) {
 
   World.add(world, body);
 
-  const dx = target.x - start.x;
-  const dy = target.y - start.y;
-
-  // Use Pythagorean Theorem to calculate travel distance between
-  // start and target position
-  const distance = sqrt(dx * dx + dy * dy);
-
   Body.setVelocity(body, {
-    x: (dx / distance) * body.asteroidSpeed,
-    y: (dy / distance) * body.asteroidSpeed
+    x: cos(travelDirection) * body.asteroidSpeed,
+    y: sin(travelDirection) * body.asteroidSpeed
   });
 
   asteroidBodies.push(body);
@@ -526,7 +523,7 @@ function createSun() {
   sunBody = Bodies.circle(
     pos.x,
     pos.y,
-    SUN_RADIUS,                         // Collision radius.
+    SUN_RADIUS,                 // Collision radius.
     {
       label: "sun",
       isStatic: true,           // Sun does not move.
@@ -610,7 +607,25 @@ function updateMouseMovement() {
   // Skip if no spaceship.
   if (!shipBody) return;
 
-  // Hold spaceship if hit asteroid for shipScaredUntil timer
+  // Keep spaceship below top bar.
+  const minShipY = PLAY_AREA_TOP + SHIP_SIZE / 2;
+
+  // Prevent the ship from leaving the canvas.
+  let x = constrain(
+    shipBody.position.x,
+    SHIP_SIZE / 2,
+    width - SHIP_SIZE / 2
+  );
+
+  let y = constrain(
+    shipBody.position.y,
+    minShipY,
+    height - SHIP_SIZE / 2
+  );
+
+  Body.setPosition(shipBody, { x, y });
+
+  // Stop spaceship temporarily after an asteroid collision.
   if (millis() < shipScaredUntil) {
     Body.setVelocity(shipBody, {
       x: 0,
@@ -645,22 +660,8 @@ function updateMouseMovement() {
     Body.setVelocity(shipBody, { x: 0, y: 0 });
   }
  
-  Body.setAngularVelocity(shipBody, 0);
-
-  // Prevent the ship from leaving the canvas.
-  let x = constrain(
-    shipBody.position.x,
-    SHIP_SIZE / 2,
-    width - SHIP_SIZE / 2
-  );
-
-  let y = constrain(
-    shipBody.position.y,
-    SHIP_SIZE / 2,
-    height - SHIP_SIZE / 2
-  );
-
-  Body.setPosition(shipBody, { x, y });
+  // Prevent spaceship from rotating.
+  Body.setAngularVelocity(shipBody, 0);  
 }
 
 // ============================================================
@@ -689,30 +690,33 @@ function keepAsteroidsStraight() {
   }
 }
 
-// Helper function for update asteroid when it reaches boundary
+// Remove and replace asteroids after they leave any canvas boundary.
 function updateAsteroidBoundaries() {
   // ... = flatten nested arrays of asteroidBodies
   for (const asteroid of [...asteroidBodies]) {
     const radius = asteroid.circleRadius || ASTEROID_RADIUS;
-    let hasExited = false;
+    const minAsteroidY = PLAY_AREA_TOP + radius;
 
-    if (asteroid.entrySide === 0 && asteroid.position.x > width + radius) {
-      hasExited = true;
+    // check if asteriod is inside the play area
+    const isInsideScreen =
+      asteroid.position.x > -radius &&
+      asteroid.position.x < width + radius &&
+      asteroid.position.y >= minAsteroidY &&
+      asteroid.position.y < height + radius;
+
+    // mark asteroid as have entered the play area
+    if (isInsideScreen) {
+      asteroid.isOnScreen = true;
     }
 
-    if (asteroid.entrySide === 1 && asteroid.position.x < -radius) {
-      hasExited = true;
-    }
+    // check if asteroid has left the play area
+    const hasLeftScreen =
+      asteroid.position.x < -radius ||
+      asteroid.position.x > width + radius ||
+      asteroid.position.y < minAsteroidY ||
+      asteroid.position.y > height + radius;
 
-    if (asteroid.entrySide === 2 && asteroid.position.y > height + radius) {
-      hasExited = true;
-    }
-
-    if (asteroid.entrySide === 3 && asteroid.position.y < -radius) {
-      hasExited = true;
-    }
-
-    if (hasExited) {
+    if (asteroid.isOnScreen && hasLeftScreen) {
       removeAsteroid(asteroid);
     }
   }
@@ -759,7 +763,7 @@ function handleCollision(a, b) {
   // If game not in play, skip.
   if (gameState !== "play") return;
 
-  // Handle ship collisons with stars, planets, asteroids, and sun.
+  // Handle ship collisions with stars, planets, asteroids, and sun.
   if (a.label === "ship") {
     if (b.label === "star") {
       collectStar(b);
@@ -864,7 +868,7 @@ function landOnPlanet(body) {
 
   score += PLANET_POINTS;
 
-  // Rmove planet from Matter physics world and p5.js drawing array.
+  // Remove planet from Matter physics world and p5.js drawing array.
   World.remove(world, body);
 
   planetBodies = planetBodies.filter(item => item !== body);
@@ -948,14 +952,13 @@ function drawStartPage() {
 
   textAlign(CENTER, CENTER);
 
-  fill(255);
+  fill("#FFE81F");
   textSize(min(width, height) * 0.08);
   textStyle(BOLD);
-  text("SPACE TRAVEL", width / 2, height * 0.35);
+  text("Space Travel", width / 2, height * 0.35);
 
   textStyle(NORMAL);
-  textSize(18);
-  fill(220, 230, 255);
+  textSize(20);
 
   drawButton(
     StartButtonX,
@@ -1052,14 +1055,14 @@ function drawTopBar() {
 
   // fill(red, green, blue, alpha "opacity/transparency");
   fill(0, 0, 20, 190);
-  rect(0, 0, width, 70);
+  rect(0, 0, width, TOP_BAR_HEIGHT);
 
   // Game title.
   textAlign(LEFT, CENTER);
-  fill(255);
+  fill("#FFE81F");
   textStyle(BOLD);
   textSize(22);
-  text("SPACE TRAVEL", 25, 35);
+  text("Space Travel", 25, 35);
 
   // Timer.
   textAlign(CENTER, CENTER);
@@ -1067,20 +1070,22 @@ function drawTopBar() {
 
   // Make the timer easier to notice during the final 10 seconds.
   // Note: 
-  //    fill(timeLeft <= 10 ? 255 : 220);
+  //    fill(timeLeft <= 10 ? '#FF0055' : '#FFE81F');
+  //
   //      is short hand for
+  //
   //        if (timeLeft <= 10) {
-  //            fill('#FFE81F');    // yellow
+  //            fill('#FF0055');    // red
   //        } else {
-  //            fill(220);            // light gray
+  //            fill('#FFE81F');    // yellow
   //        }
-  fill(timeLeft <= 10 ? '#FFE81F' : 220);
+  fill(timeLeft <= 10 ? '#FF0055' : '#FFE81F');
   text(formatTime(timeLeft), width / 2, 35);
 
   // Score.
   textAlign(RIGHT, CENTER);
-  fill(255);
-  text(`SCORE: ${score}`, width - 25, 35);
+  fill("#FFE81F");
+  text(`Score: ${score}`, width - 25, 35);
 
   pop();
 }
@@ -1095,12 +1100,12 @@ function drawShip() {
   push();
   imageMode(CENTER);
 
-  // spaceship image = 300x116
+  // spaceship image = 300x230
   drawImagePreserveAspect(
     shipImg,
     shipBody.position.x,
     shipBody.position.y,
-    SHIP_SIZE * 1.7
+    SHIP_SIZE
   );
   pop();
 }
@@ -1114,7 +1119,7 @@ function drawStars() {
     push();
     imageMode(CENTER);
     translate(body.position.x, body.position.y);
-    rotate(frameCount * 0.03);      // Slowly rotate the star for animation effect.
+    rotate(frameCount * 0.5);      // Slowly rotate the star for animation effect.
     
     // star image = 100x100
     drawImagePreserveAspect(
@@ -1159,7 +1164,7 @@ function drawAsteroids() {
     imageMode(CENTER);
 
     translate(body.position.x, body.position.y);
-    rotate(atan2(body.velocity.y, body.velocity.x) - HALF_PI/2);
+    rotate(atan2(body.velocity.y, body.velocity.x) - 45);
 
     // asteroid 1 = 200x133
     // asteroid 2 = 200x151
@@ -1184,7 +1189,7 @@ function drawSun() {
   imageMode(CENTER);
 
   translate(sunBody.position.x, sunBody.position.y);
-  rotate(frameCount * -0.01);      // Slowly rotate the sun for animation effect.
+  rotate(frameCount * -0.1);      // Slowly rotate the sun for animation effect.
 
   // sun image = 300x296
   drawImagePreserveAspect(
@@ -1207,24 +1212,21 @@ function drawEndPage() {
 
   textAlign(CENTER, CENTER);
 
-  fill(255);
+  fill("#FFE81F");
   textStyle(BOLD);
   textSize(min(width, height) * 0.08);
-  text("TIME'S UP", width / 2, height * 0.32);
+  text("Time's Up", width / 2, height * 0.32);
 
   textStyle(NORMAL);
-  textSize(22);
-  fill(210, 220, 245);
-  text("FINAL SCORE", width / 2, height * 0.47);
+  textSize(28);
+  text("Final Score", width / 2, height * 0.47);
 
   textStyle(BOLD);
   textSize(64);
-  fill(255);
   text(score, width / 2, height * 0.56);
 
   textStyle(NORMAL);
-  textSize(18);
-  fill(190, 200, 225);
+  textSize(20);
 
   drawButton(
     EndButtonX,
@@ -1272,7 +1274,7 @@ function drawButton(x, y, w, h, label) {
   // rect(x, y, width, height, cornerRadius);
   rect(x, y, w, h, 12);
 
-  fill(255);
+  fill("#FFE81F");
   textAlign(CENTER, CENTER);
   textStyle(BOLD);
   textSize(18);
@@ -1323,7 +1325,7 @@ function randomSafePosition(minDistanceFromCenter, objectRadius) {
   for (let attempts = 0; attempts < 100; attempts++) {
     pos = {
       x: random(objectRadius + EDGE_PADDING, width - objectRadius - EDGE_PADDING), 
-      y: random(objectRadius + 80, height - objectRadius - EDGE_PADDING)    // 80 = leave space for the top bar.
+      y: random(PLAY_AREA_TOP + objectRadius, height - objectRadius - EDGE_PADDING)    // Keep objects below the top bar.
     };
 
     // Keep the object away from the ship's starting location (center).
@@ -1388,18 +1390,13 @@ function randomSafePosition(minDistanceFromCenter, objectRadius) {
   // Fallback to a random position.
   return {
     x: floor(random(50, width - 50)),   // 50 = leave space for the left/right boundary.
-    y: floor(random(100, height - 50))  // 100 = leave space for the top bar and bottom boundary.
+    y: floor(                           // leave space for topBar
+          random(
+            PLAY_AREA_TOP + objectRadius,
+            height - objectRadius - EDGE_PADDING
+          )
+       )
   };
-}
-
-// ============================================================
-// MATTER VELOCITY HELPER
-// This keeps all Matter calls easy to find while learning.
-// ============================================================
-
-function BodySetVelocity(body, velocity) {
-  // Set the object's current velocity directly.
-  Body.setVelocity(body, velocity);
 }
 
 // ============================================================
@@ -1412,8 +1409,12 @@ function windowResized() {
   // Keep the ship inside the visible canvas after resizing.
   if (shipBody) {
     Body.setPosition(shipBody, {
-      x: constrain(shipBody.position.x, 50, width - 50),
-      y: constrain(shipBody.position.y, 100, height - 50)
+      x: constrain(shipBody.position.x, SHIP_SIZE / 2, width - SHIP_SIZE /2),
+      y: constrain(
+            shipBody.position.y, 
+            PLAY_AREA_TOP + SHIP_SIZE / 2,
+            height - SHIP_SIZE / 2
+         )
     });
   }
 
