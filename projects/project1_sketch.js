@@ -41,7 +41,7 @@ const ASTEROID_POINTS = -1;     // Score when hit by an asteroid.
 const SUN_POINTS = -3;          // Score when hitting the sun.
 
 // All objects are "circles" - to keep things simple.
-const SHIP_SIZE = 68;           // Matter collision diameter for the spaceship.
+const SHIP_SIZE = 38;           // Matter collision diameter for the spaceship.
 const STAR_RADIUS = 18;         // Constant star collision radius.
 const PLANET_RADIUS = 45;       // Constant planet collision radius.
 const ASTEROID_RADIUS = 25;     // Constant asteroid collision radius.
@@ -50,10 +50,13 @@ const OBJECT_GAP = 25;          // Extra spacing between objects. (avoid overlap
 const EDGE_PADDING = 30;        // Edge padding prevent objects create on canvas edge.
 
 // Note: Stars, Planets, Sun = static objects, do not move.
-const SHIP_MAX_SPEED = 18;      // Max spaceship speed.
+const SHIP_MAX_SPEED = 12;      // Max spaceship speed.
 const ASTEROID_MIN_SPEED = 1;   // Min asteroid speed.
-const ASTEROID_MAX_SPEED = 10;  // Max asteroid speed.
+const ASTEROID_MAX_SPEED = 6;   // Max asteroid speed.
 const COLLISION_COOLDOWN = 800; // Cooldown timer in (0.8 sec) before the same object can score again.
+
+const MIN_STARS = 1;            // Min number of stars during game play.
+const MAX_STARS = 3;            // Max number of stars during game play.
 
 let nextPlanetSpawnTime = 0;    // Time in millis when the next planet should spawn.
 let nextStarId = 0;             // Unique ID for each star to prevent repeated scoring.
@@ -287,7 +290,7 @@ function createGameWorld() {
   // ----------------------------------------------------------
 
   // Create 1 to 3 stars randomly.
-  const starCount = floor(random(1, 4));  // Randomly choose 1, 2, or 3 stars.
+  const starCount = floor(random(MIN_STARS, MAX_STARS+1)); 
 
   for (let i = 0; i < starCount; i++) {
     createStar();
@@ -822,14 +825,34 @@ function collectStar(body) {
   collectedObjects.add(id);
   score += STAR_POINTS;
 
+  // Remember how many stars before removal.
+  const previousCount = starBodies.length;
+
   // Remove the star from the physics world.
   World.remove(world, body);
 
   // Remove it from the drawing array as well.
   starBodies = starBodies.filter(item => item !== body);
 
-  // Immediately replace the collected star.
-  createStar();
+  // Randomly choose -1 or +1. This will give the game a
+  // more randomized effect.
+  const change = random() < 0.5 ? -1 : 1;
+
+  // Keep the target count between 1 and 3.
+  // original     -1 count      +1 count
+  //     1            1             2
+  //     2            1             3
+  //     3            2             3
+  const targetCount = constrain(
+    previousCount + change,
+    MIN_STARS,
+    MAX_STARS
+  );
+
+  // Add stars until the target count is reached.
+  while (starBodies.length < targetCount) {
+    createStar();
+  }
 }
 
 // ============================================================
