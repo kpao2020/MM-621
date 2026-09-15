@@ -8,16 +8,16 @@
     land on planets, while trying to avoid asteroids and the sun. 
     The game uses p5.js for rendering graphics and Matter.js for physics simulation.
 
-    - p5.js      = drawing, images, user interface, keyboard / mouse input
+    - p5.js      = drawing, images, user interface, mouse input
     - Matter.js  = physics bodies, movement, and collision detection
 
-    - try to keep things simple and intend to NO sound effects.
+    - try to keep things simple and intend to not implement sound effects.
 
   Note: This project is intended for educational purposes
         in the context of the MM-621 class project.
 
   Credits:
-    - Adobe Stock Images for images
+    - Adobe Stock Images for all images used in this game.
 
   References:
     - P5.js: https://p5js.org/reference/
@@ -41,22 +41,23 @@ const ASTEROID_POINTS = -1;     // Score when hit by an asteroid.
 const SUN_POINTS = -3;          // Score when hitting the sun.
 
 // All objects are "circles" - to keep things simple.
-const SHIP_SIZE = 42;           // Matter collision diameter for the spaceship.
+const SHIP_SIZE = 68;           // Matter collision diameter for the spaceship.
 const STAR_RADIUS = 18;         // Constant star collision radius.
 const PLANET_RADIUS = 45;       // Constant planet collision radius.
 const ASTEROID_RADIUS = 25;     // Constant asteroid collision radius.
 const SUN_RADIUS = 65;          // Constant sun collision raidus.
-const OBJECT_GAP = 25;          // Extra spacing between objects.
+const OBJECT_GAP = 25;          // Extra spacing between objects. (avoid overlap)
 const EDGE_PADDING = 30;        // Edge padding prevent objects create on canvas edge.
 
 // Note: Stars, Planets, Sun = static objects, do not move.
-const SHIP_MAX_SPEED = 5;       // Maximum spaceship velocity.
-const ASTEROID_SPEED = 1;       // Constant asteroid speed.
+const SHIP_MAX_SPEED = 10;      // Maximum spaceship speed.
+const ASTEROID_SPEED = 3;       // Max possible asteroid speed.
 const COLLISION_COOLDOWN = 800; // Cooldown timer in (0.8 sec) before the same object can score again.
 
 let nextPlanetSpawnTime = 0;    // Time in millis when the next planet should spawn.
 let nextStarId = 0;             // Unique ID for each star to prevent repeated scoring.
 let shipScaredUntil = 0;        // Hold time in millis when spaceship hit asteroid.
+
 // ============================================================
 // ASSET FILES
 // ============================================================
@@ -100,14 +101,16 @@ let assetLoadError = null;
 // ============================================================
 // MATTER.JS VARIABLES
 // ============================================================
-let Engine = Matter.Engine,
-    World = Matter.World,
+
+let Engine = Matter.Engine,   // Alias Engine
+    World = Matter.World,     // Alias World
     Body = Matter.Body,       // Modify existing body objects
     Bodies = Matter.Bodies;   // Create new body objects
 
 let engine;
 let world;
 
+// Spaceship, stars, planets, asteroids and sun bodies
 let shipBody;
 let starBodies = [];
 let planetBodies = [];
@@ -120,6 +123,14 @@ let sunBody;
 // "play"  = game-play screen
 // "end"   = game-over screen
 // ============================================================
+
+const BUTTON_WIDTH = 220;
+const BUTTON_HEIGHT = 60;
+
+let StartButtonX;
+let StartButtonY;
+let EndButtonX;
+let EndButtonY;
 
 let gameState = "start";
 
@@ -217,8 +228,14 @@ async function setup() {
   // Create the initial game world.
   createGameWorld();
 
-  // Use a system font for the interface.
-  textFont("system-ui");
+  // Use STAR WARS text style for the user interface.
+  textFont("News Gothic");
+  stroke('#FFE81F');
+
+  StartButtonX = width/2;
+  StartButtonY = height * 0.5;
+  EndButtonX = width/2;
+  EndButtonY = height * 0.7;
 }
 
 // ============================================================
@@ -911,10 +928,10 @@ function drawStartPage() {
   fill(220, 230, 255);
 
   drawButton(
-    width / 2,
-    height * 0.5,
-    220,                        // Button width.
-    60,                         // Button height.
+    StartButtonX,
+    StartButtonY,
+    BUTTON_WIDTH,                        
+    BUTTON_HEIGHT,                        
     "START GAME"
   );
 
@@ -970,7 +987,10 @@ function drawSpaceBackground() {
   // Dark overlay keeps white UI text readable.
   push();
   noStroke();
+
+  // fill(red, green, blue, alpha "opacity/transparency");
   fill(0, 0, 20, 75);         // Last value = 75% transparency.
+
   rect(0, 0, width, height);  // Just a simple rectangle cover entire canvas.
   pop();
 }
@@ -999,6 +1019,8 @@ function drawTopBar() {
   push();
 
   noStroke();
+
+  // fill(red, green, blue, alpha "opacity/transparency");
   fill(0, 0, 20, 190);
   rect(0, 0, width, 70);
 
@@ -1014,7 +1036,15 @@ function drawTopBar() {
   textSize(24);
 
   // Make the timer easier to notice during the final 10 seconds.
-  fill(timeLeft <= 10 ? 255 : 220);
+  // Note: 
+  //    fill(timeLeft <= 10 ? 255 : 220);
+  //      is short hand for
+  //        if (timeLeft <= 10) {
+  //            fill('#FFE81F');    // yellow
+  //        } else {
+  //            fill(220);            // light gray
+  //        }
+  fill(timeLeft <= 10 ? '#FFE81F' : 220);
   text(formatTime(timeLeft), width / 2, 35);
 
   // Score.
@@ -1123,11 +1153,14 @@ function drawSun() {
   push();
   imageMode(CENTER);
 
+  translate(sunBody.position.x, sunBody.position.y);
+  rotate(frameCount * 0.05);      // Slowly rotate the sun for animation effect.
+
   // sun image = 300x296
   drawImagePreserveAspect(
     sunImg,
-    sunBody.position.x,
-    sunBody.position.y,
+    0,
+    0,
     140
   );
   pop();
@@ -1163,18 +1196,18 @@ function drawEndPage() {
   textSize(18);
   fill(190, 200, 225);
 
+  drawButton(
+    EndButtonX,
+    EndButtonY,
+    BUTTON_WIDTH,
+    BUTTON_HEIGHT,
+    "RESTART"
+  );
+
   text(
     "Click RESTART to play again",
     width / 2,
-    height * 0.67
-  );
-
-  drawButton(
-    width / 2,
-    height * 0.78,
-    220,
-    60,
-    "RESTART"
+    height * 0.8
   );
 
   pop();
@@ -1199,11 +1232,14 @@ function drawButton(x, y, w, h, label) {
 
   // Change button appearance on hover.
   if (hovering) {
+
+    // fill(red, green, blue, alpha "opacity/transparency");
     fill(80, 120, 255, 230);
   } else {
     fill(40, 70, 150, 220);
   }
 
+  // rect(x, y, width, height, cornerRadius);
   rect(x, y, w, h, 12);
 
   fill(255);
@@ -1223,22 +1259,22 @@ function drawButton(x, y, w, h, label) {
 function mousePressed() {
   if (gameState === "start") {
     // Start button bounds:
-    // 220 wide x 60 high, centered at 60% canvas height.
+    // 220 wide x 60 high, centered at 50% canvas height.
     if (
-      mouseX > width / 2 - 110 &&
-      mouseX < width / 2 + 110 &&
-      mouseY > height * 0.5 - 30 &&
-      mouseY < height * 0.5 + 30
+      mouseX > StartButtonX - (BUTTON_WIDTH/2) &&
+      mouseX < StartButtonX + (BUTTON_WIDTH/2) &&
+      mouseY > StartButtonY - (BUTTON_HEIGHT/2) &&
+      mouseY < StartButtonY + (BUTTON_HEIGHT/2)
     ) {
       startGame();
     }
   } else if (gameState === "end") {
     // Restart button bounds.
     if (
-      mouseX > width / 2 - 110 &&
-      mouseX < width / 2 + 110 &&
-      mouseY > height * 0.78 - 30 &&
-      mouseY < height * 0.78 + 30
+      mouseX > EndButtonX - (BUTTON_WIDTH/2) &&
+      mouseX < EndButtonX + (BUTTON_WIDTH/2) &&
+      mouseY > EndButtonY - (BUTTON_HEIGHT/2) &&
+      mouseY < EndButtonY + (BUTTON_HEIGHT/2)
     ) {
       restartGame();
     }
@@ -1350,4 +1386,10 @@ function windowResized() {
       y: constrain(shipBody.position.y, 100, height - 50)
     });
   }
+
+  // Update button reference when resize
+  StartButtonX = width/2;
+  StartButtonY = height * 0.5;
+  EndButtonX = width/2;
+  EndButtonY = height * 0.7;
 }
