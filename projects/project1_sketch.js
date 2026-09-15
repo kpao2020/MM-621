@@ -50,8 +50,9 @@ const OBJECT_GAP = 25;          // Extra spacing between objects. (avoid overlap
 const EDGE_PADDING = 30;        // Edge padding prevent objects create on canvas edge.
 
 // Note: Stars, Planets, Sun = static objects, do not move.
-const SHIP_MAX_SPEED = 10;      // Maximum spaceship speed.
-const ASTEROID_SPEED = 3;       // Max possible asteroid speed.
+const SHIP_MAX_SPEED = 18;      // Max spaceship speed.
+const ASTEROID_MIN_SPEED = 1;   // Min asteroid speed.
+const ASTEROID_MAX_SPEED = 10;  // Max asteroid speed.
 const COLLISION_COOLDOWN = 800; // Cooldown timer in (0.8 sec) before the same object can score again.
 
 let nextPlanetSpawnTime = 0;    // Time in millis when the next planet should spawn.
@@ -489,6 +490,12 @@ function createAsteroid(id, previousEntrySide = -1) {
   // Randomly pick 1 of the astroid image
   body.asteroidIndex = floor(random(asteroidImgs.length));
 
+  // Randomly assign a speed to each asteroid
+  body.asteroidSpeed = random(
+    ASTEROID_MIN_SPEED,
+    ASTEROID_MAX_SPEED
+  );
+
   World.add(world, body);
 
   const dx = target.x - start.x;
@@ -499,8 +506,8 @@ function createAsteroid(id, previousEntrySide = -1) {
   const distance = sqrt(dx * dx + dy * dy);
 
   Body.setVelocity(body, {
-    x: (dx / distance) * ASTEROID_SPEED,
-    y: (dy / distance) * ASTEROID_SPEED
+    x: (dx / distance) * body.asteroidSpeed,
+    y: (dy / distance) * body.asteroidSpeed
   });
 
   asteroidBodies.push(body);
@@ -670,10 +677,10 @@ function keepAsteroidsStraight() {
     const speed = sqrt(vx * vx + vy * vy);
 
     if (speed > 0) {
-      // Keep the current direction but force a constant speed.
+      // Keep the current direction but use the assigned speed.
       Body.setVelocity(asteroid, {
-        x: (vx / speed) * ASTEROID_SPEED,
-        y: (vy / speed) * ASTEROID_SPEED
+        x: (vx / speed) * asteroid.asteroidSpeed,
+        y: (vy / speed) * asteroid.asteroidSpeed
       });
     }
   }
@@ -1154,7 +1161,7 @@ function drawSun() {
   imageMode(CENTER);
 
   translate(sunBody.position.x, sunBody.position.y);
-  rotate(frameCount * 0.05);      // Slowly rotate the sun for animation effect.
+  rotate(frameCount * -0.01);      // Slowly rotate the sun for animation effect.
 
   // sun image = 300x296
   drawImagePreserveAspect(
