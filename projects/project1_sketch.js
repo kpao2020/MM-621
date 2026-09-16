@@ -59,6 +59,8 @@ const MIN_STARS = 1;            // Min number of stars during game play.
 const MAX_STARS = 3;            // Max number of stars during game play.
 
 let nextPlanetSpawnTime = 0;    // Time in millis when the next planet should spawn.
+let nextAsteroidSpawnTime = 0;  // Time in millis when the next asteroid should spawn.
+let nextSunSpawnTime = 0;       // Time in millis when the next sun should spawn.
 let nextStarId = 0;             // Unique ID for each star to prevent repeated scoring.
 let shipScaredUntil = 0;        // Hold time in millis when spaceship hit asteroid.
 
@@ -303,17 +305,13 @@ function createGameWorld() {
   }
 
   // Create 1 planet randomly between 5 to 15 seconds.
-  nextPlanetSpawnTime = millis() + random(5000, 15000);
+  nextPlanetSpawnTime = millis() + random(5000, 15001);
   
-  // Create 1 to 2 asteroids randomly.
-  const asteroidCount = floor(random(1, 3));
+  // Create 1-2 asteroid randomly between 1 to 3 seconds.
+  nextAsteroidSpawnTime = millis() + random(1000, 3001);
 
-  for (let i = 0; i < asteroidCount; i++) {
-    createAsteroid(i);
-  }
-
-  // Create 1 sun.
-  createSun();
+  // Create 1 sun randomly between 2 to 5 seconds.
+  nextSunSpawnTime = millis() + random(2000, 5001);
 }
 
 // ============================================================
@@ -363,8 +361,8 @@ function createStar() {
 function updatePlanetSpawns() {
   // Only one planet may exist at a time.
   if (
-    planetBodies.length === 0 &&            // check if any planets exist
-    millis() >= nextPlanetSpawnTime         // check if it's time to spawn a new planet
+    planetBodies.length === 0 &&            // check if any planets exist.
+    millis() >= nextPlanetSpawnTime         // check if it's time to spawn a new planet.
   ) {
     let planetIndex = floor(random(0, 3));  // Randomly choose planet image 0, 1, or 2.
     createPlanet(planetIndex);
@@ -379,7 +377,7 @@ function createPlanet(index) {
     pos.y,
     PLANET_RADIUS,              // Collision radius.
     {
-      label: `planet-${index}`,
+      label: "planet",
       isStatic: true,           // Planets do not move.
       restitution: 0.1          // Small bounce if the ship hits the planet.
     }
@@ -397,9 +395,9 @@ function createPlanet(index) {
 // CREATE ASTEROID
 // ============================================================
 
-// Helper function for create asteroid
-// When asteroid is replaced, it appears from a different side
-// 0 = left, 1 = right, 2 = top, 3 = bottom
+// Helper function for create asteroid.
+// When asteroid is replaced, it appears from a different side.
+// 0 = left, 1 = right, 2 = top, 3 = bottom.
 function chooseAsteroidEntrySide(previousSide) {
   let side = floor(random(4));
 
@@ -410,34 +408,32 @@ function chooseAsteroidEntrySide(previousSide) {
   return side;
 }
 
-// Helper function for remove asteroid
-function removeAsteroid(body) {
-  World.remove(world, body);
-
-  asteroidBodies = asteroidBodies.filter(
-    asteroid => asteroid !== body
-  );
-
-  collisionCooldown.delete(body.gameId);
-
-  // Replace the asteroid using a different entry boundary.
-  createAsteroid(body.asteroidId, body.entrySide);
+function updateAsteroidSpawns() {
+  // Up to 2 asteroids may exist at a time.
+  if (
+    asteroidBodies.length < 2 &&              // check if less than 2 asteroids exist.
+    millis() >= nextAsteroidSpawnTime         // check if it's time to spawn a new asteroid.
+  ) {
+    let asteroidIndex = floor(random(0, 2));  // Randomly choose asteroid image 0 or 1.
+    let side = floor(random(0,4));            // Randomly pick a entry side 0, 1, 2, or 3.
+    createAsteroid(asteroidIndex, side);
+  }
 }
 
 // Create Asteroid
-function createAsteroid(id, previousEntrySide = -1) {
-  const side = chooseAsteroidEntrySide(previousEntrySide);
+function createAsteroid(id, entrySide) {
+  const side = chooseAsteroidEntrySide(entrySide);
   const margin = ASTEROID_RADIUS + 5;
   
   let start;
   let travelDirection;
 
-  // random() returns a number between 0 and 1
-  // random() < 0.5 ? -1 : 1 basically randomly determine -1 or +1
-  // travelAngle returns either -70 to -20 or +20 to +70 degrees
+  // random() returns a number between 0 and 1.
+  // random() < 0.5 ? -1 : 1 basically randomly determine -1 or +1.
+  // travelAngle returns either -70 to -20 or +20 to +70 degrees.
   const travelAngle = random(20,70) * (random() < 0.5 ? -1 : 1);
 
-  // 0 = left, 1 = right, 2 = top, 3 = bottom
+  // 0 = left, 1 = right, 2 = top, 3 = bottom.
   if (side === 0) {
     // Enter from left.
     start = {
@@ -482,7 +478,7 @@ function createAsteroid(id, previousEntrySide = -1) {
     start.y,
     ASTEROID_RADIUS,
     {
-      label: `asteroid-${id}`,
+      label: "asteroid",
       frictionAir: 0,
       restitution: 1,
       inertia: Infinity
@@ -494,10 +490,10 @@ function createAsteroid(id, previousEntrySide = -1) {
   body.entrySide = side;
   body.isOnScreen = false;
 
-  // Randomly pick 1 of the asteroid image
+  // Randomly pick 1 of the asteroid image.
   body.asteroidIndex = floor(random(asteroidImgs.length));
 
-  // Randomly assign a speed to each asteroid
+  // Randomly assign a speed to each asteroid.
   body.asteroidSpeed = random(
     ASTEROID_MIN_SPEED,
     ASTEROID_MAX_SPEED
@@ -516,6 +512,16 @@ function createAsteroid(id, previousEntrySide = -1) {
 // ============================================================
 // CREATE SUN
 // ============================================================
+
+function updateSunSpawns() {
+  // Only one sun may exist at a time.
+  if (
+    sunBody == null &&                      // check if any sun exist.
+    millis() >= nextSunSpawnTime            // check if it's time to spawn a new sun.
+  ) {
+    createSun();
+  }
+}
 
 function createSun() {
   const pos = randomSafePosition(170, SUN_RADIUS);
@@ -591,7 +597,9 @@ function updateGame() {
   Engine.update(engine, 1000 / 60);
 
   updateTimer();              // Update the game countdown timer.
-  updatePlanetSpawns();       // Spawn planets at random intervals.
+  updatePlanetSpawns();       // Spawn planet at random intervals.
+  updateAsteroidSpawns();     // Spawn asteroid at random intervals.
+  updateSunSpawns();          // Spawn sun at random intervals.
   updateAsteroidBoundaries(); // Update asteroid when reach boundary.
   
   if (timeLeft <= 0) {        // end the game when the timer reaches zero.
@@ -635,7 +643,7 @@ function updateMouseMovement() {
     return;
   }
 
-  // Only move ship when mouse button is pressed
+  // Only move ship when mouse button is pressed.
   if (!mouseIsPressed) {
     Body.setVelocity(shipBody, { x: 0, y: 0 });
     return;
@@ -645,7 +653,7 @@ function updateMouseMovement() {
   const dy = mouseY - shipBody.position.y;
 
   // Use Pythagorean Theorem to calculate distance between
-  // mouse and spaceship position
+  // mouse and spaceship position.
   const distance = sqrt(dx * dx + dy * dy);
 
   // Do not use distance > 0, to prevent jitter when mouse is 
@@ -692,24 +700,24 @@ function keepAsteroidsStraight() {
 
 // Remove and replace asteroids after they leave any canvas boundary.
 function updateAsteroidBoundaries() {
-  // ... = flatten nested arrays of asteroidBodies
+  // ... = flatten nested arrays of asteroidBodies.
   for (const asteroid of [...asteroidBodies]) {
     const radius = asteroid.circleRadius || ASTEROID_RADIUS;
     const minAsteroidY = PLAY_AREA_TOP + radius;
 
-    // check if asteriod is inside the play area
+    // check if asteriod is inside the play area.
     const isInsideScreen =
       asteroid.position.x > -radius &&
       asteroid.position.x < width + radius &&
       asteroid.position.y >= minAsteroidY &&
       asteroid.position.y < height + radius;
 
-    // mark asteroid as have entered the play area
+    // mark asteroid as have entered the play area.
     if (isInsideScreen) {
       asteroid.isOnScreen = true;
     }
 
-    // check if asteroid has left the play area
+    // check if asteroid has left the play area.
     const hasLeftScreen =
       asteroid.position.x < -radius ||
       asteroid.position.x > width + radius ||
@@ -767,9 +775,9 @@ function handleCollision(a, b) {
   if (a.label === "ship") {
     if (b.label === "star") {
       collectStar(b);
-    } else if (b.label.startsWith("planet-")) {
+    } else if (b.label === "planet") {
       landOnPlanet(b);
-    } else if (b.label.startsWith("asteroid-")) {
+    } else if (b.label === "asteroid") {
       hitAsteroid(b);
     } else if (b.label === "sun") {
       hitSun(b);
@@ -779,15 +787,15 @@ function handleCollision(a, b) {
   }
 
   // Handle asteroid collisions with stars, planets, and the sun.
-  if (a.label.startsWith("asteroid-")) {
+  if (a.label === "asteroid") {
     if (b.label === "star") {
-      collectStar(b);
+      removeStar(b);
       removeAsteroid(a);
-    } else if (b.label.startsWith("planet-")) {
-      landOnPlanet(b);
+    } else if (b.label === "planet") {
+      removePlanet(b);
       removeAsteroid(a);
     } else if (b.label === "sun") {
-      hitSun(b);
+      removeSun(b);
       removeAsteroid(a);
     }
   }
@@ -829,6 +837,59 @@ function collectStar(body) {
   collectedObjects.add(id);
   score += STAR_POINTS;
 
+  // Remove star
+  removeStar(body);
+}
+
+// ============================================================
+// LAND ON PLANET
+// ============================================================
+
+function landOnPlanet(body) {
+  if (!canScore(body.gameId)) return;
+
+  score += PLANET_POINTS;
+
+  // Remove Planet
+  removePlanet(body);
+}
+
+// ============================================================
+// HIT ASTEROID
+// ============================================================
+
+function hitAsteroid(body) {
+  if (canScore(body.gameId)) {
+    // Prevent Score to go negative
+    score = Math.max(0, score + ASTEROID_POINTS);
+  }
+
+  // Briefly stop the ship when hit.
+  shipScaredUntil = millis() + 600;
+
+  // Remove Asteroid
+  removeAsteroid(body);
+}
+
+// ============================================================
+// HIT SUN
+// ============================================================
+
+function hitSun(body) {
+  if (!canScore(body.gameId)) return;
+
+  // Prevent Score to go negative
+  score = Math.max(0, score + SUN_POINTS);
+
+  // Remove Sun
+  removeSun(body); 
+}
+
+// ============================================================
+// REMOVE STAR
+// ============================================================
+
+function removeStar(body) {
   // Remember how many stars before removal.
   const previousCount = starBodies.length;
 
@@ -860,14 +921,10 @@ function collectStar(body) {
 }
 
 // ============================================================
-// PLANET / ASTEROID / SUN SCORE
+// REMOVE PLANET
 // ============================================================
 
-function landOnPlanet(body) {
-  if (!canScore(body.gameId)) return;
-
-  score += PLANET_POINTS;
-
+function removePlanet(body) {
   // Remove planet from Matter physics world and p5.js drawing array.
   World.remove(world, body);
 
@@ -876,27 +933,31 @@ function landOnPlanet(body) {
   collisionCooldown.delete(body.gameId);
 
   // Schedule the next planet 5–15 seconds later.
-  nextPlanetSpawnTime = millis() + random(5000, 15000);
+  nextPlanetSpawnTime = millis() + random(5000, 15001);
 }
 
-function hitAsteroid(body) {
-  if (canScore(body.gameId)) {
-    // Prevent Score to go negative
-    score = Math.max(0, score + ASTEROID_POINTS);
-  }
+// ============================================================
+// REMOVE ASTEROID
+// ============================================================
 
-  // Briefly stop the ship when hit.
-  shipScaredUntil = millis() + 600;
+function removeAsteroid(body) {
+  World.remove(world, body);
 
-  removeAsteroid(body);
+  asteroidBodies = asteroidBodies.filter(
+    asteroid => asteroid !== body
+  );
+
+  collisionCooldown.delete(body.gameId);
+
+  // Schedule the next asteroid 1–3 seconds later.
+  nextAsteroidSpawnTime = millis() + random(1000, 3001);
 }
 
-function hitSun(body) {
-  if (!canScore(body.gameId)) return;
+// ============================================================
+// REMOVE SUN
+// ============================================================
 
-  // Prevent Score to go negative
-  score = Math.max(0, score + SUN_POINTS);
-
+function removeSun(body) {
   // Remove the sun from Matter physics world and p5.js drawing array.
   World.remove(world, body);
 
@@ -904,8 +965,8 @@ function hitSun(body) {
 
   collisionCooldown.delete(body.gameId);
 
-  // Immediately replace the sun at another safe location.
-  createSun();
+  // Schedule the next sun 2–5 seconds later.
+  nextSunSpawnTime = millis() + random(2000, 5001);
 }
 
 // ============================================================
