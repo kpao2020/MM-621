@@ -49,4 +49,4 @@ Norman, D. A. (2013). *The design of everyday things: Revised and expanded editi
 
 ---
 
-*Disclaimer: This blog is crafted by Ken Pao and features AI-corrected grammar and spelling, with some restructuring to enhance its visual presentation.*
+*Disclaimer: This journal is crafted by Ken Pao and features AI-corrected grammar and spelling, with some restructuring to enhance its visual presentation.*
