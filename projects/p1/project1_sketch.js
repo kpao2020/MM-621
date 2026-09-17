@@ -10,8 +10,11 @@
 
     - p5.js      = drawing, images, user interface, mouse input
     - Matter.js  = physics bodies, movement, and collision detection
-
-    - try to keep things simple and intend to not implement sound effects.
+    - Pythagorean Theorem is used to calculate distance between mouse position and spaceship
+                   which is then used to set spaceship's velocity
+    - Spread syntax is used to flatten a nested arrays, which is very useful on function
+                   updateAsteroidBoundaries() and randomSafePosition()
+    - try to keep things simple and intend to NOT implement sound effects.
 
   Note: This project is intended for educational purposes
         in the context of the MM-621 class project.
