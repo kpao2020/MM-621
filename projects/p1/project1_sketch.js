@@ -797,6 +797,9 @@ function handleCollision(a, b) {
     } else if (b.label === "sun") {
       removeSun(b);
       removeAsteroid(a);
+    } else if (b.label === "asteroid") {
+      removeAsteroid(b);
+      removeAsteroid(a);
     }
   }
 }
