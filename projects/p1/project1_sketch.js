@@ -65,7 +65,7 @@ let nextPlanetSpawnTime = 0;    // Time in millis when the next planet should sp
 let nextAsteroidSpawnTime = 0;  // Time in millis when the next asteroid should spawn.
 let nextSunSpawnTime = 0;       // Time in millis when the next sun should spawn.
 let nextStarId = 0;             // Unique ID for each star to prevent repeated scoring.
-let shipScaredUntil = 0;        // Hold time in millis when spaceship hit asteroid.
+let shipScaredUntil = 0;        // Hold time in millis when spaceship hit asteroid or sun.
 
 // ============================================================
 // ASSET FILES
@@ -887,6 +887,9 @@ function hitSun(body) {
   // Prevent Score to go negative
   score = Math.max(0, score + SUN_POINTS);
 
+  // Briefly stop the ship when hit.
+  shipScaredUntil = millis() + 1000;
+
   // Remove Sun
   removeSun(body); 
 }
@@ -1036,9 +1039,11 @@ function drawStartPage() {
   );
 
   text(
-    "Move mouse to fly through space",
+    "Move mouse to fly through space\n\n\
+    Earn points: stars, planets\n\
+    Reduce points: asteroids, sun",
     width / 2,
-    height * 0.6
+    height * 0.65
   );
 
   pop();
