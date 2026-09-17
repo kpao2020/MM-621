@@ -35,13 +35,19 @@
 // ============================================================
 
 // Game timer
-const GAME_TIME = 60;           // Total game time in seconds (1 min).
+// const GAME_TIME = 60;           // Total game time in seconds (1 min).
+
+// Spaceship health
+const SHIP_HEALTH = 100;        // Total Spaceship's health.
+
+const ASTEROID_DAMAGE = 5;      // Damage to spaceship's health when hit by an asteroid.
+const SUN_DAMAGE = 10;          // Damage to spaceship's health when hitting the sun.
 
 // Game scoring system
 const STAR_POINTS = 1;          // Score for collecting a star.
 const PLANET_POINTS = 5;        // Score for landing on a planet.
-const ASTEROID_POINTS = -1;     // Score when hit by an asteroid.
-const SUN_POINTS = -3;          // Score when hitting the sun.
+// const ASTEROID_POINTS = -1;     // Score when hit by an asteroid.
+// const SUN_POINTS = -3;          // Score when hitting the sun.
 
 // All objects are "circles" - to keep things simple.
 const SHIP_SIZE = 50;           // Matter collision diameter for the spaceship.
@@ -147,7 +153,8 @@ let EndButtonY;
 let gameState = "start";
 
 let score = 0;
-let timeLeft = GAME_TIME;
+//let timeLeft = GAME_TIME;
+let healthLeft = SHIP_HEALTH;
 let gameStartMillis = 0;
 
 let selectedBackground;
@@ -268,7 +275,8 @@ function createGameWorld() {
   sunBody = null;
 
   score = 0;
-  timeLeft = GAME_TIME;
+  // timeLeft = GAME_TIME;
+  healthLeft = SHIP_HEALTH;
 
   collectedObjects.clear();
   collisionCooldown.clear();
@@ -599,13 +607,14 @@ function updateGame() {
   // prevent Matter.js from updating at a different rate.
   Engine.update(engine, 1000 / 60);
 
-  updateTimer();              // Update the game countdown timer.
+  // updateTimer();              // Update the game countdown timer.
   updatePlanetSpawns();       // Spawn planet at random intervals.
   updateAsteroidSpawns();     // Spawn asteroid at random intervals.
   updateSunSpawns();          // Spawn sun at random intervals.
   updateAsteroidBoundaries(); // Update asteroid when reach boundary.
   
-  if (timeLeft <= 0) {        // end the game when the timer reaches zero.
+  // if (timeLeft <= 0) {        // end the game when the timer reaches zero.
+  if (healthLeft <= 0) {      // end the game when health reaches zero.
     endGame();
   }
 }
@@ -733,6 +742,8 @@ function updateAsteroidBoundaries() {
   }
 }
 
+/*
+Note: Switch to health system.  timer no longer in use
 // ============================================================
 // TIMER
 // ============================================================
@@ -752,6 +763,7 @@ function formatTime(seconds) {
   // Example: 9 seconds becomes "0:09".
   return `${minutes}:${String(secs).padStart(2, "0")}`;
 }
+*/
 
 // ============================================================
 // MATTER COLLISION EVENTS
@@ -866,8 +878,10 @@ function landOnPlanet(body) {
 
 function hitAsteroid(body) {
   if (canScore(body.gameId)) {
-    // Prevent Score to go negative
-    score = Math.max(0, score + ASTEROID_POINTS);
+    // Prevent Health to go negative
+    // score = Math.max(0, score + ASTEROID_POINTS);
+    healthLeft = Math.max(0, healthLeft - ASTEROID_DAMAGE);
+    console.log("health = "+healthLeft);
   }
 
   // Briefly stop the ship when hit.
@@ -884,8 +898,10 @@ function hitAsteroid(body) {
 function hitSun(body) {
   if (!canScore(body.gameId)) return;
 
-  // Prevent Score to go negative
-  score = Math.max(0, score + SUN_POINTS);
+  // Prevent Spaceship's health to go negative
+  // score = Math.max(0, score + SUN_POINTS);
+  healthLeft = Math.max(0, healthLeft - SUN_DAMAGE);
+  console.log("health = "+healthLeft);
 
   // Briefly stop the ship when hit.
   shipScaredUntil = millis() + 1000;
@@ -1151,8 +1167,11 @@ function drawTopBar() {
   //        } else {
   //            fill('#FFE81F');    // yellow
   //        }
-  fill(timeLeft <= 10 ? '#FF0055' : '#FFE81F');
-  text(formatTime(timeLeft), width / 2, 35);
+  // fill(timeLeft <= 10 ? '#FF0055' : '#FFE81F');
+  // text(formatTime(timeLeft), width / 2, 35);
+
+  fill(healthLeft <= 10 ? '#FF0055' : '#FFE81F');
+  text("Spaceship Health: "+ healthLeft, width/2, 35);
 
   // Score.
   textAlign(RIGHT, CENTER);
