@@ -1,3 +1,8 @@
+---
+layout: default
+title: Welcome to my GitHub page!
+---
+
 # Welcome to my GitHub page!
 
 This is written in **Markdown**. Markdown is an easy-to-read language for formatting plain text.
@@ -10,25 +15,22 @@ You can use *Markdown* syntax to format your writing on GitHub.
 
 ## Projects
 
-* *[TBD]*
+* [View Projects](https://kpao2020.github.io/MM-621/projects/index.html)
+*(Ctrl+Click or Cmd+Click to open in a new tab)*
 
 ---
 
 ## Demos
 
-* [Demo 1](demo/8-25-2026.js)
-* [Demo 2](demo/8-25-2026-b.js)
-
-* [View Demo 2 in Action](https://kpao2020.github.io/MM-621/index.html)
+* [View Demo in Action](https://kpao2020.github.io/MM-621/demo/index.html)
 *(Ctrl+Click or Cmd+Click to open in a new tab)*
 ---
 
 ## Journal
 
-Here is my journal:
+Here are my journals:
 
-* [Test](journals/8-20-26.md)
-* [Chapter 1 Self Reflection](journals/ch1-reflection.md)
+* [View Journals](https://kpao2020.github.io/MM-621/journals/index.html)
 
 ---
 

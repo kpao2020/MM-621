@@ -69,25 +69,25 @@ let shipScaredUntil = 0;        // Hold time in millis when spaceship hit astero
 // ============================================================
 
 const BG_FILES = [
-  "../images/bg1.jpg",
-  "../images/bg2.jpg",
-  "../images/bg3.jpg"
+  "../../images/bg1.jpg",
+  "../../images/bg2.jpg",
+  "../../images/bg3.jpg"
 ];
 
 const ASTEROID_FILES = [
-  "../images/asteroid1.png",
-  "../images/asteroid2.png"
+  "../../images/asteroid1.png",
+  "../../images/asteroid2.png"
 ];
 
 const PLANET_FILES = [
-  "../images/planet1.png",
-  "../images/planet2.png",
-  "../images/planet3.png"
+  "../../images/planet1.png",
+  "../../images/planet2.png",
+  "../../images/planet3.png"
 ];
 
-const SHIP_FILE = "../images/spaceship.png";
-const STAR_FILE = "../images/star.png";
-const SUN_FILE = "../images/sun.png";
+const SHIP_FILE = "../../images/spaceship.png";
+const STAR_FILE = "../../images/star.png";
+const SUN_FILE = "../../images/sun.png";
 
 // ============================================================
 // IMAGE VARIABLES
