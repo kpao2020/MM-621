@@ -1057,7 +1057,7 @@ function drawStartPage() {
   text(
     "Move mouse to fly through space\n\n\
     Earn points: stars, planets\n\
-    Reduce points: asteroids, sun",
+    Health reduced: asteroids, sun",
     width / 2,
     height * 0.65
   );
@@ -1306,7 +1306,7 @@ function drawEndPage() {
   fill("#FFE81F");
   textStyle(BOLD);
   textSize(min(width, height) * 0.08);
-  text("Time's Up", width / 2, height * 0.32);
+  text("Game Over", width / 2, height * 0.32);
 
   textStyle(NORMAL);
   textSize(28);
