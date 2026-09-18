@@ -34,10 +34,7 @@
 // - use const to avoid accidental changes to these values.
 // ============================================================
 
-// Game timer
-// const GAME_TIME = 60;           // Total game time in seconds (1 min).
-
-// Spaceship health
+// Game health system
 const SHIP_HEALTH = 100;        // Total Spaceship's health.
 
 const ASTEROID_DAMAGE = 5;      // Damage to spaceship's health when hit by an asteroid.
@@ -46,8 +43,6 @@ const SUN_DAMAGE = 10;          // Damage to spaceship's health when hitting the
 // Game scoring system
 const STAR_POINTS = 1;          // Score for collecting a star.
 const PLANET_POINTS = 5;        // Score for landing on a planet.
-// const ASTEROID_POINTS = -1;     // Score when hit by an asteroid.
-// const SUN_POINTS = -3;          // Score when hitting the sun.
 
 // All objects are "circles" - to keep things simple.
 const SHIP_SIZE = 50;           // Matter collision diameter for the spaceship.
@@ -109,11 +104,11 @@ let bgImages = [];
 let asteroidImgs = [];
 let planetImgs = [];
 
-let shipImg = null;
-let logoImg = null;
-let iconImg = null;
-let starImg = null;
-let sunImg = null;
+let shipImg;
+let logoImg;
+let iconImg;
+let starImg;
+let sunImg;
 
 let assetLoadError = null;
 
@@ -157,9 +152,8 @@ let EndButtonY;
 let gameState = "start";
 
 let score = 0;
-//let timeLeft = GAME_TIME;
+
 let healthLeft = SHIP_HEALTH;
-let gameStartMillis = 0;
 
 let selectedBackground;
 
@@ -281,7 +275,7 @@ function createGameWorld() {
   sunBody = null;
 
   score = 0;
-  // timeLeft = GAME_TIME;
+
   healthLeft = SHIP_HEALTH;
 
   collectedObjects.clear();
@@ -440,7 +434,7 @@ function updateAsteroidSpawns() {
 // Create Asteroid
 function createAsteroid(id, entrySide) {
   const side = chooseAsteroidEntrySide(entrySide);
-  const margin = ASTEROID_RADIUS + 5;
+  const margin = ASTEROID_RADIUS + 5; // avoid asteroid to spawn on screen boundary
   
   let start;
   let travelDirection;
@@ -581,6 +575,7 @@ function draw() {
     return;
   }
 
+  // Game State to draw respective game page
   if (gameState === "start") {
     drawStartPage();
     return;
@@ -613,13 +608,11 @@ function updateGame() {
   // prevent Matter.js from updating at a different rate.
   Engine.update(engine, 1000 / 60);
 
-  // updateTimer();              // Update the game countdown timer.
   updatePlanetSpawns();       // Spawn planet at random intervals.
   updateAsteroidSpawns();     // Spawn asteroid at random intervals.
   updateSunSpawns();          // Spawn sun at random intervals.
   updateAsteroidBoundaries(); // Update asteroid when reach boundary.
   
-  // if (timeLeft <= 0) {        // end the game when the timer reaches zero.
   if (healthLeft <= 0) {      // end the game when health reaches zero.
     endGame();
   }
@@ -748,29 +741,6 @@ function updateAsteroidBoundaries() {
   }
 }
 
-/*
-Note: Switch to health system.  timer no longer in use
-// ============================================================
-// TIMER
-// ============================================================
-
-function updateTimer() {
-  // Calculate how many whole seconds have passed.
-  const elapsed = floor((millis() - gameStartMillis) / 1000);
-
-  // Never allow the timer to become negative.
-  timeLeft = max(0, GAME_TIME - elapsed);
-}
-
-function formatTime(seconds) {
-  const minutes = floor(seconds / 60);
-  const secs = seconds % 60;
-
-  // Example: 9 seconds becomes "0:09".
-  return `${minutes}:${String(secs).padStart(2, "0")}`;
-}
-*/
-
 // ============================================================
 // MATTER COLLISION EVENTS
 // ============================================================
@@ -885,9 +855,8 @@ function landOnPlanet(body) {
 function hitAsteroid(body) {
   if (canScore(body.gameId)) {
     // Prevent Health to go negative
-    // score = Math.max(0, score + ASTEROID_POINTS);
     healthLeft = Math.max(0, healthLeft - ASTEROID_DAMAGE);
-    console.log("health = "+healthLeft);
+    //console.log("health = "+healthLeft);
   }
 
   // Briefly stop the ship when hit.
@@ -904,10 +873,9 @@ function hitAsteroid(body) {
 function hitSun(body) {
   if (!canScore(body.gameId)) return;
 
-  // Prevent Spaceship's health to go negative
-  // score = Math.max(0, score + SUN_POINTS);
+  // Prevent Health to go negative
   healthLeft = Math.max(0, healthLeft - SUN_DAMAGE);
-  console.log("health = "+healthLeft);
+  //console.log("health = "+healthLeft);
 
   // Briefly stop the ship when hit.
   shipScaredUntil = millis() + 1000;
@@ -972,6 +940,7 @@ function removePlanet(body) {
 // ============================================================
 
 function removeAsteroid(body) {
+  // Remove asteroid from Matter physics world and p5.js drawing array.
   World.remove(world, body);
 
   asteroidBodies = asteroidBodies.filter(
@@ -989,7 +958,7 @@ function removeAsteroid(body) {
 // ============================================================
 
 function removeSun(body) {
-  // Remove the sun from Matter physics world and p5.js drawing array.
+  // Remove the sun from Matter physics world and p5.js drawing.
   World.remove(world, body);
 
   sunBody = null;
@@ -1006,10 +975,6 @@ function removeSun(body) {
 
 function startGame() {
   createGameWorld();
-
-  // Record game-start time.
-  gameStartMillis = millis();
-
   gameState = "play";
 }
 
@@ -1027,9 +992,6 @@ function endGame() {
 
 function restartGame() {
   createGameWorld();
-
-  gameStartMillis = millis(); // Reset the game timer.
-
   gameState = "play";
 }
 
