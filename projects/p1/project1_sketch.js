@@ -268,7 +268,7 @@ function createGameWorld() {
   // Clear Matter bodies before starting a new game.
   clearMatterWorld();
 
-  // Clear matter.js body variables and initialize score and timer.
+  // Clear matter.js body variables and initialize score and health.
   starBodies = [];
   planetBodies = [];
   asteroidBodies = [];
@@ -985,7 +985,7 @@ function endGame() {
 
   gameState = "end";
 
-  // Stop the ship when the timer reaches zero.
+  // Stop the ship when the health reaches zero.
   Body.setVelocity(shipBody, { x: 0, y: 0 });
   Body.setAngularVelocity(shipBody, 0);
 }
@@ -1121,28 +1121,24 @@ function drawTopBar() {
 
   image(logoImg,150,10);
 
-  // Timer.
-  textAlign(CENTER, CENTER);
-  textSize(24);
+  // Health Bar
+  image(iconImg, width/2-SHIP_HEALTH + 10, 30);
 
-  // Make the timer easier to notice during the final 10 seconds.
+  // Health Bar background
+  fill(100);
+  rect(width/2 - SHIP_HEALTH/2, 25, SHIP_HEALTH, 20, 5);
+
+  // Make the health bar easier to notice during the final 20%.
   // Note: 
-  //    fill(timeLeft <= 10 ? '#FF0055' : '#FFE81F');
+  //    fill(healthLeft <= 20 ? '#FF0055' : 'lightgreen');
   //
   //      is short hand for
   //
-  //        if (timeLeft <= 10) {
+  //        if (healthLeft <= 20) {
   //            fill('#FF0055');    // red
   //        } else {
-  //            fill('#FFE81F');    // yellow
+  //            fill('lightgreen');   // light green
   //        }
-  // fill(timeLeft <= 10 ? '#FF0055' : '#FFE81F');
-  // text(formatTime(timeLeft), width / 2, 35);
-
-  image(iconImg, width/2-SHIP_HEALTH + 10, 30);
-
-  fill(100);
-  rect(width/2 - SHIP_HEALTH/2, 25, SHIP_HEALTH, 20, 5);
 
   fill(healthLeft <= 20 ? '#FF0055' : 'lightgreen');
   rect(width/2 - SHIP_HEALTH/2, 25, healthLeft, 20, 5);
