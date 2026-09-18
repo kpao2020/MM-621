@@ -95,6 +95,8 @@ const PLANET_FILES = [
 ];
 
 const SHIP_FILE = "../../images/spaceship.png";
+const LOGO_FILE = "../../images/spacetravel_logo.png";
+const ICON_FILE = "../../images/spaceship_icon.png";
 const STAR_FILE = "../../images/star.png";
 const SUN_FILE = "../../images/sun.png";
 
@@ -108,6 +110,8 @@ let asteroidImgs = [];
 let planetImgs = [];
 
 let shipImg = null;
+let logoImg = null;
+let iconImg = null;
 let starImg = null;
 let sunImg = null;
 
@@ -204,6 +208,8 @@ async function loadAssets() {
 
   // Load individual object images.
   shipImg = await loadOptionalImage(SHIP_FILE, "spaceship.png");
+  logoImg = await loadOptionalImage(LOGO_FILE, "spacetravel_logo.png");
+  iconImg = await loadOptionalImage(ICON_FILE, "spaceship_icon.png");
   starImg = await loadOptionalImage(STAR_FILE, "star.png");
   sunImg = await loadOptionalImage(SUN_FILE, "sun.png");
 }
@@ -1042,7 +1048,6 @@ function drawStartPage() {
   textSize(min(width, height) * 0.08);
   textStyle(BOLD);
   text("Space Travel", width / 2, height * 0.35);
-
   textStyle(NORMAL);
   textSize(20);
 
@@ -1152,6 +1157,8 @@ function drawTopBar() {
   textSize(22);
   text("Space Travel", 25, 35);
 
+  image(logoImg,150,10);
+
   // Timer.
   textAlign(CENTER, CENTER);
   textSize(24);
@@ -1170,8 +1177,14 @@ function drawTopBar() {
   // fill(timeLeft <= 10 ? '#FF0055' : '#FFE81F');
   // text(formatTime(timeLeft), width / 2, 35);
 
-  fill(healthLeft <= 10 ? '#FF0055' : '#FFE81F');
-  text("Spaceship Health: "+ healthLeft, width/2, 35);
+  image(iconImg, width/2-SHIP_HEALTH + 10, 30);
+
+  fill(100);
+  rect(width/2 - SHIP_HEALTH/2, 25, SHIP_HEALTH, 20, 5);
+
+  fill(healthLeft <= 20 ? '#FF0055' : 'lightgreen');
+  rect(width/2 - SHIP_HEALTH/2, 25, healthLeft, 20, 5);
+  //text("Spaceship Health: "+ healthLeft, width/2, 35);
 
   // Score.
   textAlign(RIGHT, CENTER);
