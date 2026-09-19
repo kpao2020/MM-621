@@ -14,6 +14,7 @@
                    which is then used to set spaceship's velocity
     - Spread syntax is used to flatten a nested arrays, which is very useful on function
                    updateAsteroidBoundaries() and randomSafePosition()
+    - Explosion animation - https://www.youtube.com/watch?v=YPKidHmretc&t=10s
     - try to keep things simple and intend to NOT implement sound effects.
 
   Note: This project is intended for educational purposes
@@ -69,6 +70,8 @@ let nextSunSpawnTime = 0;       // Time in millis when the next sun should spawn
 let nextStarId = 0;             // Unique ID for each star to prevent repeated scoring.
 let shipScaredUntil = 0;        // Hold time in millis when spaceship hit asteroid or sun.
 let maxAsteroids;               // Max number of Asteroids on play screen
+
+let sparkles=[];                 // Explosion animation.
 
 // ============================================================
 // ASSET FILES
@@ -425,7 +428,7 @@ function updateAsteroidSpawns() {
   // Start with 2 asteroids and incrase number of asteroids
   // as player getting higher score
   maxAsteroids = START_ASTEROIDS + Math.floor(score / 5);
-  console.log(maxAsteroids);
+  // console.log(maxAsteroids);
 
   if (
     asteroidBodies.length < maxAsteroids && 
@@ -560,6 +563,30 @@ function createSun() {
 }
 
 // ============================================================
+// EXPLOSION ANIMATION
+// ============================================================
+function createExplosion(body) {
+  for (let i = 0; i < 30; i++) {
+    sparkles.push(new Sparkle(body.position.x, body.position.y));
+  }
+  // console.log("EXPLOSION CREATED:", sparkles.length);
+}
+
+function updateSparkles() {
+  // console.log("SPARKLES",sparkles.length);
+
+  for (let i = sparkles.length - 1; i >= 0; i--) {
+    sparkles[i].update();
+    sparkles[i].display();
+
+    // console.log("display",sparkles[i]);
+    if (sparkles[i].isFinished()) {
+      sparkles.splice(i,1);
+    }
+  }
+}
+
+// ============================================================
 // p5.js DRAW LOOP
 // - 60 Frame Per Second (FPS) is the default frame rate for p5.js.
 // ============================================================
@@ -618,7 +645,7 @@ function updateGame() {
   updateAsteroidSpawns();     // Spawn asteroid at random intervals.
   updateSunSpawns();          // Spawn sun at random intervals.
   updateAsteroidBoundaries(); // Update asteroid when reach boundary.
-  
+
   if (healthLeft <= 0) {      // end the game when health reaches zero.
     endGame();
   }
@@ -770,6 +797,7 @@ function handleCollision(a, b) {
 
   // Handle ship collisions with stars, planets, asteroids, and sun.
   if (a.label === "ship") {
+    createExplosion(a);
     if (b.label === "star") {
       collectStar(b);
     } else if (b.label === "planet") {
@@ -785,6 +813,7 @@ function handleCollision(a, b) {
 
   // Handle asteroid collisions with stars, planets, and the sun.
   if (a.label === "asteroid") {
+    createExplosion(a);
     if (b.label === "star") {
       removeStar(b);
       removeAsteroid(a);
@@ -1053,7 +1082,7 @@ function drawGame() {
   drawAsteroids();
   drawStars();
   drawShip();
-
+  updateSparkles();
   drawTopBar();
 }
 
