@@ -6,7 +6,7 @@ title: Project 1 Readme
 ## Project 1
 
 ---
-# Space Travel
+# Space Travel: [Click Here to Play](https://kpao2020.github.io/MM-621/projects/p1/project1.html)
 
 ---
 
