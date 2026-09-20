@@ -9,7 +9,7 @@ title: Project 1 Readme
 
 # Space Travel:
 <p align="center">
-  [Click Here to Play](https://kpao2020.github.io/MM-621/projects/p1/project1.html)
+  <a href="https://kpao2020.github.io/MM-621/projects/p1/project1.html">Click Here to Play</a>
 </p> 
 
 ---
@@ -17,7 +17,7 @@ title: Project 1 Readme
 ### Low Fidelity Wireframe
 
 <p align="center">
-![project 1 lo-fi wireframe](project1_wireframe.png)
+  <img src="project1_wireframe.png" alt="Project 1 lo-fi wireframe">
 <p>
 
 - 2D gameplay preferred on a full-desktop-screen browser, using a mouse to drive a spacespace in any direction. There are a few game objects for interactive and immersive gaming experience.
@@ -27,7 +27,7 @@ title: Project 1 Readme
 ### Mood Board
 
 <p align="center">
-![example of confusing door](project1_moodboard.png)
+    <img src="project1_moodboard.png" alt="Project 1 mood board">
 <p>
 
 - Dark themed space, futuristic spaceship style, growing stars, real planets, asteroids, and a big sun.
