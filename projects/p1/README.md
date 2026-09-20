@@ -49,7 +49,7 @@ The game uses p5.js for rendering graphics and Matter.js for physics simulation.
 ---
 
 ### Gameplay Design
-- For the most immersive experience, we recommend playing in full-screen mode on a desktop browser.
+- For the most immersive experience, I recommend playing in full-screen mode on a desktop browser.
 - Players of all skill levels can immerse themselves in piloting a spaceship through a dark-themed space environment. 
 - Players interact with randomly generated objects for fun, engaging, and challenging gameplay. As they progress, the difficulty increases proportionally.
 - The game starts with a full health bar.
