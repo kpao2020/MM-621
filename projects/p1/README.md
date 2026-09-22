@@ -64,6 +64,13 @@ The game uses p5.js for rendering graphics and Matter.js for physics simulation.
 - There were many bugs, which I hope I have now fully resolved. 
 - Thanks to Professor Stannard's advice regarding an incorrect scoring bug, I split the function that originally handled both score calculation and the removal of collided objects into two separate functions. I also divided my single, lengthy sketch file into seven separate JavaScript files, making the codebase much easier to manage.
 
+### Feature Roadmap
+- Add more challenging objects.
+- Add more animations for visual effects.
+- Add sound effects.
+- Adjust Game Title page to include more graphics, icons, instructions, login, high score history, and a "Cog" icon to allow customized settings, such as various spaceship choice, sound choice, background choice, difficulty choice, and more.
+- Integrate with external social media to allow game feedback or exchange gaming experience.
+
 ---
 
 ### Note: 
