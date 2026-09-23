@@ -46,6 +46,21 @@ The game uses p5.js for rendering graphics and Matter.js for physics simulation.
   - Explosion animation is to enhance visual effect when something collided.
   - try to keep things simple and intend to NOT implement sound effects.
 
+### Files:
+  - asteroids.js          - all codes related to asteroids
+  - planets.js            - all codes related to planets
+  - project1_sketch.js    - main sketch game code in p5.js and matter.js
+  - spaceship.js          - all codes related to spaceship
+  - sparkles.js           - explosion animation
+  - stars.js              - all codes related to stars
+  - sun.js                - all codes related to sun
+  - project1.html         - game host webpage
+  - project1_style.css    - css style for game host webpage
+  - project1_lo-fi_wireframe.fig      - actual figma file for project 1
+  - project1_wireframe.png            - project 1 wireframe picture
+  - project1_moodboard.png            - project 1 moodboard picture
+  - README.md                         - readme file
+
 ---
 
 ### Gameplay Design
@@ -57,12 +72,15 @@ The game uses p5.js for rendering graphics and Matter.js for physics simulation.
 - Getting hit by an asteroid or crashing into the sun damages the spaceship's health.
 - When the health bar is completely depleted, the game is over.
 
+---
+
 ### Developer Notes
 - The initial design relied on a one-minute timer to control the game loop. It featured a small spaceship with a fixed speed, no animations, no difficulty scaling, no health mechanics, and a single scoring system—which was barely enough for an MVP. 
 - As development progressed and I received user feedback, I made the game more challenging. I implemented difficulty progression logic, enhanced the visual effects, and introduced more randomized elements. 
 - To make the mechanics more reasonable, I replaced the one-minute timer with a health bar and swapped negative scoring for a health damage system.
 - There were many bugs, which I hope I have now fully resolved. 
-- Thanks to Professor Stannard's advice regarding an incorrect scoring bug, I split the function that originally handled both score calculation and the removal of collided objects into two separate functions. I also divided my single, lengthy sketch file into seven separate JavaScript files, making the codebase much easier to manage.
+
+---
 
 ### Feature Roadmap
 - Add more challenging objects.
@@ -78,6 +96,7 @@ The game uses p5.js for rendering graphics and Matter.js for physics simulation.
 
 ### Credits:
   - Adobe Stock Images for all images used in this game.
+  - Thanks to Professor Stannard's advice regarding an incorrect scoring bug, I split the function that originally handled both score calculation and the removal of collided objects into two separate functions. I also divided my single, lengthy sketch file into seven separate JavaScript files, making the codebase much easier to manage.
 
 ### References:
   - [P5.js Reference](https://p5js.org/reference/)

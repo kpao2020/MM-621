@@ -18,11 +18,27 @@
     - Explosion animation is to enhance visual effect when something collided.
     - try to keep things simple and intend to NOT implement sound effects.
 
+  Files:
+    - asteroids.js          - all codes related to asteroids
+    - planets.js            - all codes related to planets
+    - project1_sketch.js    - main sketch game code in p5.js and matter.js
+    - spaceship.js          - all codes related to spaceship
+    - sparkles.js           - explosion animation
+    - stars.js              - all codes related to stars
+    - sun.js                - all codes related to sun
+    - project1.html         - game host webpage
+    - project1_style.css    - css style for game host webpage
+    - project1_lo-fi_wireframe.fig      - actual figma file for project 1
+    - project1_wireframe.png            - project 1 wireframe picture
+    - project1_moodboard.png            - project 1 moodboard picture
+    - README.md                         - readme file
+
   Note: This project is intended for educational purposes
         in the context of the MM-621 class project.
 
   Credits:
     - Adobe Stock Images for all images used in this game.
+    - Thanks to Professor Stannard's advice regarding an incorrect scoring bug, I split the function that originally handled both score calculation and the removal of collided objects into two separate functions. I also divided my single, lengthy sketch file into seven separate JavaScript files, making the codebase much easier to manage.
 
   References:
     - P5.js: https://p5js.org/reference/
