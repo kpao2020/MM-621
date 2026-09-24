@@ -381,14 +381,17 @@ function handleCollision(a, b) {
 
   // Handle ship collisions with stars, planets, asteroids, and sun.
   if (a.label === "ship") {
-    createExplosion(a);
     if (b.label === "star") {
+      createExplosion(a, "g");
       collectStar(b);
     } else if (b.label === "planet") {
+      createExplosion(a, "g");
       landOnPlanet(b);
     } else if (b.label === "asteroid") {
+      createExplosion(b, "r");
       hitAsteroid(b);
     } else if (b.label === "sun") {
+      createExplosion(b, "r");
       hitSun(b);
     }
 
@@ -397,21 +400,24 @@ function handleCollision(a, b) {
 
   // Handle asteroid collisions with stars, planets, and the sun.
   if (a.label === "asteroid") {
-    createExplosion(b);
+
+    // will create animation on star, planet, sun and asteroid
+    // no animation on ship
     if (b.label === "star") {
+      createExplosion(a, "y");
       removeStar(b);
       removeAsteroid(a);
     } else if (b.label === "planet") {
+      createExplosion(a, "y");
       removePlanet(b);
       removeAsteroid(a);
     } else if (b.label === "sun") {
+      createExplosion(a, "y");
       removeSun(b);
       removeAsteroid(a);
+    } else if (b.label === "asteroid") {
+      createExplosion(a, "y");
     }
-    // else if (b.label === "asteroid") {
-    //   removeAsteroid(b);
-    //   removeAsteroid(a);
-    // }
   }
 }
 
