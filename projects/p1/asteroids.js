@@ -71,7 +71,7 @@ function createAsteroid(id, entrySide) {
     // Enter from left.
     start = {
       x: -margin,
-      y: random(PLAY_AREA_TOP + ASTEROID_RADIUS, height - margin)
+      y: random(ASTEROID_RADIUS, height - margin)
     };
 
     travelDirection = travelAngle;
@@ -80,7 +80,7 @@ function createAsteroid(id, entrySide) {
     // Enter from right.
     start = {
       x: width + margin,
-      y: random(PLAY_AREA_TOP + ASTEROID_RADIUS, height - margin)
+      y: random(ASTEROID_RADIUS, height - margin)
     };
 
     travelDirection = travelAngle + 180;
@@ -89,7 +89,7 @@ function createAsteroid(id, entrySide) {
     // Enter from top.
     start = {
       x: random(margin, width - margin),
-      y: PLAY_AREA_TOP + ASTEROID_RADIUS
+      y: ASTEROID_RADIUS
     };
 
     travelDirection = travelAngle + 90;
@@ -179,7 +179,7 @@ function updateAsteroidBoundaries() {
   // ... = flatten nested arrays of asteroidBodies.
   for (const asteroid of [...asteroidBodies]) {
     const radius = asteroid.circleRadius || ASTEROID_RADIUS;
-    const minAsteroidY = PLAY_AREA_TOP + radius;
+    const minAsteroidY = radius;
 
     // check if asteriod is inside the play area.
     const isInsideScreen =
