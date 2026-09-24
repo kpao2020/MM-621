@@ -359,10 +359,19 @@ h3 {
 }
 
 .card-link {
-    color: var(--green);
-    font-weight: 900;
-    text-decoration-thickness: 2px;
-    text-underline-offset: 4px;
+    color: #ffffff;            /* White button text */
+    font-weight: 600;            /* Regular text weight */
+    display: inline-block;       /* Allows padding and margins to work properly */
+    padding: 10px 16px;          /* Adds space inside the button */
+    margin-right: 10px;          /* Adds space to the right of each button */
+    margin-bottom: 10px;         /* Adds space below in case they wrap to a new line */
+    background-color: #007bff; /* Sets the button color (blue) */
+    text-decoration: none;       /* Removes the default text underline */
+    border-radius: 6px;
+}
+
+.card-link:hover {
+    background-color: #0056b3;
 }
 
 .readme-note {
