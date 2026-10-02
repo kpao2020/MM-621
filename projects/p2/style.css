@@ -1,0 +1,29 @@
+html,body {
+    margin: 0;
+    min-height: 100%;
+    background: #02030c;
+    overflow: hidden;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    
+}
+
+.sketch-stage {
+    display: flex;
+    justify-content: center;
+    padding: 28px;
+    min-height: 456px;
+    background: rgba(16, 12, 47, .72);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    box-shadow: var(--shadow);
+}
+
+.sketch-stage canvas {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+}
