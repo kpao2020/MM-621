@@ -10,7 +10,7 @@ const MAX_STARS = 3;            // Max number of stars during game play.
 let nextStarId = 0;             // Unique ID for each star to prevent repeated scoring.
 
 // Star image and matter body
-const STAR_FILE = "../../images/star.png";
+const STAR_FILE = "../../assets/images/star.png";
 let starImg;
 let starBodies = [];
 

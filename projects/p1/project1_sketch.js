@@ -67,13 +67,13 @@ let shipScaredUntil = 0;        // Hold time in millis when spaceship hit astero
 // ============================================================
 
 const BG_FILES = [
-  "../../images/bg1.jpg",
-  "../../images/bg2.jpg",
-  "../../images/bg3.jpg"
+  "../../assets/images/bg1.jpg",
+  "../../assets/images/bg2.jpg",
+  "../../assets/images/bg3.jpg"
 ];
 
-const LOGO_FILE = "../../images/spacetravel_logo.png";
-const ICON_FILE = "../../images/spaceship_icon.png";
+const LOGO_FILE = "../../assets/images/spacetravel_logo.png";
+const ICON_FILE = "../../assets/images/spaceship_icon.png";
 
 // ============================================================
 // IMAGE VARIABLES

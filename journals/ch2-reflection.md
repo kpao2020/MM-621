@@ -18,7 +18,7 @@ Norman states the designer's primary job around these gaps:
 
 Norman used his example of opening a filing cabinet to illustrate a failed design on an everyday product, how the visible elements of the filing cabinet applied to Gulf of Execution and how the failed opening actions with no signifiers implied to the Gulf of Evaluation. I especially like the simple figure 2.1 to present the relationship between the two gulfs.
 
-![Figure 2.1 The Gulf of Execution and Evaluation](../images/fig2-1.png)
+![Figure 2.1 The Gulf of Execution and Evaluation](../assets/images/fig2-1.png)
 
 
 #### The Seven Stages of Action and Root-Cause Thinking
@@ -27,7 +27,7 @@ To further explain how designers can bridge the two gulfs, Norman breaks human b
 
 Norman visually maps this process in figure 2.2.
 
-![Figure 2.2 The Seven Stages of the Action Cycle.](../images/fig2-2.png)
+![Figure 2.2 The Seven Stages of the Action Cycle.](../assets/images/fig2-2.png)
 
 
 What struck me most was how Norman used a goal of turning on a light to reverse-trace back to his ultimate goal of satisfying hunger, developing a hierarchy of five subgoals. And this is what he called - root cause analysis, keep asking "why" until the ultimate.
@@ -43,7 +43,7 @@ Norman details how cognition and emotion work across three levels: Visceral (imm
 
 I noticed this dynamic clearly when using a modern digital temperature-control kettle:
 
-![A picture of a digital temperature-control kettle](../images/kettle_400.jpg)
+![A picture of a digital temperature-control kettle](../assets/images/kettle_400.jpg)
 
 *   Visceral: The sleek matte finish, a clear glass pot, and bright digital display look high-end and inviting on the counter.
 *   Behavioral: Muscle memory expects a quick push or simple switch to start boiling water immediately. Instead, the kettle requires turning the power on, selecting a temperature for a specific type of tea, and then pressing the start/stop button again.

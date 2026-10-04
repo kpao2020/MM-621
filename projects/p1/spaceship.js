@@ -6,7 +6,7 @@ const SHIP_SIZE = 80;           // Matter collision diameter for the spaceship.
 const SHIP_MAX_SPEED = 10;      // Max spaceship speed.
 
 // Spaceship image and matter body
-const SHIP_FILE = "../../images/spaceship.png";
+const SHIP_FILE = "../../assets/images/spaceship.png";
 let shipImg;                    // In-game spacespace image
 let shipBody;                   // In-game matter spacespace body
 let healthLeft = SHIP_HEALTH;   // In-game spaceship current health
