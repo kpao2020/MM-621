@@ -26,7 +26,7 @@ let currentIndex = 0;
 // ============================================================
 // IMAGES VARIABLES
 // ============================================================
-const BG_FILE = '../../images/worldmap.png';
+const BG_FILE = '../../assets/images/worldmap.png';
 let bgImg;
 let assetLoadError = '';
 

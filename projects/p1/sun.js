@@ -6,7 +6,7 @@ const SUN_RADIUS = 65;          // Constant sun collision radius.
 let nextSunSpawnTime = 0;       // Time in millis when the next sun should spawn.
 
 // Sun image and matter body
-const SUN_FILE = "../../images/sun.png";
+const SUN_FILE = "../../assets/images/sun.png";
 let sunImg;
 let sunBody;
 

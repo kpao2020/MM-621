@@ -9,7 +9,7 @@ title: Project 1 Readme
 
 # Space Travel:
 <p align="center">
-  [ <a href="https://kpao2020.github.io/MM-621/projects/p1/project1.html">Click Here to Play</a> ]
+  [ <a href="https://kpao2020.github.io/MM-621/projects/p1/index.html">Click Here to Play</a> ]
 </p> 
 
 ---
@@ -54,7 +54,7 @@ The game uses p5.js for rendering graphics and Matter.js for physics simulation.
   - sparkles.js           - explosion animation
   - stars.js              - all codes related to stars
   - sun.js                - all codes related to sun
-  - project1.html         - game host webpage
+  - index.html            - game host webpage
   - project1_style.css    - css style for game host webpage
   - project1_lo-fi_wireframe.fig      - actual figma file for project 1
   - project1_wireframe.png            - project 1 wireframe picture

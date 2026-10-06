@@ -12,8 +12,8 @@ let maxAsteroids;               // Max number of Asteroids on play screen
 
 // Asteroids images and matter body
 const ASTEROID_FILES = [
-  "../../images/asteroid1.png",
-  "../../images/asteroid2.png"
+  "../../assets/images/asteroid1.png",
+  "../../assets/images/asteroid2.png"
 ];
 
 let asteroidImgs = [];

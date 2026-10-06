@@ -7,9 +7,9 @@ let nextPlanetSpawnTime = 0;    // Time in millis when the next planet should sp
 
 // Planets images and matter body
 const PLANET_FILES = [
-  "../../images/planet1.png",
-  "../../images/planet2.png",
-  "../../images/planet3.png"
+  "../../assets/images/planet1.png",
+  "../../assets/images/planet2.png",
+  "../../assets/images/planet3.png"
 ];
 
 let planetImgs = [];            // Planets images array
