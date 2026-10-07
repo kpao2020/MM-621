@@ -22,6 +22,8 @@
 // ============================================================
 let earthquakes;
 let currentIndex = 0;
+let mapLayer;
+let ripples = [];  // Array to hold ripple effects for earthquakes
 
 // ============================================================
 // IMAGES VARIABLES
@@ -76,14 +78,17 @@ async function setup() {
   const WH = WW * bgImg.height / bgImg.width;
   resizeCanvas(WW, WH);
 
-  // Draw background worldmap.
-  image(bgImg, 0, 0, width, height);
+  // Create a separate layer for the map and permanent earthquake dots.
+  mapLayer = createGraphics(width, height);
+
+  // Draw the map onto the separate layer
+  mapLayer.image(bgImg, 0, 0, width, height);
 
   // Load earthquake data from USGS GeoJSON feed for magnitude 2.5+ earthquakes in past 30 days.
   // Why 2.5+? Because 2.5 is a common threshold for earthquakes that are felt by people and 
   // can cause minor damage. If I skip 2.5, the next level is 4.5 which is slightly too high 
   // and would result in very few earthquakes being showed.
-  let URL = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_month.geojson';
+  const URL = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_month.geojson';
 
   // Use fetch is better than loadJSON because it allows for error handling and async/await syntax.
   try {
@@ -103,6 +108,11 @@ async function setup() {
 // p5.js DRAW
 // ============================================================
 function draw() {
+
+  // If the earthquake data is not loaded yet, skip drawing.
+  if (!earthquakes) {
+    return;
+  }
 
   // Use If statement is better than For loop because it lets each earthquake draw in a 
   // separate frame, creating a more dynamic visualization effect. Using for loop
@@ -130,23 +140,143 @@ function draw() {
 
     // Map longitude (-180 to 180) to the canvas width (0 to width)
     // The image has a small horizontal margin around the visible map.
-    let x = map(lon, -180, 180, 0.05 * width, 0.95 * width);
+    let x = map(lon, -180, 180, 0.024 * width, 0.967 * width);
     
     // Map latitude (90 to -90) to canvas height 
     // Invert (90 to -90 instead of -90 to 90) because p5's Y-axis direction
     // The image has larger top/bottom margins than a geographic map.
-    let y = map(lat, 90, -90, 0.17 * height, 0.90 * height);
+    let y = map(lat, 90, -90, 0.167 * height, 0.891 * height);
     
-    // Map the earthquake magnitude to the visual radius of our circle
-    let radius = map(mag, 2.5, 8.0, 2, 40);
+    // Map the earthquake magnitude to the visual diameter of our circle.
+    let diameter = map(
+      constrain(mag, 2.5, 8.0),   // constrain the magnitude to the range of 2.5 to 8.0
+                                  // so magnitudes outside this range will not distort 
+                                  // the visual representation.
+      2.5, 
+      8.0, 
+      4, 
+      40
+    );
     
-    // Draw the earthquake dot
-    noStroke();
-    fill(255, 80, 100, 150); // Glowing, semi-transparent red
-    circle(x, y, radius);
+    let dotColor = getEarthquakeColor(mag); // Get color based on magnitude
+
+    // Permanently add this earthquake to the map layer
+    mapLayer.noStroke();
+    mapLayer.fill(dotColor);
+    mapLayer.circle(x, y, diameter);
+
+    // Start a ripple for this earthquake
+    ripples.push({
+      x: x,
+      y: y,
+      diameter: diameter,
+      color: dotColor,
+      startFrame: frameCount
+    });
 
     currentIndex++; // Move to the next earthquake for the next frame
-  } else {
-    noLoop(); // Stop the draw loop when all earthquakes have been drawn
+  } 
+  
+  // Draw the map layer with all permanent earthquake dots
+  image(mapLayer, 0, 0);
+
+  // Draw and animate the ripples
+  drawRipples();
+
+  // Stop only after every earthquake and ripple are finished
+  if (
+    currentIndex >= earthquakes.length &&
+    ripples.length === 0
+  ) {
+    noLoop();
+  }
+}
+
+// ============================================================
+// GET EARTHQUAKE COLOR
+// - Based on magnitude, use lerpColor() to interpolate between 
+//   two colors (yellow for small, red for large).
+// ============================================================
+function getEarthquakeColor(magnitude) {
+  let amount = map(magnitude, 2.5, 8.0, 0, 1, true);
+
+  let smallColor = color(255, 230, 80, 180); // yellow
+  let largeColor = color(255, 40, 40, 220);   // red
+
+  return lerpColor(smallColor, largeColor, amount);
+}
+
+// ============================================================
+// DRAW EARTHQUAKE DOTS WITH RIPPLE EFFECT
+// - Draw a circle for the earthquake with a ripple effect
+// ============================================================
+function drawEarthquakeDots(x, y, diameter, dotColor, index) {
+  // Draw the earthquake center
+  noStroke();
+  fill(dotColor);
+  circle(x, y, diameter);
+
+  // Create a repeating ripple
+  let rippleSize = (frameCount * 2 + index * 15) % 60;
+  let rippleAlpha = map(rippleSize, 0, 60, 150, 0);
+
+  let rippleColor = color(
+    red(dotColor),
+    green(dotColor),
+    blue(dotColor),
+    rippleAlpha
+  );
+
+  noFill();
+  stroke(rippleColor);
+  strokeWeight(2);
+  circle(x, y, diameter + rippleSize);
+}
+
+// ============================================================
+// DRAW RIPPLE EFFECT
+// ============================================================
+function drawRipples() {
+  // Draw and animate the ripples
+  for (let i = ripples.length - 1; i >= 0; i--) {
+    let ripple = ripples[i];
+    let age = frameCount - ripple.startFrame;
+    let rippleDuration = 45;
+
+    if (age > rippleDuration) {
+      ripples.splice(i, 1);
+      continue;
+    }
+
+    let rippleDiameter = map(
+      age,
+      0,
+      rippleDuration,
+      ripple.diameter,
+      ripple.diameter + 60
+    );
+
+    let rippleAlpha = map(
+      age,
+      0,
+      rippleDuration,
+      150,
+      0
+    );
+
+    noFill();
+    stroke(
+      red(ripple.color),
+      green(ripple.color),
+      blue(ripple.color),
+      rippleAlpha
+    );
+    strokeWeight(2);
+
+    circle(
+      ripple.x,
+      ripple.y,
+      rippleDiameter
+    );
   }
 }
