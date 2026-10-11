@@ -3,7 +3,7 @@ let flower;
 async function setup() {
   createCanvas(500, 500);
 
-  flower = await loadJSON("flower.json");
+  flower = await loadJSON("../../assets/data/flower.json");
 }
 
 function draw() {

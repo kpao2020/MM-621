@@ -20,10 +20,11 @@
 // ============================================================
 // GLOBAL VARIABLES
 // ============================================================
-let earthquakes;
-let currentIndex = 0;
-let mapLayer;
-let ripples = [];  // Array to hold ripple effects for earthquakes
+let earthquakes;            // Array to hold earthquake data from USGS GeoJSON API
+let currentIndex = 0;       // Index to track the current earthquake being processed for animation
+let mapLayer;               // Separate map layer for the world map and permanent earthquake dots
+let ripples = [];           // Array to hold ripple effects for earthquakes
+let earthquakePoints = [];  // Array to hold earthquake positions for hover interaction
 
 // ============================================================
 // IMAGES VARIABLES
@@ -34,6 +35,9 @@ let assetLoadError = '';
 
 // ============================================================
 // ASSETS LOADING
+// - Load images and handle errors for missing files. 
+//   If an image fails to load, sketch.js will stop and display
+//   an error message.
 // ============================================================
 async function loadOptionalImage(path, label) {
   try {
@@ -160,6 +164,17 @@ function draw() {
     
     let dotColor = getEarthquakeColor(mag); // Get color based on magnitude
 
+    // Save the earthquake data and screen position for the hover interaction.
+    earthquakePoints.push({
+      x: x,
+      y: y,
+      diameter: diameter,
+      place: currentEarthquake.properties.place || 'Unknown location',
+      latitude: lat,
+      longitude: lon,
+      magnitude: mag
+    });
+
     // Permanently add this earthquake to the map layer
     mapLayer.noStroke();
     mapLayer.fill(dotColor);
@@ -183,6 +198,9 @@ function draw() {
   // Draw and animate the ripples
   drawRipples();
 
+  // Draw the information box above the map when the mouse is over an earthquake.
+  drawEarthquakeTooltip();
+
   // Stop only after every earthquake and ripple are finished
   if (
     currentIndex >= earthquakes.length &&
@@ -190,6 +208,80 @@ function draw() {
   ) {
     noLoop();
   }
+}
+
+// ============================================================
+// MOUSE HOVER INTERACTION
+// - Redraw the canvas while the mouse moves so the tooltip works after noLoop().
+// ============================================================
+function mouseMoved() {
+  if (earthquakes) {
+    redraw();
+  }
+
+  return false;
+}
+
+// ============================================================
+// DRAW EARTHQUAKE TOOLTIP
+// - Show the place, coordinates, and magnitude for the nearest earthquake.
+// ============================================================
+function drawEarthquakeTooltip() {
+  let hoveredEarthquake = getHoveredEarthquake();
+
+  if (!hoveredEarthquake) {
+    return;
+  }
+
+  const TOOLTIP_WIDTH = 220;
+  const TOOLTIP_HEIGHT = 112;
+  const TOOLTIP_MARGIN = 14;
+  let tooltipX = mouseX + TOOLTIP_MARGIN;
+  let tooltipY = mouseY + TOOLTIP_MARGIN;
+
+  // Keep the tooltip inside the canvas when the mouse is near an edge.
+  if (tooltipX + TOOLTIP_WIDTH > width) {
+    tooltipX = mouseX - TOOLTIP_WIDTH - TOOLTIP_MARGIN;
+  }
+
+  if (tooltipY + TOOLTIP_HEIGHT > height) {
+    tooltipY = mouseY - TOOLTIP_HEIGHT - TOOLTIP_MARGIN;
+  }
+
+  push();
+  noStroke();
+  fill(20, 24, 55, 235);
+  rect(tooltipX, tooltipY, TOOLTIP_WIDTH, TOOLTIP_HEIGHT, 8);
+
+  fill('#ffffff');
+  textAlign(LEFT, TOP);
+  textSize(13);
+  text(`City / country: ${hoveredEarthquake.place}`, tooltipX + 12, tooltipY + 10, TOOLTIP_WIDTH - 24, 34);
+  text(`Latitude: ${hoveredEarthquake.latitude.toFixed(3)}`, tooltipX + 12, tooltipY + 48);
+  text(`Longitude: ${hoveredEarthquake.longitude.toFixed(3)}`, tooltipX + 12, tooltipY + 65);
+  text(`Magnitude: ${hoveredEarthquake.magnitude.toFixed(1)}`, tooltipX + 12, tooltipY + 82);
+  pop();
+}
+
+// ============================================================
+// FIND HOVERED EARTHQUAKE
+// - Return the earthquake point closest to the mouse cursor.
+// ============================================================
+function getHoveredEarthquake() {
+  let closestEarthquake = null;
+  let closestDistance = Infinity;
+
+  for (let earthquake of earthquakePoints) {
+    let distanceToMouse = dist(mouseX, mouseY, earthquake.x, earthquake.y);
+    let hoverRadius = Math.max(earthquake.diameter / 2 + 6, 10);
+
+    if (distanceToMouse <= hoverRadius && distanceToMouse < closestDistance) {
+      closestEarthquake = earthquake;
+      closestDistance = distanceToMouse;
+    }
+  }
+
+  return closestEarthquake;
 }
 
 // ============================================================
