@@ -11,6 +11,7 @@ body {
 }
 
 .sketch-stage {
+    position: relative;
     display: flex;
     justify-content: center;
     padding: 28px;
@@ -26,4 +27,21 @@ body {
     max-width: 100%;
     height: auto;
     border-radius: 12px;
+}
+
+.reset-zoom {
+    position: absolute;
+    top: 40px;
+    right: 40px;
+    z-index: 2;
+    padding: 8px 12px;
+    color: #ffffff;
+    background: rgba(20, 24, 55, .9);
+    border: 1px solid rgba(255, 255, 255, .35);
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+.reset-zoom:hover {
+    background: rgba(44, 50, 96, .95);
 }

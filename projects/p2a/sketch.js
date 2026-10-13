@@ -22,9 +22,16 @@
 // ============================================================
 let earthquakes;            // Array to hold earthquake data from USGS GeoJSON API
 let currentIndex = 0;       // Index to track the current earthquake being processed for animation
-let mapLayer;               // Separate map layer for the world map and permanent earthquake dots
+let mapLayer;               // Separate map layer for the world map background
 let ripples = [];           // Array to hold ripple effects for earthquakes
 let earthquakePoints = [];  // Array to hold earthquake positions for hover interaction
+let zoomLevel = 1;          // Current map zoom level
+let zoomOffsetX = 0;        // Offset used for cursor-centered zoom
+let zoomOffsetY = 0;
+
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 8;
+const ZOOM_STEP = 1.15;
 
 // ============================================================
 // IMAGES VARIABLES
@@ -87,6 +94,9 @@ async function setup() {
 
   // Draw the map onto the separate layer
   mapLayer.image(bgImg, 0, 0, width, height);
+
+  // Connect the corner control after the canvas has been created.
+  document.getElementById('reset-zoom').addEventListener('click', resetZoom);
 
   // Load earthquake data from USGS GeoJSON feed for magnitude 2.5+ earthquakes in past 30 days.
   // Why 2.5+? Because 2.5 is a common threshold for earthquakes that are felt by people and 
@@ -169,16 +179,12 @@ function draw() {
       x: x,
       y: y,
       diameter: diameter,
+      color: dotColor,
       place: currentEarthquake.properties.place || 'Unknown location',
       latitude: lat,
       longitude: lon,
       magnitude: mag
     });
-
-    // Permanently add this earthquake to the map layer
-    mapLayer.noStroke();
-    mapLayer.fill(dotColor);
-    mapLayer.circle(x, y, diameter);
 
     // Start a ripple for this earthquake
     ripples.push({
@@ -192,10 +198,13 @@ function draw() {
     currentIndex++; // Move to the next earthquake for the next frame
   } 
   
-  // Draw the map layer with all permanent earthquake dots
-  image(mapLayer, 0, 0);
-
-  // Draw and animate the ripples
+  // Draw the map, dots, and ripples with the same explicit coordinate
+  // conversion so they stay aligned at every zoom level.
+  background('#02030c');
+  const mapLeft = width / 2 + zoomOffsetX - (width * zoomLevel) / 2;
+  const mapTop = height / 2 + zoomOffsetY - (height * zoomLevel) / 2;
+  image(mapLayer, mapLeft, mapTop, width * zoomLevel, height * zoomLevel);
+  drawEarthquakePoints();
   drawRipples();
 
   // Draw the information box above the map when the mouse is over an earthquake.
@@ -220,6 +229,51 @@ function mouseMoved() {
   }
 
   return false;
+}
+
+// ============================================================
+// ZOOM INTERACTION
+// - Zoom toward the cursor while preserving the map point under it.
+// ============================================================
+function mouseWheel(event) {
+  if (!earthquakes || !isMouseOverCanvas()) {
+    return true;
+  }
+
+  const previousZoom = zoomLevel;
+  const zoomMultiplier = event.deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP;
+  zoomLevel = constrain(zoomLevel * zoomMultiplier, MIN_ZOOM, MAX_ZOOM);
+
+  if (zoomLevel !== previousZoom) {
+    const mapX = (mouseX - width / 2 - zoomOffsetX) / previousZoom + width / 2;
+    const mapY = (mouseY - height / 2 - zoomOffsetY) / previousZoom + height / 2;
+
+    zoomOffsetX = mouseX - width / 2 - (mapX - width / 2) * zoomLevel;
+    zoomOffsetY = mouseY - height / 2 - (mapY - height / 2) * zoomLevel;
+    redraw();
+  }
+
+  // Prevent the page from scrolling while the cursor is over the canvas.
+  return false;
+}
+
+function resetZoom() {
+  zoomLevel = 1;
+  zoomOffsetX = 0;
+  zoomOffsetY = 0;
+  redraw();
+}
+
+function isMouseOverCanvas() {
+  return mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height;
+}
+
+function worldToScreenX(worldX) {
+  return width / 2 + zoomOffsetX + (worldX - width / 2) * zoomLevel;
+}
+
+function worldToScreenY(worldY) {
+  return height / 2 + zoomOffsetY + (worldY - height / 2) * zoomLevel;
 }
 
 // ============================================================
@@ -271,8 +325,12 @@ function getHoveredEarthquake() {
   let closestEarthquake = null;
   let closestDistance = Infinity;
 
+  // Convert the screen-space cursor back into map-layer coordinates.
+  const mapMouseX = (mouseX - width / 2 - zoomOffsetX) / zoomLevel + width / 2;
+  const mapMouseY = (mouseY - height / 2 - zoomOffsetY) / zoomLevel + height / 2;
+
   for (let earthquake of earthquakePoints) {
-    let distanceToMouse = dist(mouseX, mouseY, earthquake.x, earthquake.y);
+    let distanceToMouse = dist(mapMouseX, mapMouseY, earthquake.x, earthquake.y);
     let hoverRadius = Math.max(earthquake.diameter / 2 + 6, 10);
 
     if (distanceToMouse <= hoverRadius && distanceToMouse < closestDistance) {
@@ -299,30 +357,21 @@ function getEarthquakeColor(magnitude) {
 }
 
 // ============================================================
-// DRAW EARTHQUAKE DOTS WITH RIPPLE EFFECT
-// - Draw a circle for the earthquake with a ripple effect
+// DRAW EARTHQUAKE POINTS
+// - Redraw all earthquake dots in the same transformed coordinate system
+//   as the map and ripples.
 // ============================================================
-function drawEarthquakeDots(x, y, diameter, dotColor, index) {
-  // Draw the earthquake center
+function drawEarthquakePoints() {
   noStroke();
-  fill(dotColor);
-  circle(x, y, diameter);
 
-  // Create a repeating ripple
-  let rippleSize = (frameCount * 2 + index * 15) % 60;
-  let rippleAlpha = map(rippleSize, 0, 60, 150, 0);
-
-  let rippleColor = color(
-    red(dotColor),
-    green(dotColor),
-    blue(dotColor),
-    rippleAlpha
-  );
-
-  noFill();
-  stroke(rippleColor);
-  strokeWeight(2);
-  circle(x, y, diameter + rippleSize);
+  for (let earthquake of earthquakePoints) {
+    fill(earthquake.color);
+    circle(
+      worldToScreenX(earthquake.x),
+      worldToScreenY(earthquake.y),
+      earthquake.diameter * zoomLevel
+    );
+  }
 }
 
 // ============================================================
@@ -366,9 +415,9 @@ function drawRipples() {
     strokeWeight(2);
 
     circle(
-      ripple.x,
-      ripple.y,
-      rippleDiameter
+      worldToScreenX(ripple.x),
+      worldToScreenY(ripple.y),
+      rippleDiameter * zoomLevel
     );
   }
 }
