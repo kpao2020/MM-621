@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Chapter 4 Self Reflection — Knowing What to Do: Constraints, Discoverability, and Feedback - Part 1 (pages 123–141)
+title: Chapter 4 Self Reflection — Knowing What to Do\: Constraints, Discoverability, and Feedback - Part 1 (pages 123–141)
 ---
 
 # Chapter 4 Self Reflection — **Knowing What to Do: Constraints, Discoverability, and Feedback**
