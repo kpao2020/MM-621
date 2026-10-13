@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Chapter 2 Self Reflection — The Psychology of Everyday Actions
+title: "Chapter 2 Self Reflection — The Psychology of Everyday Actions"
 ---
 
 # Chapter 2 Self Reflection — **The Psychology of Everyday Actions**
