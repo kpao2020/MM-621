@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Chapter 1 Self Reflection — The Psychopathology of Everyday Things
+title: "Chapter 1 Self Reflection — The Psychopathology of Everyday Things"
 ---
 
 # Chapter 1 Self Reflection — **The Psychopathology of Everyday Things**
