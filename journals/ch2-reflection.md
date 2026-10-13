@@ -1,9 +1,9 @@
 ---
 layout: default
-title: Chapter 2 Self Reflection — The Design of Everyday Things
+title: Chapter 2 Self Reflection — The Psychology of Everyday Actions
 ---
 
-# Chapter 2 Self Reflection — **The Design of Everyday Things**
+# Chapter 2 Self Reflection — **The Psychology of Everyday Actions**
 
 **Key point:** When an interface leaves someone confused or frustrated, the failure lies in the system's communication, not in the user's intelligence.
 

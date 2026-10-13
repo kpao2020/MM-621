@@ -1,9 +1,9 @@
 ---
 layout: default
-title: Chapter 1 Self Reflection — The Design of Everyday Things
+title: Chapter 1 Self Reflection — The Psychopathology of Everyday Things
 ---
 
-# Chapter 1 Self Reflection — **The Design of Everyday Things**
+# Chapter 1 Self Reflection — **The Psychopathology of Everyday Things**
 
 **The golden rule:** When people have trouble using something, it's almost always a design flaw — not a user error.
 
