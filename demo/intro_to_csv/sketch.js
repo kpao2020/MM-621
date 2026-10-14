@@ -1,3 +1,4 @@
+// instructions
 // https://docs.google.com/document/d/1FWJBvbCRL1pr6PqKjEz_af5YIGUKKbokheJSW9bFLWI/edit?tab=t.0#heading=h.9iipw3mwlh63
 
 // ken-pao-food.csv
@@ -19,7 +20,7 @@ function draw() {
 
   if (data) {
     let numRows = data.getRowCount();
-    let carbs = data.getColumn("Sodium");
+    let carbs = data.getColumn("Carbs");
     let names = data.getColumn("Food");
 
     for (let i = 0; i < numRows; i++) {
@@ -35,7 +36,7 @@ function draw() {
       text(names[i], x, y - 5);
 
       textAlign(CENTER);
-      text("Sodium", width / 2, 50);
+      text("Carbs", width / 2, 50);
     }
   }
 }
