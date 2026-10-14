@@ -9,15 +9,18 @@ let nutriSelector;
 let table;
 let selectedNutri;
 let nutriNames;
+let canvasElement;
 
 async function setup() {
 
-  createCanvas(windowWidth * 0.8, windowHeight * 0.8);
+  canvasElement = createCanvas(windowWidth * 0.8, windowHeight * 0.8);
+  canvasElement.parent('sketch-stage');
 
   // Initialize nutrition selector
   nutriSelector = createSelect();
-  nutriSelector.position(140, 20);
+  nutriSelector.parent('sketch-stage');
   nutriSelector.option('Select a nutrition...');
+  positionNutritionSelector();
 
   // Load the CSV file with a header row
   table = await loadTable(csvUrl, ',', 'header');
@@ -140,4 +143,22 @@ function onNutriSelected() {
     .filter((item) => item.food && Number.isFinite(item.value));
 
   selectedNutri.name = columnName;
+}
+
+function positionNutritionSelector() {
+  const canvasRect = canvasElement.elt.getBoundingClientRect();
+  const stageRect = document
+    .getElementById('sketch-stage')
+    .getBoundingClientRect();
+
+  // Position the DOM select relative to the centered canvas.
+  nutriSelector.position(
+    canvasRect.left - stageRect.left + 200,
+    canvasRect.top - stageRect.top + 20
+  );
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth * 0.8, windowHeight * 0.8);
+  positionNutritionSelector();
 }
