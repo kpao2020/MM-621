@@ -13,6 +13,8 @@ The first part of Chapter 4 explains how designers can guide people through unfa
 
 #### Four Kinds of Constraints
 
+![2 lego pictures, A is complete build, B is break-down 15 pieces.](../assets/images/ch4_lego.png)
+
 Norman begins with the example of building a Lego motorcycle. The fifteen pieces do not need detailed instructions because several kinds of constraints help determine where each piece belongs. Physical constraints limit which pieces can fit together. Cultural constraints help people understand the meaning of colors and familiar objects. Semantic constraints use the meaning of the situation, such as knowing that a rider should face forward. Logical constraints help when only one possible piece remains.
 
 Norman summarizes the value of constraints this way:
