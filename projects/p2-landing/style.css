@@ -213,6 +213,30 @@ h2 {
   text-decoration: none;
 }
 
+/* Put Ken's project and source links in two balanced columns. */
+.card-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+  align-items: center;
+  gap: .75rem;
+  width: 100%;
+  margin-top: auto;
+}
+
+.card-actions .card-link {
+  justify-content: center;
+  margin-top: 0;
+  text-align: center;
+  white-space: nowrap;
+  font-size: clamp(.78rem, 1.3vw, .95rem);
+}
+
+.card-divider {
+  width: 1px;
+  height: 1.5rem;
+  background: rgb(255 255 255 / 24%);
+}
+
 .partner .card-link { color: var(--lilac); }
 .card-link span { transition: transform 180ms ease; }
 .card-link:hover span { transform: translateX(4px); }
@@ -238,6 +262,8 @@ footer {
   .intro-row { gap: .75rem; }
   .version-grid { grid-template-columns: 1fr; }
   .version-card { min-height: 220px; }
+  .card-actions { gap: .5rem; }
+  .card-actions .card-link { font-size: .78rem; }
 }
 
 /* Respect visitors who ask their device to reduce motion. */
