@@ -1,7 +1,7 @@
 /*
   Name: Ken Pao
   Class: MM-621
-  Project 2B:
+  Project 2:
 
   Description:
     A live Hayward weather dashboard using the free NOAA National Weather
