@@ -4,11 +4,12 @@
 
   Description:
     - Draws a ghost that eases toward the mouse pointer.
-    - Shows a brief Boo effect and plays a synthesized creak when a card is clicked.
+    - Shows a brief Boo effect and plays an MP3 when a card is clicked.
 
   References:
     - P5.js: https://p5js.org/reference/
-    - Web Audio API: https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API
+    - Pixabay sound MP3 files: https://pixabay.com/sound-effects/
+    - HTMLAudioElement: https://developer.mozilla.org/en-US/docs/Web/API/HTMLAudioElement
     - OpenAI ChatGPT for code assistance and optimization suggestions.
 
   Code Origin:
@@ -22,8 +23,15 @@
 let ghostX = 0;
 let ghostY = 0;
 let booUntil = 0;
+
+// The click handler in sketch.js changes this to a random spooky emoji.
 let booEmoji = '🎃';
-let spookyAudioContext = null;
+let spookySounds = [];
+let nextSpookySound = 0;
+const SPOOKY_SOUND_FILES = [
+  '../../assets/sounds/boo-and-laugh.mp3',
+  '../../assets/sounds/halloween-horror-laughter.mp3'
+];
 
 // ============================================================
 // DRAW FLOATING GHOST
@@ -82,40 +90,29 @@ function drawBooEffect() {
 }
 
 // ============================================================
-// PLAY CREEPY CREAK
-// - Synthesize a short descending creak on a user click without an audio file.
+// SET UP SPOOKY SOUNDS
+// - Load the two local MP3 files so a card click can play one immediately.
 // ============================================================
-async function playCreak() {
-  const AUDIO_CONTEXT_CLASS = window.AudioContext || window.webkitAudioContext;
-  if (!AUDIO_CONTEXT_CLASS) return;
-  try {
-    // Resume the context from this click gesture before scheduling any sound.
-    if (!spookyAudioContext) spookyAudioContext = new AUDIO_CONTEXT_CLASS();
-    if (spookyAudioContext.state === 'suspended') await spookyAudioContext.resume();
-    const CONTEXT = spookyAudioContext;
-    if (CONTEXT.state !== 'running') return;
+function setupSpookySounds() {
+  spookySounds = SPOOKY_SOUND_FILES.map((FILE_PATH) => {
+    const SOUND = new Audio(FILE_PATH);
+    SOUND.preload = 'auto';
+    SOUND.load();
+    return SOUND;
+  });
+}
 
-    const OSCILLATOR = CONTEXT.createOscillator();
-    const GAIN = CONTEXT.createGain();
-    const FILTER = CONTEXT.createBiquadFilter();
-    const NOW = CONTEXT.currentTime;
+// ============================================================
+// PLAY SPOOKY SOUND
+// - Alternate between the two local MP3s when a weather card is clicked.
+// ============================================================
+function playSpookySound() {
+  if (spookySounds.length === 0) setupSpookySounds();
 
-    OSCILLATOR.type = 'sawtooth';
-    OSCILLATOR.frequency.setValueAtTime(420, NOW);
-    OSCILLATOR.frequency.exponentialRampToValueAtTime(125, NOW + 0.42);
-    FILTER.type = 'lowpass';
-    FILTER.frequency.setValueAtTime(1100, NOW);
-    FILTER.frequency.exponentialRampToValueAtTime(380, NOW + 0.42);
-    GAIN.gain.setValueAtTime(0.0001, NOW);
-    GAIN.gain.exponentialRampToValueAtTime(0.055, NOW + 0.035);
-    GAIN.gain.exponentialRampToValueAtTime(0.0001, NOW + 0.45);
-
-    OSCILLATOR.connect(FILTER);
-    FILTER.connect(GAIN);
-    GAIN.connect(CONTEXT.destination);
-    OSCILLATOR.start(NOW);
-    OSCILLATOR.stop(NOW + 0.46);
-  } catch (error) {
+  const SOUND = spookySounds[nextSpookySound];
+  nextSpookySound = (nextSpookySound + 1) % spookySounds.length;
+  SOUND.currentTime = 0;
+  SOUND.play().catch((error) => {
     console.warn('The spooky sound could not be played:', error.message);
-  }
+  });
 }

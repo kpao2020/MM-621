@@ -19,6 +19,7 @@
     - Sunrise/Sunset API for calculating day/night transitions: https://sunrise-sunset.org/api
     - NOAA National Weather Service API
     - Adobe Stock Images for background and iconography
+    - Sound effects from Pixabay: https://pixabay.com/sound-effects/
 
   References:
     - P5.js: https://p5js.org/reference/
@@ -63,6 +64,7 @@ async function setup() {
   const WW = Math.min(0.92 * windowWidth, 1160);
   createCanvas(WW, Math.max(690, WW * 0.67)).parent('sketch-stage');
   rectMode(CENTER);
+  setupSpookySounds();
 
   // Create the ambient animated particles before the data arrives.
   createWeatherParticles();
@@ -840,7 +842,7 @@ function mousePressed() {
       activeMetric = Number(card.index);
       booEmoji = ['🎃', '🦇', '🕷️'][floor(random(3))];
       booUntil = millis() + 1000;
-      playCreak();
+      playSpookySound();
       loop();
       return false;
     }
