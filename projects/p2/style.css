@@ -13,6 +13,8 @@ body {
 .sketch-stage {
     display: flex;
     justify-content: center;
+    box-sizing: border-box;
+    width: 100%;
     padding: 28px;
     min-height: 720px;
     background:
@@ -26,5 +28,18 @@ body {
     max-width: 100%;
     height: auto;
     border-radius: 28px;
-    box-shadow: 0 24px 80px rgba(0, 0, 0, .35);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, .35); /* rgba(r,g,b,a) */
+}
+
+@media (max-width: 600px) {
+    .sketch-stage {
+        justify-content: flex-start;
+        padding: 12px;
+        min-height: 0;
+    }
+
+    .sketch-stage canvas {
+        border-radius: 18px;
+        box-shadow: 0 14px 40px rgba(0, 0, 0, .32);
+    }
 }

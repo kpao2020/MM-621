@@ -61,8 +61,8 @@ let selectedLocation = BAY_AREA_LOCATIONS[0];
 // ============================================================
 async function setup() {
   // Create a responsive canvas for the dashboard.
-  const WW = Math.min(0.92 * windowWidth, 1160);
-  createCanvas(WW, Math.max(690, WW * 0.67)).parent('sketch-stage');
+  const WW = getDashboardWidth();
+  createCanvas(WW, getDashboardHeight(WW)).parent('sketch-stage');
   rectMode(CENTER);
   setupSpookySounds();
 
@@ -78,6 +78,28 @@ async function setup() {
 
   // Refresh the sun schedule twice an hour so Auto mode stays current overnight.
   setInterval(loadSunTimes, 30 * 60 * 1000);
+}
+
+// ============================================================
+// RESIZE CANVAS
+// - Keep p5's drawing coordinates in step with the available browser width.
+// ============================================================
+function getDashboardWidth() {
+  const SIDE_SPACE = windowWidth < 600 ? 24 : 56;
+  return Math.min(1160, Math.max(280, windowWidth - SIDE_SPACE));
+}
+
+function getDashboardHeight(canvasWidth) {
+  const COMPACT_HEIGHT = canvasWidth < 760 ? 760 : 690;
+  return Math.max(COMPACT_HEIGHT, canvasWidth * 0.67);
+}
+
+function windowResized() {
+  const NEW_WIDTH = getDashboardWidth();
+  resizeCanvas(NEW_WIDTH, getDashboardHeight(NEW_WIDTH));
+  particles = [];
+  createWeatherParticles();
+  loop();
 }
 
 // ============================================================
@@ -114,10 +136,11 @@ function draw() {
 // - Click the tiny sun/moon pill to switch between Auto and Manual mode.
 // ============================================================
 function drawSkyToggle() {
+  const IS_NARROW = width < 560;
   // Keep the day/night mode switch in the upper-right corner.
-  const TOGGLE_WIDTH = min(128, width - 64);
-  const TOGGLE_X = width - TOGGLE_WIDTH - 32;
-  const TOGGLE_Y = 73;
+  const TOGGLE_WIDTH = min(128, width - (IS_NARROW ? 40 : 64));
+  const TOGGLE_X = width - TOGGLE_WIDTH - (IS_NARROW ? 20 : 32);
+  const TOGGLE_Y = IS_NARROW ? 83 : 73;
   skyToggleBounds = { x: TOGGLE_X, y: TOGGLE_Y, width: TOGGLE_WIDTH, height: 32 };
 
   push();
@@ -137,14 +160,14 @@ function drawSkyToggle() {
   fill(255, 244, 222);
   textAlign(LEFT, CENTER);
   textStyle(BOLD);
-  textSize(11);
+  textSize(IS_NARROW ? 10 : 11);
   text(getSkyLabel(), TOGGLE_X + 34, TOGGLE_Y + 16);
 
   textStyle(NORMAL);
-  textSize(12);
+  textSize(IS_NARROW ? 11 : 12);
   fill(242, 220, 204);
-  textAlign(CENTER, TOP);
-  text(formatCalendarDate(), TOGGLE_X + TOGGLE_WIDTH / 2, 45);
+  textAlign(IS_NARROW ? LEFT : CENTER, IS_NARROW ? CENTER : TOP);
+  text(formatCalendarDate(), IS_NARROW ? 20 : TOGGLE_X + TOGGLE_WIDTH / 2, IS_NARROW ? 99 : 45);
   pop();
 }
 
@@ -318,17 +341,23 @@ function updateParticleMotion() {
 // - Present the location, condition, and live data status.
 // ============================================================
 function drawDashboardHeader() {
+  const IS_NARROW = width < 560;
+  const LEFT_MARGIN = IS_NARROW ? 20 : 42;
+  const TITLE = `${selectedLocation.city} weather`;
+
   noStroke();
   fill(255);
   textAlign(LEFT, TOP);
   textStyle(BOLD);
-  textSize(min(32, width * 0.042));
-  const TITLE = `${selectedLocation.city} weather`;
-  text(TITLE, 42, 34);
+  const TITLE_SIZE = IS_NARROW ? 24 : min(32, width * 0.042);
+  textSize(TITLE_SIZE);
+  const TITLE_WIDTH = width - LEFT_MARGIN - (IS_NARROW ? 36 : 62);
+  textSize(min(TITLE_SIZE, TITLE_SIZE * TITLE_WIDTH / max(1, textWidth(TITLE))));
+  text(TITLE, LEFT_MARGIN, IS_NARROW ? 17 : 34);
 
   // This triangle opens the Bay Area location menu.
-  const ARROW_X = 42 + textWidth(TITLE) + 13;
-  const ARROW_Y = 52;
+  const ARROW_X = LEFT_MARGIN + textWidth(TITLE) + (IS_NARROW ? 8 : 13);
+  const ARROW_Y = IS_NARROW ? 35 : 52;
   locationArrowBounds = { x: ARROW_X - 6, y: ARROW_Y - 12, width: 28, height: 28 };
   fill(255, 184, 113);
   if (locationMenuOpen) {
@@ -339,8 +368,25 @@ function drawDashboardHeader() {
 
   textStyle(NORMAL);
   fill(244, 218, 193);
-  textSize(15);
-  text(`${selectedLocation.city}, ${selectedLocation.state}  •  ${getConditionLabel()}`, 44, 78, max(80, width - 300), 22);
+  if (IS_NARROW) {
+    // Keep the full place name and condition on their own lines on narrow screens.
+    const CITY_LABEL = `${selectedLocation.city}, ${selectedLocation.state}`;
+    textStyle(NORMAL);
+    textSize(13);
+    textSize(min(13, 13 * (width - 40) / max(1, textWidth(CITY_LABEL))));
+    text(CITY_LABEL, 20, 49);
+
+    const CONDITION_LABEL = getConditionLabel();
+    textSize(12);
+    textSize(min(12, 12 * (width - 40) / max(1, textWidth(CONDITION_LABEL))));
+    text(CONDITION_LABEL, 20, 66);
+  } else {
+    const LOCATION_LABEL = `${selectedLocation.city}, ${selectedLocation.state}  •  ${getConditionLabel()}`;
+    const LABEL_WIDTH = max(80, width - 300);
+    textSize(15);
+    textSize(min(15, 15 * LABEL_WIDTH / max(1, textWidth(LOCATION_LABEL))));
+    text(LOCATION_LABEL, 44, 78);
+  }
 }
 
 // ============================================================
@@ -372,9 +418,10 @@ function drawLocationMenu() {
   locationMenuItems = [];
   if (!locationMenuOpen) return;
 
-  const MENU_X = 42;
-  const MENU_Y = 72;
-  const MENU_WIDTH = 228;
+  const IS_NARROW = width < 560;
+  const MENU_X = IS_NARROW ? 20 : 42;
+  const MENU_Y = IS_NARROW ? 132 : 72;
+  const MENU_WIDTH = min(228, width - (IS_NARROW ? 40 : 84));
   const ITEM_HEIGHT = 36;
 
   push();
@@ -441,7 +488,7 @@ function drawMetricCards() {
   const METRICS = getWeatherMetrics();
   const COLUMN_COUNT = 2;
   const ROW_GAP = 10;
-  const CARD_TOP = 122;
+  const CARD_TOP = width < 560 ? 142 : 122;
   const SAFE_BOTTOM = height - 292;
   const CARD_HEIGHT = min(104, max(84, (SAFE_BOTTOM - CARD_TOP - ROW_GAP * 2) / 3));
   const CARD_WIDTH = (width - 70) / COLUMN_COUNT;
@@ -452,7 +499,7 @@ function drawMetricCards() {
     const COLUMN = i % COLUMN_COUNT;
     const ROW = floor(i / COLUMN_COUNT);
     const CARD_X = 28 + COLUMN * (CARD_WIDTH + 14);
-    const CARD_Y = 122 + ROW * (CARD_HEIGHT + ROW_GAP);
+    const CARD_Y = CARD_TOP + ROW * (CARD_HEIGHT + ROW_GAP);
 
     // Check both the horizontal and vertical bounds for hover feedback.
   // Check whether the pointer is inside the card's full rectangle.
@@ -594,32 +641,38 @@ function getWeatherMetrics() {
 function drawFeaturedMetric() {
   const METRICS = getWeatherMetrics();
   const METRIC = METRICS[activeMetric];
-  const IS_NARROW = width < 760;
-  const CENTER_X = width * 0.2;
-  const CENTER_Y = height - 166;
-  // Reserve a distinct right-hand column for copy; never draw it over the gauge.
-  const TEXT_X = max(width * (IS_NARROW ? 0.52 : 0.58), CENTER_X + 150);
-  const TEXT_WIDTH = width - TEXT_X - 28;
+  const IS_COMPACT = width < 760;
+  const CENTER_X = IS_COMPACT ? width / 2 : width * 0.2;
+  const CENTER_Y = IS_COMPACT ? height - 132 : height - 166;
+  const TEXT_X = IS_COMPACT ? width / 2 : max(width * 0.58, CENTER_X + 150);
+  const TEXT_WIDTH = IS_COMPACT ? width - 40 : width - TEXT_X - 28;
+  const TITLE_Y = IS_COMPACT ? height - 278 : height - 221;
+  const DETAIL_Y = IS_COMPACT ? height - 252 : height - 190;
 
   push();
-  drawSelectedMetricGraphic(CENTER_X, CENTER_Y);
+  if (IS_COMPACT) {
+    // Scale the complete graphic as one unit beneath the description.
+    translate(CENTER_X, CENTER_Y);
+    scale(0.72);
+    drawSelectedMetricGraphic(0, 0);
+  } else {
+    drawSelectedMetricGraphic(CENTER_X, CENTER_Y);
+  }
   pop();
 
   fill(255, 224, 187);
-  textAlign(LEFT, TOP);
+  textAlign(IS_COMPACT ? CENTER : LEFT, TOP);
   textStyle(BOLD);
-  textSize(IS_NARROW ? 13 : 17);
-  text(METRIC.label, TEXT_X, height - 221, TEXT_WIDTH, 24);
+  const TITLE_SIZE = IS_COMPACT ? 13 : 17;
+  textSize(TITLE_SIZE);
+  textSize(min(TITLE_SIZE, TITLE_SIZE * TEXT_WIDTH / max(1, textWidth(METRIC.label))));
+  text(METRIC.label, TEXT_X, TITLE_Y);
   textStyle(NORMAL);
   fill(239, 226, 218);
-  textSize(IS_NARROW ? 11 : 14);
-  text(
-    METRIC.detail,
-    TEXT_X,
-    height - 190,
-    TEXT_WIDTH,
-    45
-  );
+  const DETAIL_SIZE = IS_COMPACT ? 11 : 14;
+  textSize(DETAIL_SIZE);
+  textSize(min(DETAIL_SIZE, DETAIL_SIZE * TEXT_WIDTH / max(1, textWidth(METRIC.detail))));
+  text(METRIC.detail, TEXT_X, DETAIL_Y);
 }
 
 // ============================================================
