@@ -1,10 +1,9 @@
 /*
   Project 2: Spooky Weather
-  Cursor ghost and playful card-click effects.
-
+  
   Description:
-    - Draws a ghost that eases toward the mouse pointer.
-    - Shows a brief Boo effect and plays an MP3 when a card is clicked.
+    - Draws an animated ghost cursor image that follows the mouse pointer.
+    - Shows a brief Boo effect and plays a spooky sound when clicking on a card.
 
   References:
     - P5.js: https://p5js.org/reference/
@@ -20,14 +19,15 @@
 // ============================================================
 // GHOST AND CLICK EFFECT STATE
 // ============================================================
-let ghostX = 0;
-let ghostY = 0;
-let booUntil = 0;
+let ghostX = 0;         // The ghost's current X position on the canvas.
+let ghostY = 0;         // The ghost's current Y position on the canvas.
+let booUntil = 0;       // "BOO!" effect timer.
 
-// The click handler in sketch.js changes this to a random spooky emoji.
-let booEmoji = '🎃';
-let spookySounds = [];
-let nextSpookySound = 0;
+// There are 3 emoji options; the click handler is in sketch.js 
+// which changes booEmoji to a random spooky emoji
+let booEmoji = '🎃';     // initialize to pumpkin emoji
+let spookySounds = [];   // sound Array to hold the 2 spooky sound objects.
+let nextSpookySound = 0; // index to alternate between the two spooky sounds.
 const SPOOKY_SOUND_FILES = [
   '../../assets/sounds/boo-and-laugh.mp3',
   '../../assets/sounds/halloween-horror-laughter.mp3'
@@ -35,30 +35,39 @@ const SPOOKY_SOUND_FILES = [
 
 // ============================================================
 // DRAW FLOATING GHOST
-// - Ease a tiny ghost toward the pointer so it drifts across the dashboard.
+// - Draw a tiny animated ghost cursor image that moves toward to the mouse position.
 // ============================================================
 function drawFloatingGhost() {
   // Adjust these dimensions and offsets to customize the cursor-following ghost.
-  const GHOST_WIDTH = 34;
+  const GHOST_WIDTH = 32;
   const GHOST_HEIGHT = 38;
   const EYE_OFFSET_X = 6;
   const EYE_OFFSET_Y = -3;
   const TARGET_X = constrain(mouseX, 18, width - 18);
   const TARGET_Y = constrain(mouseY, 18, height - 18);
+
+  // use lerp to smoothly move the ghost toward the mouse position, at 0.075 speed.
   ghostX = lerp(ghostX || TARGET_X, TARGET_X, 0.075);
   ghostY = lerp(ghostY || TARGET_Y, TARGET_Y, 0.075);
 
+  // use push/pop to isolate the ghost drawing from other canvas elements.
   push();
   noStroke();
-  fill(244, 242, 232);
+  fill(244, 242, 232); // ghost body color - almost white with a hint of gray for a spooky effect.
+
   // A solid body polygon gives the ghost one clean animated hem.
   const BODY_LEFT = ghostX - GHOST_WIDTH / 2;
   const BODY_RIGHT = ghostX + GHOST_WIDTH / 2;
   const WAVE_SEGMENTS = 12;
+
   // Draw the round crown first; the moving body redraws its lower edge as a wave.
   ellipse(ghostX, ghostY - 5, GHOST_WIDTH, GHOST_HEIGHT * 0.82);
+  
+  // beginShape and endShape with (CLOSE) will auto connect each vertex as a closed polygon.
   beginShape();
   vertex(BODY_LEFT, ghostY - 5);
+
+  // use a sine wave to animate the bottom of the ghost image.
   for (let i = 0; i <= WAVE_SEGMENTS; i++) {
     const X = BODY_LEFT + (GHOST_WIDTH * i) / WAVE_SEGMENTS;
     const WAVE_Y = ghostY + 7 + sin(frameCount * 0.035 + i * 0.55) * 2;
@@ -91,7 +100,8 @@ function drawBooEffect() {
 
 // ============================================================
 // SET UP SPOOKY SOUNDS
-// - Load the two local MP3 files so a card click can play one immediately.
+// - using HTML Audio to Load the two local MP3 files so a card 
+//   click can play one immediately.
 // ============================================================
 function setupSpookySounds() {
   spookySounds = SPOOKY_SOUND_FILES.map((FILE_PATH) => {

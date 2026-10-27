@@ -28,7 +28,7 @@ body {
     max-width: 100%;
     height: auto;
     border-radius: 28px;
-    box-shadow: 0 24px 80px rgba(0, 0, 0, .35);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, .35); /* rgba(r,g,b,a) */
 }
 
 @media (max-width: 600px) {
