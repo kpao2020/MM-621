@@ -28,16 +28,24 @@ let weatherError = '';
 let weatherLoading = true;
 let sunriseTime = null;
 let sunsetTime = null;
-let weatherRequestId = 0;
+let weatherRequestId = 0;     // Weather API request ID to keep track of latest weather data
 
 // ============================================================
 // LOAD WEATHER DATA
 // - Use NOAA's point lookup before requesting the local observation station.
 // - https://api.weather.gov/points/37.6688,-122.0808
 // - https://api.weather.gov/stations/KHWD/observations/latest
+//
+// Note: When user selects different location quickly, it may 
+//       overwrite global variable weatherData with outdated data.
+//       To prevent that happening, I use a local variable
+//       REQUEST_ID to keep track of each async running function call
+//       and use it compare the current weatherRequestId to make sure
+//       only store the latest weather data align with the latest
+//       selected location.
 // ============================================================
 async function loadWeatherData(location = selectedLocation) {
-  const REQUEST_ID = ++weatherRequestId;
+  const REQUEST_ID = ++weatherRequestId; 
   weatherLoading = true;
   weatherError = '';
 
@@ -80,7 +88,8 @@ async function loadWeatherData(location = selectedLocation) {
       throw new Error('NOAA returned a station without a usable URL.');
     }
 
-    const OBSERVATION_RESPONSE = await fetch(`${STATION_URL}/observations/latest`, {
+    const OBSERVATION_URL = `${STATION_URL}/observations/latest`;
+    const OBSERVATION_RESPONSE = await fetch(OBSERVATION_URL, {
       headers: { Accept: 'application/geo+json' }
     });
     const OBSERVATION_DATA = await OBSERVATION_RESPONSE.json();
@@ -97,6 +106,7 @@ async function loadWeatherData(location = selectedLocation) {
     sunriseTime = new Date(POINTS_DATA.properties.astronomicalData.sunrise);
     sunsetTime = new Date(POINTS_DATA.properties.astronomicalData.sunset);
     weatherData = normalizeWeatherData(OBSERVATION_DATA.properties);
+    weatherData.sourceUrl = OBSERVATION_URL;
     weatherLoading = false;
     updateParticleMotion();
   } catch (error) {

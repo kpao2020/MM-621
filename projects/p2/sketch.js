@@ -857,6 +857,7 @@ function mousePressed() {
     }
   }
 
+  // Check if mouse is in the NOAA source area
   if (
     weatherData &&
     mouseX >= sourceLinkBounds.x &&
@@ -864,7 +865,8 @@ function mousePressed() {
     mouseY >= sourceLinkBounds.y &&
     mouseY <= sourceLinkBounds.y + sourceLinkBounds.height
   ) {
-    window.open(weatherData.station, '_blank', 'noopener');
+    // Open selected location weather API data
+    window.open(weatherData.sourceUrl, '_blank', 'noopener');
     return false;
   }
 
