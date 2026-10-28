@@ -29,52 +29,12 @@ let weatherLoading = true;
 let sunriseTime = null;
 let sunsetTime = null;
 let weatherRequestId = 0;
-let sunRequestId = 0;
-
-// ============================================================
-// LOAD SUNRISE / SUNSET TIMES
-// - Use the free sunrise-sunset service so Auto mode follows the local sky.
-// ============================================================
-async function loadSunTimes(location = selectedLocation) {
-  const REQUEST_ID = ++sunRequestId;
-  try {
-    // Build the request URL and add the location's coordinates as query parameters.
-    const SUN_TIMES_URL = new URL('https://api.sunrise-sunset.org/json');
-    SUN_TIMES_URL.searchParams.set('lat', location.latitude);
-    SUN_TIMES_URL.searchParams.set('lng', location.longitude);
-    SUN_TIMES_URL.searchParams.set('formatted', '0');
-
-    // Request today's sunrise and sunset values for the selected location.
-    const SUN_TIMES_RESPONSE = await fetch(SUN_TIMES_URL);
-
-    // Convert the response into a JavaScript object so the returned times can be used.
-    const SUN_TIMES_DATA = await SUN_TIMES_RESPONSE.json();
-
-    if (
-      !SUN_TIMES_RESPONSE.ok ||
-      SUN_TIMES_DATA.status !== 'OK'
-    ) {
-      throw new Error('Sun times were unavailable.');
-    }
-
-    if (REQUEST_ID !== sunRequestId) return;
-
-    // Store the API timestamps as Date objects for direct time comparisons later.
-    sunriseTime = new Date(SUN_TIMES_DATA.results.sunrise);
-    sunsetTime = new Date(SUN_TIMES_DATA.results.sunset);
-  } catch (error) {
-    if (REQUEST_ID !== sunRequestId) return;
-    // Use friendly approximate times if the sunrise/sunset service is unavailable.
-    const TODAY = new Date();
-    sunriseTime = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate(), 6, 30);
-    sunsetTime = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate(), 19, 45);
-    console.warn('Using approximate sunrise and sunset times:', error.message);
-  }
-}
 
 // ============================================================
 // LOAD WEATHER DATA
 // - Use NOAA's point lookup before requesting the local observation station.
+// - https://api.weather.gov/points/37.6688,-122.0808
+// - https://api.weather.gov/stations/KHWD/observations/latest
 // ============================================================
 async function loadWeatherData(location = selectedLocation) {
   const REQUEST_ID = ++weatherRequestId;
@@ -134,6 +94,8 @@ async function loadWeatherData(location = selectedLocation) {
     }
 
     if (REQUEST_ID !== weatherRequestId) return;
+    sunriseTime = new Date(POINTS_DATA.properties.astronomicalData.sunrise);
+    sunsetTime = new Date(POINTS_DATA.properties.astronomicalData.sunset);
     weatherData = normalizeWeatherData(OBSERVATION_DATA.properties);
     weatherLoading = false;
     updateParticleMotion();

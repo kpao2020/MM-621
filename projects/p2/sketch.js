@@ -54,7 +54,7 @@ const BAY_AREA_LOCATIONS = [
   { city: 'San Francisco', state: 'California', latitude: 37.7749, longitude: -122.4194 },
   { city: 'San Jose', state: 'California', latitude: 37.3382, longitude: -121.8863 }
 ];
-let selectedLocation = BAY_AREA_LOCATIONS[0];
+let selectedLocation = BAY_AREA_LOCATIONS[0];   // default location to Hayward
 
 // ============================================================
 // p5.js SETUP
@@ -70,14 +70,11 @@ async function setup() {
   createWeatherParticles();
 
   // Load current weather observations from NOAA.
-  // Wait for both weather data and sun data before drawing the full dashboard.
-  await Promise.all([loadWeatherData(), loadSunTimes()]);
+  // Wait for weather data before drawing the full dashboard.
+  await loadWeatherData();
 
   // Keep the weather graphics animating continuously after setup completes.
   loop();
-
-  // Refresh the sun schedule twice an hour so Auto mode stays current overnight.
-  setInterval(loadSunTimes, 30 * 60 * 1000);
 }
 
 // ============================================================
@@ -464,7 +461,6 @@ function selectWeatherLocation(index) {
   activeMetric = 0;
   booUntil = 0;
   loadWeatherData(selectedLocation);
-  loadSunTimes(selectedLocation);
 }
 
 // ============================================================
