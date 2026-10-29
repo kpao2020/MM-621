@@ -13,7 +13,6 @@
       available, but building a search function is a complex task and not a truly p5js coding experience.
     - Add more occassion themes, such as Christmas, New Year, July 4, etc, so this weather dashboard 
       can have more colorful and playful elements and can be use all year long.
-    - Add auto-update to refresh weather data so user can run this web-app forever without refreshing browser.
 
   Note:
     - This project is intended for educational purposes in the context of the MM-621 class project.
@@ -52,6 +51,8 @@ let locationMenuItems = [];
 
 // ============================================================
 // WEATHER SETTINGS
+// - Pull live data from actual physical weather stations
+// - Only set 4 local cities for initial MVP prototype
 // ============================================================
 const BAY_AREA_LOCATIONS = [
   { city: 'Hayward', state: 'California', latitude: 37.6688, longitude: -122.0808 },
@@ -63,6 +64,7 @@ let selectedLocation = BAY_AREA_LOCATIONS[0];   // default location to Hayward
 
 // ============================================================
 // p5.js SETUP
+// - This is p5js v2, using async to await api data
 // ============================================================
 async function setup() {
   // Create a responsive canvas for the dashboard.
@@ -73,6 +75,9 @@ async function setup() {
 
   // Create the ambient animated particles before the data arrives.
   createWeatherParticles();
+
+  // Refresh at the next :00, :20, or :40 mark while the page is open.
+  scheduleWeatherRefresh();
 
   // Load current weather observations from NOAA.
   // Wait for weather data before drawing the full dashboard.
@@ -136,6 +141,8 @@ function draw() {
 // ============================================================
 // DRAW SKY TOGGLE
 // - Click the tiny sun/moon pill to switch between Auto and Manual mode.
+// - Auto mode - auto switch day / night based on sunrise / sunset time.
+// - Manual mode - allow user to view in day / night theme at anytime.
 // ============================================================
 function drawSkyToggle() {
   const IS_NARROW = width < 560;
@@ -145,6 +152,7 @@ function drawSkyToggle() {
   const TOGGLE_Y = IS_NARROW ? 83 : 84;
   skyToggleBounds = { x: TOGGLE_X, y: TOGGLE_Y, width: TOGGLE_WIDTH, height: 32 };
 
+  // Use push() / pop() to isolate the SkyToggle from other elements
   push();
   rectMode(CORNER);
   noStroke();
@@ -771,7 +779,7 @@ function drawDashboardFooter() {
   textStyle(NORMAL);
   textSize(11);
   const SOURCE_LABEL = 'NOAA source ↗';
-  const UPDATED_LABEL = `Updated: ${formatTimestamp(weatherData.timestamp)}`;
+  const UPDATED_LABEL = `Updated: ${formatTimestamp(weatherUpdatedAt || weatherData.timestamp)}`;
   const SOURCE_WIDTH = textWidth(SOURCE_LABEL);
   const UPDATED_WIDTH = textWidth(UPDATED_LABEL);
   const FOOTER_RIGHT = width - 42;
@@ -797,7 +805,8 @@ function drawLoadingState() {
   fill(255);
   textAlign(CENTER, CENTER);
   textSize(22);
-  text(`Loading live ${selectedLocation.city} weather…`, width / 2, height / 2);
+  const STATUS_LABEL = weatherData ? 'Refreshing' : 'Loading live';
+  text(`${STATUS_LABEL} ${selectedLocation.city} weather…`, width / 2, height / 2);
 }
 
 // ============================================================
@@ -867,6 +876,7 @@ function mouseMoved() {
 // - Select a weather card and update the large gauge.
 // ============================================================
 function mousePressed() {
+  // Allow user to open / close location selection dropdown menu
   if (
     mouseX >= locationArrowBounds.x &&
     mouseX <= locationArrowBounds.x + locationArrowBounds.width &&
@@ -878,6 +888,7 @@ function mousePressed() {
     return false;
   }
 
+  // Allow user to select different locations
   for (let item of locationMenuItems) {
     if (
       mouseX >= item.x &&
@@ -917,6 +928,8 @@ function mousePressed() {
     return false;
   }
 
+  // Check if mouse is in each of the card area. If clicked on
+  // any card, display a "Boo" effect and play a spooky sound
   for (let card of metricCards) {
     if (
       mouseX >= card.x &&
