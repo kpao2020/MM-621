@@ -8,6 +8,12 @@
     Service API. The dashboard visualizes current weather observations across multiple
     locations with animated graphics, gauges, particles, and mouse interactions.
 
+  Future features:
+    - Add searching capability to allow users to retrieve desire location(s). The data is already
+      available, but building a search function is a complex task and not a truly p5js coding experience.
+    - Add more occassion themes, such as Christmas, New Year, July 4, etc, so this weather dashboard 
+      can have more colorful and playful elements and can be use all year long.
+
   Note:
     - This project is intended for educational purposes in the context of the MM-621 class project.
     - NOAA requires latitude and longitude to retrieve weather data.
@@ -16,14 +22,12 @@
 
   Credits:
     - P5.js library for creative coding: https://p5js.org/
-    - Sunrise/Sunset API for calculating day/night transitions: https://sunrise-sunset.org/api
     - NOAA National Weather Service API
     - Adobe Stock Images for background and iconography
     - Sound effects from Pixabay: https://pixabay.com/sound-effects/
 
   References:
     - P5.js: https://p5js.org/reference/
-    - Sunrise/Sunset API: https://sunrise-sunset.org/api
     - NOAA API: https://www.weather.gov/documentation/services-web-api
     - OpenAI ChatGPT for code assistance and optimization suggestions.
 
@@ -47,6 +51,8 @@ let locationMenuItems = [];
 
 // ============================================================
 // WEATHER SETTINGS
+// - Pull live data from actual physical weather stations
+// - Only set 4 local cities for initial MVP prototype
 // ============================================================
 const BAY_AREA_LOCATIONS = [
   { city: 'Hayward', state: 'California', latitude: 37.6688, longitude: -122.0808 },
@@ -54,10 +60,11 @@ const BAY_AREA_LOCATIONS = [
   { city: 'San Francisco', state: 'California', latitude: 37.7749, longitude: -122.4194 },
   { city: 'San Jose', state: 'California', latitude: 37.3382, longitude: -121.8863 }
 ];
-let selectedLocation = BAY_AREA_LOCATIONS[0];
+let selectedLocation = BAY_AREA_LOCATIONS[0];   // default location to Hayward
 
 // ============================================================
 // p5.js SETUP
+// - This is p5js v2, using async to await api data
 // ============================================================
 async function setup() {
   // Create a responsive canvas for the dashboard.
@@ -69,15 +76,15 @@ async function setup() {
   // Create the ambient animated particles before the data arrives.
   createWeatherParticles();
 
+  // Refresh at the next :00, :20, or :40 mark while the page is open.
+  scheduleWeatherRefresh();
+
   // Load current weather observations from NOAA.
-  // Wait for both weather data and sun data before drawing the full dashboard.
-  await Promise.all([loadWeatherData(), loadSunTimes()]);
+  // Wait for weather data before drawing the full dashboard.
+  await loadWeatherData();
 
   // Keep the weather graphics animating continuously after setup completes.
   loop();
-
-  // Refresh the sun schedule twice an hour so Auto mode stays current overnight.
-  setInterval(loadSunTimes, 30 * 60 * 1000);
 }
 
 // ============================================================
@@ -134,15 +141,18 @@ function draw() {
 // ============================================================
 // DRAW SKY TOGGLE
 // - Click the tiny sun/moon pill to switch between Auto and Manual mode.
+// - Auto mode - auto switch day / night based on sunrise / sunset time.
+// - Manual mode - allow user to view in day / night theme at anytime.
 // ============================================================
 function drawSkyToggle() {
   const IS_NARROW = width < 560;
-  // Keep the day/night mode switch in the upper-right corner.
+  // Keep the control in the upper-right corner.
   const TOGGLE_WIDTH = min(128, width - (IS_NARROW ? 40 : 64));
   const TOGGLE_X = width - TOGGLE_WIDTH - (IS_NARROW ? 20 : 32);
-  const TOGGLE_Y = IS_NARROW ? 83 : 73;
+  const TOGGLE_Y = IS_NARROW ? 83 : 84;
   skyToggleBounds = { x: TOGGLE_X, y: TOGGLE_Y, width: TOGGLE_WIDTH, height: 32 };
 
+  // Use push() / pop() to isolate the SkyToggle from other elements
   push();
   rectMode(CORNER);
   noStroke();
@@ -168,6 +178,14 @@ function drawSkyToggle() {
   fill(242, 220, 204);
   textAlign(IS_NARROW ? LEFT : CENTER, IS_NARROW ? CENTER : TOP);
   text(formatCalendarDate(), IS_NARROW ? 20 : TOGGLE_X + TOGGLE_WIDTH / 2, IS_NARROW ? 99 : 45);
+
+  const SUN_TRANSITION_LABEL = getNextSunTransitionLabel();
+  if (SUN_TRANSITION_LABEL) {
+    fill(255, 220, 180);
+    textAlign(IS_NARROW ? LEFT : CENTER, CENTER);
+    textSize(10);
+    text(SUN_TRANSITION_LABEL, IS_NARROW ? 20 : TOGGLE_X + TOGGLE_WIDTH / 2, IS_NARROW ? 126 : 68);
+  }
   pop();
 }
 
@@ -252,6 +270,27 @@ function getSkyState() {
 // ============================================================
 function getSkyLabel() {
   return skyMode === 'auto' ? `Auto • ${getSkyState()}` : `Manual • ${manualSky}`;
+}
+
+// ============================================================
+// GET NEXT SUN TRANSITION LABEL
+// - Show the next sunrise during night or sunset during day.
+// ============================================================
+function getNextSunTransitionLabel() {
+  const IS_DAY = getSkyState() === 'day';
+  const EVENT_NAME = IS_DAY ? 'Sunset' : 'Sunrise';
+  const EVENT_TIME = IS_DAY ? sunsetTime : sunriseTime;
+  if (!EVENT_TIME || Number.isNaN(EVENT_TIME.getTime())) return '';
+
+  const NOW = new Date();
+  const NEXT_EVENT = new Date(EVENT_TIME);
+  while (NEXT_EVENT <= NOW) {
+    NEXT_EVENT.setDate(NEXT_EVENT.getDate() + 1);
+  }
+
+  const DATE_LABEL = NEXT_EVENT.toDateString() === NOW.toDateString() ? 'today' : 'tomorrow';
+  const TIME_LABEL = NEXT_EVENT.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return `${EVENT_NAME} ${DATE_LABEL} · ${TIME_LABEL}`;
 }
 
 // ============================================================
@@ -464,7 +503,6 @@ function selectWeatherLocation(index) {
   activeMetric = 0;
   booUntil = 0;
   loadWeatherData(selectedLocation);
-  loadSunTimes(selectedLocation);
 }
 
 // ============================================================
@@ -741,7 +779,7 @@ function drawDashboardFooter() {
   textStyle(NORMAL);
   textSize(11);
   const SOURCE_LABEL = 'NOAA source ↗';
-  const UPDATED_LABEL = `Updated: ${formatTimestamp(weatherData.timestamp)}`;
+  const UPDATED_LABEL = `Updated: ${formatTimestamp(weatherUpdatedAt || weatherData.timestamp)}`;
   const SOURCE_WIDTH = textWidth(SOURCE_LABEL);
   const UPDATED_WIDTH = textWidth(UPDATED_LABEL);
   const FOOTER_RIGHT = width - 42;
@@ -767,7 +805,8 @@ function drawLoadingState() {
   fill(255);
   textAlign(CENTER, CENTER);
   textSize(22);
-  text(`Loading live ${selectedLocation.city} weather…`, width / 2, height / 2);
+  const STATUS_LABEL = weatherData ? 'Refreshing' : 'Loading live';
+  text(`${STATUS_LABEL} ${selectedLocation.city} weather…`, width / 2, height / 2);
 }
 
 // ============================================================
@@ -837,6 +876,7 @@ function mouseMoved() {
 // - Select a weather card and update the large gauge.
 // ============================================================
 function mousePressed() {
+  // Allow user to open / close location selection dropdown menu
   if (
     mouseX >= locationArrowBounds.x &&
     mouseX <= locationArrowBounds.x + locationArrowBounds.width &&
@@ -848,6 +888,7 @@ function mousePressed() {
     return false;
   }
 
+  // Allow user to select different locations
   for (let item of locationMenuItems) {
     if (
       mouseX >= item.x &&
@@ -861,6 +902,7 @@ function mousePressed() {
     }
   }
 
+  // Check if mouse is in the NOAA source area
   if (
     weatherData &&
     mouseX >= sourceLinkBounds.x &&
@@ -868,7 +910,8 @@ function mousePressed() {
     mouseY >= sourceLinkBounds.y &&
     mouseY <= sourceLinkBounds.y + sourceLinkBounds.height
   ) {
-    window.open(weatherData.station, '_blank', 'noopener');
+    // Open selected location weather API data
+    window.open(weatherData.sourceUrl, '_blank', 'noopener');
     return false;
   }
 
@@ -885,6 +928,8 @@ function mousePressed() {
     return false;
   }
 
+  // Check if mouse is in each of the card area. If clicked on
+  // any card, display a "Boo" effect and play a spooky sound
   for (let card of metricCards) {
     if (
       mouseX >= card.x &&

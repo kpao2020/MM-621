@@ -11,9 +11,8 @@
 
   References:
     - P5.js: https://p5js.org/reference/
-    - Sunrise-sunset API: https://sunrise-sunset.org/api
     - NOAA API: https://www.weather.gov/documentation/services-web-api
-    - OpenAI ChatGPT for code assistance and optimization suggestions.
+    - OpenAI ChatGPT(Codex) for code assistance and optimization suggestions.
 
   Code Origin:
     - [ORIGINAL API + AI-ASSISTED REVISIONS]  
@@ -28,99 +27,80 @@ let weatherError = '';
 let weatherLoading = true;
 let sunriseTime = null;
 let sunsetTime = null;
-let weatherRequestId = 0;
-let sunRequestId = 0;
-
-// ============================================================
-// LOAD SUNRISE / SUNSET TIMES
-// - Use the free sunrise-sunset service so Auto mode follows the local sky.
-// ============================================================
-async function loadSunTimes(location = selectedLocation) {
-  const REQUEST_ID = ++sunRequestId;
-  try {
-    // Build the request URL and add the location's coordinates as query parameters.
-    const SUN_TIMES_URL = new URL('https://api.sunrise-sunset.org/json');
-    SUN_TIMES_URL.searchParams.set('lat', location.latitude);
-    SUN_TIMES_URL.searchParams.set('lng', location.longitude);
-    SUN_TIMES_URL.searchParams.set('formatted', '0');
-
-    // Request today's sunrise and sunset values for the selected location.
-    const SUN_TIMES_RESPONSE = await fetch(SUN_TIMES_URL);
-
-    // Convert the response into a JavaScript object so the returned times can be used.
-    const SUN_TIMES_DATA = await SUN_TIMES_RESPONSE.json();
-
-    if (
-      !SUN_TIMES_RESPONSE.ok ||
-      SUN_TIMES_DATA.status !== 'OK'
-    ) {
-      throw new Error('Sun times were unavailable.');
-    }
-
-    if (REQUEST_ID !== sunRequestId) return;
-
-    // Store the API timestamps as Date objects for direct time comparisons later.
-    sunriseTime = new Date(SUN_TIMES_DATA.results.sunrise);
-    sunsetTime = new Date(SUN_TIMES_DATA.results.sunset);
-  } catch (error) {
-    if (REQUEST_ID !== sunRequestId) return;
-    // Use friendly approximate times if the sunrise/sunset service is unavailable.
-    const TODAY = new Date();
-    sunriseTime = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate(), 6, 30);
-    sunsetTime = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate(), 19, 45);
-    console.warn('Using approximate sunrise and sunset times:', error.message);
-  }
-}
+let weatherRequestId = 0;     // Weather API request ID to keep track of latest weather data
+let weatherUpdatedAt = null;
+const WEATHER_LOCATION_CACHE = new Map();
+const MIN_LOADING_DURATION = 1000;
 
 // ============================================================
 // LOAD WEATHER DATA
 // - Use NOAA's point lookup before requesting the local observation station.
+// - https://api.weather.gov/points/37.6688,-122.0808
+// - https://api.weather.gov/stations/KHWD/observations/latest
+//
+// Note: When user selects different location quickly, it may 
+//       overwrite global variable weatherData with outdated data.
+//       To prevent that happening, I use a local variable
+//       REQUEST_ID to keep track of each async running function call
+//       and use it compare the current weatherRequestId to make sure
+//       only store the latest weather data align with the latest
+//       selected location.
 // ============================================================
 async function loadWeatherData(location = selectedLocation) {
   const REQUEST_ID = ++weatherRequestId;
+  const LOADING_STARTED_AT = Date.now();
   weatherLoading = true;
   weatherError = '';
 
   try {
-    const POINTS_URL = `https://api.weather.gov/points/${location.latitude},${location.longitude}`;
-    const POINTS_RESPONSE = await fetch(POINTS_URL, {
-      headers: { Accept: 'application/geo+json' }
-    });
-    const POINTS_DATA = await POINTS_RESPONSE.json();
+    const LOCATION_KEY = `${location.latitude},${location.longitude}`;
+    let LOCATION_DATA = WEATHER_LOCATION_CACHE.get(LOCATION_KEY);
 
-    if (!POINTS_RESPONSE.ok) {
-      throw new Error(POINTS_DATA.title || 'NOAA point lookup failed.');
+    // Resolve the nearby station once per location. Scheduled refreshes can
+    // then request only the latest observation.
+    if (!LOCATION_DATA) {
+      const POINTS_URL = `https://api.weather.gov/points/${location.latitude},${location.longitude}`;
+      const POINTS_RESPONSE = await fetch(POINTS_URL, {
+        headers: { Accept: 'application/geo+json' }
+      });
+      const POINTS_DATA = await POINTS_RESPONSE.json();
+
+      if (!POINTS_RESPONSE.ok) {
+        throw new Error(POINTS_DATA.title || 'NOAA point lookup failed.');
+      }
+
+      const STATIONS_URL = POINTS_DATA.properties?.observationStations;
+      if (!STATIONS_URL) {
+        throw new Error(`NOAA did not return an observation station URL for ${location.city}.`);
+      }
+
+      const STATIONS_RESPONSE = await fetch(STATIONS_URL, {
+        headers: { Accept: 'application/geo+json' }
+      });
+      const STATIONS_DATA = await STATIONS_RESPONSE.json();
+
+      if (!STATIONS_RESPONSE.ok) {
+        throw new Error(STATIONS_DATA.title || 'NOAA station lookup failed.');
+      }
+      if (!Array.isArray(STATIONS_DATA.features) || STATIONS_DATA.features.length === 0) {
+        throw new Error(`NOAA did not return an observation station near ${location.city}.`);
+      }
+
+      const STATION_URL = STATIONS_DATA.features[0]?.id;
+      if (!STATION_URL) {
+        throw new Error('NOAA returned a station without a usable URL.');
+      }
+
+      LOCATION_DATA = {
+        observationUrl: `${STATION_URL}/observations/latest`,
+        sunrise: POINTS_DATA.properties.astronomicalData?.sunrise,
+        sunset: POINTS_DATA.properties.astronomicalData?.sunset
+      };
+      WEATHER_LOCATION_CACHE.set(LOCATION_KEY, LOCATION_DATA);
     }
 
-    const STATIONS_URL = POINTS_DATA.properties?.observationStations;
-
-    if (!STATIONS_URL) {
-      throw new Error(`NOAA did not return an observation station URL for ${location.city}.`);
-    }
-
-    const STATIONS_RESPONSE = await fetch(STATIONS_URL, {
-      headers: { Accept: 'application/geo+json' }
-    });
-    const STATIONS_DATA = await STATIONS_RESPONSE.json();
-
-    if (!STATIONS_RESPONSE.ok) {
-      throw new Error(STATIONS_DATA.title || 'NOAA station lookup failed.');
-    }
-
-    if (
-      !Array.isArray(STATIONS_DATA.features) ||
-      STATIONS_DATA.features.length === 0
-    ) {
-      throw new Error(`NOAA did not return an observation station near ${location.city}.`);
-    }
-
-    const STATION_URL = STATIONS_DATA.features[0]?.id;
-
-    if (!STATION_URL) {
-      throw new Error('NOAA returned a station without a usable URL.');
-    }
-
-    const OBSERVATION_RESPONSE = await fetch(`${STATION_URL}/observations/latest`, {
+    const OBSERVATION_URL = LOCATION_DATA.observationUrl;
+    const OBSERVATION_RESPONSE = await fetch(OBSERVATION_URL, {
       headers: { Accept: 'application/geo+json' }
     });
     const OBSERVATION_DATA = await OBSERVATION_RESPONSE.json();
@@ -134,15 +114,40 @@ async function loadWeatherData(location = selectedLocation) {
     }
 
     if (REQUEST_ID !== weatherRequestId) return;
+    sunriseTime = LOCATION_DATA.sunrise ? new Date(LOCATION_DATA.sunrise) : null;
+    sunsetTime = LOCATION_DATA.sunset ? new Date(LOCATION_DATA.sunset) : null;
     weatherData = normalizeWeatherData(OBSERVATION_DATA.properties);
-    weatherLoading = false;
+    weatherData.sourceUrl = OBSERVATION_URL;
+    weatherUpdatedAt = new Date();
     updateParticleMotion();
   } catch (error) {
     if (REQUEST_ID !== weatherRequestId) return;
     weatherError = error.message;
-    weatherLoading = false;
     console.error('Failed to load NOAA weather data:', error);
+  } finally {
+    const REMAINING_LOADING_TIME = MIN_LOADING_DURATION - (Date.now() - LOADING_STARTED_AT);
+    if (REMAINING_LOADING_TIME > 0) {
+      await new Promise((resolve) => setTimeout(resolve, REMAINING_LOADING_TIME));
+    }
+    if (REQUEST_ID === weatherRequestId) {
+      weatherLoading = false;
+    }
   }
+}
+
+// ============================================================
+// SCHEDULE WEATHER REFRESH
+// - Refresh on the next :00, :20, or :40 minute mark, then realign each time.
+// ============================================================
+function scheduleWeatherRefresh() {
+  const NOW = new Date();
+  const MINUTES_TO_NEXT_MARK = 20 - (NOW.getMinutes() % 20);
+  const DELAY = MINUTES_TO_NEXT_MARK * 60_000 - NOW.getSeconds() * 1_000 - NOW.getMilliseconds();
+
+  setTimeout(() => {
+    loadWeatherData(selectedLocation);
+    scheduleWeatherRefresh();
+  }, DELAY);
 }
 
 // ============================================================
