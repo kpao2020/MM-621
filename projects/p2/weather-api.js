@@ -11,9 +11,8 @@
 
   References:
     - P5.js: https://p5js.org/reference/
-    - Sunrise-sunset API: https://sunrise-sunset.org/api
     - NOAA API: https://www.weather.gov/documentation/services-web-api
-    - OpenAI ChatGPT for code assistance and optimization suggestions.
+    - OpenAI ChatGPT(Codex) for code assistance and optimization suggestions.
 
   Code Origin:
     - [ORIGINAL API + AI-ASSISTED REVISIONS]  

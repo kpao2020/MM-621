@@ -8,6 +8,13 @@
     Service API. The dashboard visualizes current weather observations across multiple
     locations with animated graphics, gauges, particles, and mouse interactions.
 
+  Future features:
+    - Add searching capability to allow users to retrieve desire location(s). The data is already
+      available, but building a search function is a complex task and not a truly p5js coding experience.
+    - Add more occassion themes, such as Christmas, New Year, July 4, etc, so this weather dashboard 
+      can have more colorful and playful elements and can be use all year long.
+    - Add auto-update to refresh weather data so user can run this web-app forever without refreshing browser.
+
   Note:
     - This project is intended for educational purposes in the context of the MM-621 class project.
     - NOAA requires latitude and longitude to retrieve weather data.
@@ -16,14 +23,12 @@
 
   Credits:
     - P5.js library for creative coding: https://p5js.org/
-    - Sunrise/Sunset API for calculating day/night transitions: https://sunrise-sunset.org/api
     - NOAA National Weather Service API
     - Adobe Stock Images for background and iconography
     - Sound effects from Pixabay: https://pixabay.com/sound-effects/
 
   References:
     - P5.js: https://p5js.org/reference/
-    - Sunrise/Sunset API: https://sunrise-sunset.org/api
     - NOAA API: https://www.weather.gov/documentation/services-web-api
     - OpenAI ChatGPT for code assistance and optimization suggestions.
 
@@ -134,10 +139,10 @@ function draw() {
 // ============================================================
 function drawSkyToggle() {
   const IS_NARROW = width < 560;
-  // Keep the day/night mode switch in the upper-right corner.
+  // Keep the control in the upper-right corner.
   const TOGGLE_WIDTH = min(128, width - (IS_NARROW ? 40 : 64));
   const TOGGLE_X = width - TOGGLE_WIDTH - (IS_NARROW ? 20 : 32);
-  const TOGGLE_Y = IS_NARROW ? 83 : 73;
+  const TOGGLE_Y = IS_NARROW ? 83 : 84;
   skyToggleBounds = { x: TOGGLE_X, y: TOGGLE_Y, width: TOGGLE_WIDTH, height: 32 };
 
   push();
@@ -165,6 +170,14 @@ function drawSkyToggle() {
   fill(242, 220, 204);
   textAlign(IS_NARROW ? LEFT : CENTER, IS_NARROW ? CENTER : TOP);
   text(formatCalendarDate(), IS_NARROW ? 20 : TOGGLE_X + TOGGLE_WIDTH / 2, IS_NARROW ? 99 : 45);
+
+  const SUN_TRANSITION_LABEL = getNextSunTransitionLabel();
+  if (SUN_TRANSITION_LABEL) {
+    fill(255, 220, 180);
+    textAlign(IS_NARROW ? LEFT : CENTER, CENTER);
+    textSize(10);
+    text(SUN_TRANSITION_LABEL, IS_NARROW ? 20 : TOGGLE_X + TOGGLE_WIDTH / 2, IS_NARROW ? 126 : 68);
+  }
   pop();
 }
 
@@ -249,6 +262,27 @@ function getSkyState() {
 // ============================================================
 function getSkyLabel() {
   return skyMode === 'auto' ? `Auto • ${getSkyState()}` : `Manual • ${manualSky}`;
+}
+
+// ============================================================
+// GET NEXT SUN TRANSITION LABEL
+// - Show the next sunrise during night or sunset during day.
+// ============================================================
+function getNextSunTransitionLabel() {
+  const IS_DAY = getSkyState() === 'day';
+  const EVENT_NAME = IS_DAY ? 'Sunset' : 'Sunrise';
+  const EVENT_TIME = IS_DAY ? sunsetTime : sunriseTime;
+  if (!EVENT_TIME || Number.isNaN(EVENT_TIME.getTime())) return '';
+
+  const NOW = new Date();
+  const NEXT_EVENT = new Date(EVENT_TIME);
+  while (NEXT_EVENT <= NOW) {
+    NEXT_EVENT.setDate(NEXT_EVENT.getDate() + 1);
+  }
+
+  const DATE_LABEL = NEXT_EVENT.toDateString() === NOW.toDateString() ? 'today' : 'tomorrow';
+  const TIME_LABEL = NEXT_EVENT.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return `${EVENT_NAME} ${DATE_LABEL} · ${TIME_LABEL}`;
 }
 
 // ============================================================
