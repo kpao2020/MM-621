@@ -4,7 +4,7 @@ Basket Buddy is a planned mobile-first p5.js MVP for one simple personalized mea
 
 ## Current state
 
-Planning only. The existing P3 starter files are present, but the recommendation flow, API calls, Cloudflare Worker, and visual result experience have not been implemented.
+The Cloudflare Worker endpoint for generating a structured meal product list is implemented locally in `worker/`. It is not deployed or verified yet. The p5.js recommendation flow, Open Prices integration, and results experience have not been implemented.
 
 ## Planned interaction
 
@@ -46,4 +46,4 @@ This repository is public. Do not put API keys or secret values in HTML, JavaScr
 
 ## Next planned step
 
-Confirm one example meal request and recommendation goal, then inspect an Open Prices record that matches one ingredient within 100 miles of Hayward before implementation.
+Connect the p5.js page to the Worker, then add the bounded Open Prices lookup flow. The Worker uses Cloudflare Workers AI through the `AI` binding and does not need a separate model API key. Before deployment, configure the binding and check that the allowed website origins in `worker/wrangler.toml` match the chosen local and hosted URLs. The manual Open Prices feasibility check is complete.

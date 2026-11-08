@@ -1,10 +1,10 @@
 # Basket Buddy — Project Tracker
 
-Last updated: 2026-11-07
+Last updated: 2026-11-08
 
 ## Overall status
 
-**Planning.** The MVP scope and three-week proposal have been updated. No implementation or API integration has started.
+**Early implementation.** The MVP scope and three-week proposal are set. Open Prices feasibility and provider research are complete; a local Cloudflare Worker endpoint now generates a bounded structured meal list. It has not been deployed or verified, and the p5.js or Open Prices integration has not started.
 
 ## Decisions recorded
 
@@ -22,22 +22,29 @@ Last updated: 2026-11-07
 - [x] Keep `sketch.js` as primary main JS; split components into their own JS files.
 - [x] Keep secrets only in Cloudflare, entered by the user.
 - [x] Create proposal, requirements, README, agent notes, memory, tracker, and progress log.
+- [x] Select Cloudflare Workers AI for the meal-list call.
+- [x] Add a local Cloudflare Worker endpoint with request validation, JSON schema output, a 10-product cap, token-usage fields, and configured-origin CORS.
 
-## Week 1 — Data and interaction feasibility (planned, not started)
+## Week 1 — Data and interaction feasibility
 
-- [ ] Confirm example request, recommendation objective, item count, and target browser.
+- [x] Confirm an API feasibility sample: peanut butter sandwich with white bread and a bowl of strawberries; target browser: Chrome. This is a manual sample, not an AI-generated meal request.
 - [x] Limit MVP to one simple meal request capped at 10 unique grocery products; no serving-count control.
-- [ ] Check an Open Prices record matching an ingredient from the example meal within 100 miles of Hayward, including price, unit, product size, currency, store, and date fields; record which unit and size fields are available.
-- [ ] Verify the Hayward-centered 100-mile radius and bounded price query against a live API response.
+- [x] Check Open Prices records for matching peanut butter, white bread, and strawberries within 100 miles of Hayward, including price, unit, product size, currency, store, date, and source fields; record which unit and size fields are available.
+- [x] Verify the Hayward-centered 100-mile radius and bounded price query against live API responses.
+- [ ] Confirm the AI-generated example request and recommendation goal for the final demo.
 - [ ] Decide how to present separate same-currency totals if mixed currencies are returned.
-- [ ] Choose an AI provider and confirm current free-tier/token reporting limits.
+- [x] Choose Cloudflare Workers AI and review current model and token reporting documentation.
+- [x] Compare grocery price/search data options and document why Open Prices fits the MVP and its data freshness limitations in the proposal.
+- [x] Add a concise tools and technologies list to the proposal, separate from JavaScript libraries.
 
-## Week 2 — Worker and API path (planned, not started)
+Provider research and provider selection are complete. The Worker uses `@cf/meta/llama-3.3-70b-instruct-fp8-fast`; deployment and verification remain open.
+
+## Week 2 — Worker and API path (in progress)
 
 - [ ] Review Week 1 unit and size data with the user, then decide whether unit conversions or unit-price comparisons fit the MVP and how to handle missing or different units.
-- [ ] Build a Cloudflare Worker endpoint without secret values in source.
-- [ ] User adds any required secrets directly in Cloudflare settings.
-- [ ] Return a schema-limited AI recommendation with a strict item/output cap.
+- [x] Build a local Cloudflare Worker endpoint without secret values in source; deployment and verification remain open.
+- [x] No separate model API key is needed; the Worker uses Cloudflare's `AI` binding. Cloudflare account setup and deployment remain open.
+- [x] Return a schema-limited AI recommendation with a strict item/output cap.
 - [ ] Implement one-call meal list generation and show a no-match state without substitute suggestions.
 - [ ] Sort returned prices and calculate the lowest-available-price estimate, excluding unavailable items and keeping currencies separate.
 - [ ] Fetch only bounded Open Prices location/price records.
@@ -53,6 +60,8 @@ Last updated: 2026-11-07
 - [ ] Record limitations for final presentation.
 
 ## Open choices
+
+The API sample and target browser are confirmed for feasibility work; the final AI-generated demo request and recommendation goal remain open.
 
 See `memory.md`. Do not resolve open choices by assumption when they affect API behavior, cost, privacy, or the project scope.
 

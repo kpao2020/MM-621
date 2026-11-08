@@ -1,0 +1,14 @@
+# Basket Buddy API Worker
+# Deploy this Worker separately from the GitHub Pages frontend.
+
+name = "basket-buddy-api"
+main = "src/index.js"
+compatibility_date = "2026-11-08"
+
+[ai]
+binding = "AI"
+
+[vars]
+# Include the GitHub Pages origin and local development origins.
+# CORS controls browser access; it is not authentication for the public endpoint.
+ALLOWED_ORIGINS = "https://kpao2020.github.io,http://localhost:5500,http://127.0.0.1:5500"
