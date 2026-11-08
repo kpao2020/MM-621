@@ -1,6 +1,6 @@
 # Basket Buddy — Project Memory
 
-Last updated: 2026-11-07
+Last updated: 2026-11-08
 
 ## Confirmed decisions
 
@@ -24,6 +24,8 @@ Last updated: 2026-11-07
 - Visual direction: friendly, playful, eye-friendly, mobile-first, and no chart gridlines or game framing.
 - Footer follows P2's one-line convention: last update timestamp, link to checked/pretty-printed API JSON, and session token usage if the AI provider reports it.
 - Secrets are not stored in the repository or local files. The user will set Cloudflare secrets themselves.
+- Use Cloudflare Workers AI for the one meal-list request; the current model is `@cf/meta/llama-3.3-70b-instruct-fp8-fast` through the Worker `AI` binding.
+- Open Prices is the selected grocery-price source after comparing retailer feeds, Flipp, MealMe, Algolia, Google Shopping access, SerpApi, and OpenWeb Ninja. Use its bounded public read endpoints and ODbL reuse path; present price records as community-reported observations with dates and sources, since coverage can be sparse or old.
 
 ## Data and response constraints
 
@@ -35,10 +37,9 @@ Last updated: 2026-11-07
 
 ## Decisions still open
 
-- AI provider: Cloudflare Workers AI or Gemini. Confirm limits for the one meal-generation call used by the MVP.
 - Whether to calculate normalized prices for value comparisons, and how to handle prices with different or missing units. Inspect unit and product-size fields in Week 1, then make the decision with the user in Week 2; no conversion approach has been approved.
-- Example meal request and the one personalization detail to support.
-- Target phone/browser for the MVP and final demo.
+- Final AI-generated example meal request and the one personalization detail to support. The API feasibility sample is a peanut butter sandwich with white bread and a bowl of strawberries; it is not the final AI prompt.
+- Final demo phone/browser. Chrome is confirmed as the target browser for the API feasibility sample.
 - If multiple currencies are returned, decide how to present separate same-currency totals without mixing currencies.
 - Confirm the final API page-size cap after checking real data coverage.
 

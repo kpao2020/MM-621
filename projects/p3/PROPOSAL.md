@@ -13,11 +13,29 @@
     My goal is to complete a working MVP (minimum viable product) in three weeks. The plan is subject to change based on Week 1 progress.
 - **JavaScript libraries**: 
     - P5js: [https://p5js.org/](https://p5js.org/)
+- **Tools and technologies**:
+    - Cloudflare Workers AI: generates the meal product list.
+    - Cloudflare Workers: hosts the backend API endpoint.
+    - Open Prices API: provides available product, price, and store data.
+    - GitHub and GitHub Pages: source control and project hosting.
+    - HTML, CSS, and JavaScript: structure, styling, and application logic.
+    - Google Chrome: target browser for development and use.
 - **Research and resources**: 
+    - I compared Open Prices with retailer feeds, Flipp, MealMe, Algolia, and Google Shopping results offered through SerpApi and OpenWeb Ninja.
+    - Retailer feeds may provide current prices, but each retailer has a separate data source. Flipp shows local flyer offers, but I did not find a self-service free API, and its terms restrict scraping and republishing its content. MealMe combines grocery data with ordering, and its published terms restrict reuse in ways that do not fit this public student project.
+    - Algolia is a search service that requires a product catalog to be supplied and indexed; it does not provide grocery products or prices. Google does not offer a general public API to search all Google Shopping products and offers; its Merchant API is for businesses to manage their own Merchant Center products and inventory.
+    - SerpApi and OpenWeb Ninja are third-party services that return Google Shopping results, not Google APIs. Their free plans have limited request caps (250 searches and 100 API requests per month, respectively). SerpApi's free plan excludes its U.S. Legal Shield, while OpenWeb Ninja's reuse license applies only to rights it holds and leaves users responsible for rights and terms from original sources. A city-level search can help localize results, but does not verify a nearby store's inventory or shelf price.
+    - I selected Open Prices because it has public read endpoints that do not require an API key, supports product and price lookups with store locations and observation dates, and allows a bounded search around Hayward. Its Open Database License (ODbL) gives me a clear reuse path with the required attribution and license terms. In my feasibility check, I found records for all three sample ingredients, but some observations were old and one looked questionable. I will show each observation date and source, describe the data as community-reported, and show “Price unavailable” when no matching record is found rather than presenting these results as guaranteed current shelf prices.
     - [p5.js reference](https://p5js.org/reference/)
     - [Open Prices data guide](https://openfoodfacts.github.io/open-prices/guides/data/)
     - [Open Prices API documentation](https://prices.openfoodfacts.org/api/docs)
     - [Open Database License (ODbL) v1.0](https://opendatacommons.org/licenses/odbl/1-0/)
+    - [Flipp FAQ](https://corp.flipp.com/faq/) and [terms of use](https://corp.flipp.com/terms-of-use/)
+    - [MealMe API and SDK terms](https://www.mealme.ai/privacy)
+    - [Algolia pricing](https://www.algolia.com/pricing)
+    - [Google Merchant API overview](https://developers.google.com/merchant/api/overview)
+    - [SerpApi Google Shopping results](https://serpapi.com/shopping-results), [pricing](https://serpapi.com/pricing), and [legal terms](https://serpapi.com/legal)
+    - [OpenWeb Ninja product search](https://www.openwebninja.com/api/real-time-product-search) and [terms of use](https://www.openwebninja.com/terms)
 
 - *Disclaimer*: This project idea originated with and is owned by Ken Pao. AI assisted with the research and writing of this proposal.
 
@@ -106,7 +124,7 @@ A 100-mile circle around Hayward can include stores outside the Bay Area. The ap
 - `index.html` and `style.css` will provide the page and responsive controls.
 - `sketch.js` will remain the main p5.js file for the page, application state, and interactions.
 - Separate component files will handle the Worker request, data handling, and results display. I will keep the files focused and use the clear headers and explanatory comments in each JavaScript file.
-- A Cloudflare Worker will handle the AI request and targeted Open Prices lookups. I will choose an AI provider after checking its free-tier limits and token reporting.
+- A Cloudflare Worker will handle the AI request and targeted Open Prices lookups. I selected Cloudflare Workers AI after reviewing its free-tier limits and token reporting.
 - I will enter any required secrets directly in Cloudflare settings. Secret values must not be placed in the public repository, local files, browser code, logs, or Git history.
 
 

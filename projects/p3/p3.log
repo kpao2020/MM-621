@@ -97,3 +97,39 @@ Append-only notes. Never include credentials, precise user coordinates, or priva
 
 - User requested that Week 1 confirm which price-unit and product-size fields are available, followed by a Week 2 decision on conversion and comparison rules.
 - Updated the proposal, tracker, and memory. The decision remains open; no conversion approach has been approved.
+
+## 2026-11-08 — Open Prices feasibility check
+
+- User selected a manual API sample: peanut butter sandwich with white bread and a bowl of strawberries; target browser for the sample: Chrome. This is not the AI-generated final demo request.
+- Queried the public Open Prices API with read-only GET requests; no credentials were needed.
+- Verified nearby locations and price results within 161 km (about 100 miles) of Hayward. Found records for peanut butter, white bread, and strawberries at stores in Mountain View and Cupertino.
+- Example records: Signature Select creamy peanut butter, $2.99 USD on 2026-10-18 at Safeway in Mountain View; Nature's Own thick sliced white bread, $3.99 USD on 2026-07-23 at Target in Cupertino; strawberries, $10.99 USD on 2026-02-07 at Safeway in Mountain View.
+- Product-size metadata appeared for the examples. `price_per` was null, so no normalized unit price was available. The strawberry record's 140 g size and $10.99 price should be treated as a questionable community observation and not generalized.
+- The product catalog can find ingredient-like names, but price records are tied to product codes/barcodes. The final AI prompt, provider choice, and any unit comparison remain open.
+
+## 2026-11-08 — AI provider comparison
+
+- Compared current official Cloudflare Workers AI and Gemini Developer API documentation for free usage, token reporting, structured output, and request setup.
+- Cloudflare Workers AI includes 10,000 Neurons per day on the free Workers plan. The Worker AI binding avoids a separate provider API key; text generation responses can include prompt, completion, and total token counts. `@cf/meta/llama-3.3-70b-instruct-fp8-fast` is currently documented for JSON Mode and zero data retention.
+- Gemini offers free token usage for selected models, project/model-specific request limits in AI Studio, structured JSON output, and prompt/candidate token counts in response metadata. Gemini free-tier content may be used to improve Google products; using the API requires keeping a Google API key in Worker secrets.
+- Current recommendation is Cloudflare Workers AI for this planned Cloudflare Worker MVP. Provider choice remains unconfirmed; no model or provider has been wired into the project.
+
+## 2026-11-08 — Cloudflare provider selected and Worker started
+
+- User selected Cloudflare Workers AI.
+- Added `worker/src/index.js` and `worker/wrangler.toml` for a POST `/api/meal` endpoint using the `AI` binding and `@cf/meta/llama-3.3-70b-instruct-fp8-fast` JSON Mode.
+- The endpoint accepts a bounded meal request, returns a meal name and up to 10 unique product names, reports token usage when present, and provides JSON errors. No provider API key or secret is included in the repository.
+- Configured CORS origins for the GitHub Pages site and common local preview origins. This is a browser access rule, not endpoint authentication.
+- Implementation has not been deployed or tested. Next: connect the p5.js page and add targeted Open Prices lookups.
+
+## 2026-11-08 — Provider research added to proposal
+
+- Completed the proposal's Research and resources section with the comparison of Open Prices, retailer feeds, Flipp, MealMe, Algolia, Google Shopping access, SerpApi, and OpenWeb Ninja.
+- Documented the reason for selecting Open Prices: bounded public lookups, store and observation details, and an ODbL reuse path with attribution; also documented the sample's old/questionable records and the need to avoid claims of current shelf prices.
+- Updated the proposal's technical plan to reflect the confirmed Cloudflare Workers AI choice.
+- Next: connect the p5.js page to the existing local Worker, then implement bounded Open Prices lookups. Worker deployment and verification are still pending.
+
+## 2026-11-08 — Proposal tools and technologies list
+
+- Added a short list for Cloudflare Workers AI, Cloudflare Workers, Open Prices API, GitHub/GitHub Pages, HTML/CSS/JavaScript, and Chrome.
+- Kept p5.js in its existing JavaScript libraries section.
