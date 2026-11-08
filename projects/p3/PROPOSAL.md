@@ -1,0 +1,130 @@
+# Basket Buddy — Project 3 Proposal
+
+- **Student Designer**: Ken Pao
+- **Class**: MM-621 (Interaction Design Studio II)
+- **Date**: Nov 8, 2026
+
+- **Project type**: Individual
+- **Project concept**: 
+    Basket Buddy is a mobile-friendly p5.js web app that helps shoppers plan a simple meal. A user can type a meal request, and AI will suggest a shopping list with up to 10 grocery products. The app will use the Open Prices API to look up available prices and store locations, then display the results in a friendly, easy-to-read format.
+
+    For the meal suggestions, I want the AI to favor familiar grocery items commonly found in the Bay Area. This preference may make the list more practical, but it cannot guarantee that a product is in stock or has a matching price in Open Prices. Because Open Prices is a community-contributed dataset, I will show the observation date and source with each price. If no matching record is found, the app will display “Price unavailable.” [Open Prices data guide](https://openfoodfacts.github.io/open-prices/guides/data/)
+
+    My goal is to complete a working MVP (minimum viable product) in three weeks. The plan is subject to change based on Week 1 progress.
+- **JavaScript libraries**: 
+    - P5js: [https://p5js.org/](https://p5js.org/)
+- **Research and resources**: 
+    - [p5.js reference](https://p5js.org/reference/)
+    - [Open Prices data guide](https://openfoodfacts.github.io/open-prices/guides/data/)
+    - [Open Prices API documentation](https://prices.openfoodfacts.org/api/docs)
+    - [Open Database License (ODbL) v1.0](https://opendatacommons.org/licenses/odbl/1-0/)
+
+- *Disclaimer*: This project idea originated with and is owned by Ken Pao. AI assisted with the research and writing of this proposal.
+
+## Three-Week Plan
+
+### Week 1 — Check the Data and Prepare the Project
+
+**Work**
+
+- Choose an example meal request and a phone/browser for the final demo.
+- Check a limited Open Prices response for an ingredient in the example meal within 100 miles of Hayward. Inspect the available records for product, price, currency, store, and observation date, and confirm which price-unit and product-size fields are available or missing.
+- Choose an AI provider after reviewing its free-tier limits and token reporting. Prepare Cloudflare settings and enter any required secret directly.
+- Sketch a simple mobile layout.
+
+**Deliverables**
+
+- A documented example request, target browser, and selected AI provider.
+- At least one inspected Open Prices record that matches an ingredient in the example meal, is within 100 miles of Hayward, and has usable price, store, and date information. If the data is not available, document the blocker before Week 2; the price feature will remain incomplete until it is resolved.
+- A note showing which price-unit and product-size fields are available in the inspected data.
+- A mobile layout sketch.
+
+### Week 2 — Connect the Main Flow
+
+**Work**
+
+- Build the Cloudflare Worker and connect one AI call for the meal list.
+- Add targeted Open Prices lookups for the generated products within 100 miles of Hayward.
+- Connect the text input to a basic p5.js results view.
+- Review the Week 1 unit and size data and decide whether unit conversion or unit-price comparisons fit the MVP, including how to handle different or missing units.
+- Sort returned prices and calculate the estimated total from the lowest available returned price for each product.
+- Handle missing prices, invalid responses, and service errors. Keep AI-generated text separate from price and store data.
+
+**Deliverables**
+
+- A typed meal request that runs through the Worker and displays no more than 10 products.
+- Up to three real Open Prices records for each matched product, or “Price unavailable” when no record is found.
+- An estimated total that includes only available prices, with a clear note about missing prices.
+- A decision on unit conversion and price comparisons based on the Week 1 data.
+- Clear AI and API error messages, with no secrets exposed in the browser or repository.
+
+### Week 3 — Finish and Deliver
+
+**Work**
+
+- Finish the mobile layout, footer, formatted JSON view, and Open Prices credit.
+- Publish the page on GitHub Pages and deploy the Worker.
+- Check the example request, a missing-price case, a service-error case, and the layout on the selected phone/browser.
+- Check that the estimated total excludes products with unavailable prices.
+- Fix the most important issues and prepare a short limitations note for the final presentation.
+
+**Deliverables**
+
+- A hosted page and Worker that complete the typed meal request.
+- A readable results view with no more than 10 products and three price records per product.
+- An estimated total with the note “Based on the lowest returned price for each available item. Items without prices are not included.”
+- A footer with the timestamp, checked JSON link, and token usage when reported, plus the separate Open Prices credit and disclaimer.
+- A final demo using a real example and a short note about data coverage and unresolved limitations.
+
+---
+
+## Interaction Design
+
+1. The user types and submits a request for one simple meal.
+2. The app makes one AI call to generate a short shopping list with no more than 10 unique products.
+3. The app checks Open Prices for those products. It will not download the full dataset or make another AI call to analyze prices.
+4. The results show each product with up to three matching price records, sorted from lowest to highest among the returned records in the same currency. Each record includes the price, currency, store location, observation date, and source. The price unit and product size will also be shown when available. How to compare different or missing units will be decided in Week 2 after reviewing the Week 1 data.
+5. The app adds the lowest available returned price for each product to calculate an **Estimated total**. A note will say “Based on the lowest returned price for each available item. Items without prices are not included.” Prices in different currencies will not be combined. If no prices are available, the total will be marked unavailable.
+6. If a price is missing, the app displays “Price unavailable.” If the AI or data service fails, it displays a clear error message.
+7. p5.js will present the results with a playful, eye-friendly design that fits a phone screen. I plan to avoid gridlines and dense tables.
+8. Similar to Project 2, a footer will show the latest data request or update timestamp and a link to the checked data in formatted JSON. It will also show session input and output token usage when the AI provider reports it; otherwise, usage will be marked unavailable.
+
+Note: I want to track and monitor AI token usage during each session.
+
+The app will also display a separate one-line credit and disclaimer:
+
+> Contains information from [Open Prices (Open Food Facts)](https://prices.openfoodfacts.org/), made available under the [Open Database License (ODbL) v1.0](https://opendatacommons.org/licenses/odbl/1-0/); prices are community-reported and may be incomplete or outdated.
+
+## Store Location
+
+I will use Hayward, California, as the center point for finding stores. Project 2 already uses Hayward's coordinates (37.6688, -122.0808). The app will search within a 100-mile radius, approximately 161 km; Open Prices accepts coordinates and a radius in kilometers for location and price searches. [Nearby locations API](https://openfoodfacts.github.io/documentation/docs/Open-prices/locations/locations_nearby_list/), [prices API](https://openfoodfacts.github.io/documentation/docs/Open-prices/prices/prices_list/)
+
+A 100-mile circle around Hayward can include stores outside the Bay Area. The app will label the search area as within 100 miles of Hayward and show each store's recorded location. Results are not based on the user's location and may be far from the user. The app will use a limited set of API results, so the estimated total is based on returned records and does not claim to find the lowest prices across every store.
+
+## Technical Plan
+
+- `index.html` and `style.css` will provide the page and responsive controls.
+- `sketch.js` will remain the main p5.js file for the page, application state, and interactions.
+- Separate component files will handle the Worker request, data handling, and results display. I will keep the files focused and use the clear headers and explanatory comments in each JavaScript file.
+- A Cloudflare Worker will handle the AI request and targeted Open Prices lookups. I will choose an AI provider after checking its free-tier limits and token reporting.
+- I will enter any required secrets directly in Cloudflare settings. Secret values must not be placed in the public repository, local files, browser code, logs, or Git history.
+
+
+## Risks and Delivery
+
+Open Prices may not have a price record for every product or store, and an older record may differ from the current shelf price. AI-generated product names may also need to be matched to records in the API. Prices may come from different stores or package sizes, so the total is an estimate based on the returned records.
+
+The goal is to have the basic flow working in Week 2 and finish by the end of Week 3. Provider setup, free-tier limits, service availability, and data coverage still need to be checked. If any of these blocks the main flow, I will record the issue and review it before changing the plan. 
+
+## Future Features
+
+- Voice input and microphone speech recognition.
+- Search for a single product.
+- Use browser location to prioritize nearby stores.
+- AI-generated substitutes when a user requests them.
+- Retailer ordering and home delivery with the shopper's approval.
+- Price-drop monitoring and alerts.
+- Additional regions and stores.
+
+### Developer notes
+- I will use the p5.js setup and responsive canvas from Project 2 - Spooky weather as a reference. As in my other projects, `sketch.js` will remain the main entry point, with focused helper files and comments to make the code easier to maintain and troubleshoot.
