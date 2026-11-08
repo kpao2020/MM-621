@@ -1,0 +1,99 @@
+# Basket Buddy — Progress Log
+
+Append-only notes. Never include credentials, precise user coordinates, or private user data.
+
+## 2026-11-07 — Proposal and handoff setup
+
+- Confirmed the working project name: Basket Buddy.
+- Updated the proposal to remove route/travel-time estimates.
+- Confirmed browser location permission may be requested for nearby-store filtering; do not infer location from IP.
+- If permission is declined, use a bounded Open Prices lookup and label the store location as non-personalized/possibly not nearby.
+- Documented proposed query caps, no-grid visual direction, P2-style footer, and Cloudflare-only user-managed secrets.
+- Created project requirements, memory, tracker, README, and agent handoff instructions.
+- Current status: planning; implementation has not started.
+- Open decisions: AI provider, example request, recommendation goal, final result caps, and target browser.
+
+## 2026-11-07 — Bay Area and attribution requirements
+
+- Set the data region to MTC's nine-county Bay Area.
+- Limit display to at most three price records per product; sorting rule (most recent or lowest) remains open.
+- For direct product requests, look up the requested product first; consider an AI substitute only when a suitable Bay Area record is missing.
+- Proposed limit: at most 10 unique grocery products per request; this should cover most simple single meals for 1–4 servings.
+- Added a one-line Open Prices / Open Food Facts contributor credit, ODbL 1.0 link, and community-data disclaimer to the planned app footer.
+- No-location fallback remains bounded and Bay Area-wide; it must not be described as personalized or nearby.
+
+## 2026-11-07 — Product cap recommendation
+
+- Set the MVP request cap to 10 unique grocery products. For a simple single meal, quantities can scale to 1–4 servings; complex or multi-dish requests may need to be simplified.
+
+## 2026-11-07 — Scope simplification and future ideas
+
+- User removed serving-count controls; do not frame the MVP around 1–4 people.
+- MVP request paths: one specific product search, or one simple personalized meal request with at most 10 unique grocery products.
+- Personalization comes from the current prompt; no saved user profile.
+- Added future-only ideas: shopper-approved ordering/home delivery, price-drop alerts, and expansion beyond the Bay Area.
+- Revisit whether AI substitution for missing data should be removed to avoid an extra AI call; no change to that behavior until the user decides.
+
+## 2026-11-07 — AI/API request flow decision
+
+- Confirmed: a meal request uses one AI call to generate at most 10 grocery products, then targeted Open Prices request(s) fetch matching records.
+- Confirmed: a specific product search goes directly to Open Prices and uses no AI call.
+- Confirmed: do not make a follow-up AI call to analyze API results or suggest replacements. If no suitable price record exists, show “No price record found.”
+
+## 2026-11-07 — Optional substitutions
+
+- Updated the no-match behavior: display “Find substitutes” as an optional shopper action.
+- Only after the click, make one compact batch AI call per request, return at most one substitute per missing product, then query Open Prices for those suggestions.
+- No automatic substitution calls, no AI analysis call for prices, and no repeated substitute retry if an alternative also lacks a price record.
+
+## 2026-11-07 — MVP scope correction: substitutions deferred
+
+- User moved substitute suggestions and the associated follow-up AI call out of the first MVP.
+- MVP behavior for an item without a matching price record: show “No price record found”; do not offer substitutes or make another AI call.
+- Keep optional, shopper-triggered AI substitute suggestions plus a targeted Open Prices lookup in the future-feature backlog only.
+- This entry supersedes the earlier optional-substitution MVP decision above.
+
+## 2026-11-07 — No-price message wording
+
+- Use “Price unavailable” as the shopper-facing message when no suitable price record is found; this replaces “No price record found” in current MVP guidance.
+
+## 2026-11-07 — Locality-aware meal recommendations
+
+- User wants meal recommendations to favor items commonly stocked in the Bay Area, and tailor to a user's area when coarse locality context is available.
+- MVP approach: add this as a prompt preference in the existing single meal-generation AI call; do not add a separate AI call or location-catalog prefetch.
+- Treat availability as a heuristic only. The AI cannot verify local inventory or Open Prices coverage; the app still checks generated products against Open Prices and displays “Price unavailable” when no matching record exists.
+- Never send precise browser coordinates to the AI; use only coarse locality context if available.
+
+## 2026-11-07 — Three-week proposal revision
+
+- User confirmed text-only input for the MVP; moved voice and microphone input to future features.
+- Revised the proposal with three weekly milestones and measurable deliverables, without mentioning hours in the proposal.
+- User suggested Hayward as a fixed center and asked about a fallback without location. The proposal recommends discovering candidates within 100 miles and checking a small list of Bay Area store IDs; the radius alone does not enforce the nine-county boundary. The approach still needs user review and a real coverage check.
+- Proposed additional scope cuts for user review: meal-only requests, a fixed store selection instead of browser location, and deferring totals and advanced ranking. Previous confirmed requirements remain in effect until the user approves changes.
+
+## 2026-11-07 — Proposal proofreading
+
+- Rewrote and proofread the proposal in a more natural first-person style, using the Project 1 and Project 2 descriptions as references.
+- Preserved the three-week plan, text-only input, proposed Hayward fallback, project ownership statement, and pending status of additional scope cuts. No implementation decision was changed.
+
+## 2026-11-07 — Hayward search area and estimated total
+
+- User confirmed the MVP will use a 100-mile radius around Hayward, including locations outside the Bay Area, without checking a list of store IDs or verifying county boundaries.
+- User confirmed one simple meal request; single-product search and browser-based location move to future features. List future features only in the proposal's Future Features section.
+- Sort the returned prices from lowest to highest and calculate an estimated total using the lowest available returned price per product. Exclude items without prices and label the total “Estimated total: available items only.” Never combine currencies; if all prices are unavailable, show the total as unavailable.
+- Updated the proposal and current continuity documents. This entry supersedes the earlier nine-county, browser-location, fixed-store-list, and pending-scope decisions.
+
+## 2026-11-07 — Estimated total wording
+
+- Label the amount “Estimated total” and show: “Based on the lowest returned price for each available item. Items without prices are not included.” This replaces the earlier “available items only” note.
+
+## 2026-11-07 — Approved proposal review changes
+
+- User approved showing the price unit and product size when the source provides them, a Week 1 check for a record matching an example meal ingredient within 100 miles of Hayward, and a schedule note based on Week 1 progress.
+- Applied the three approved wording edits to the proposal and updated the continuity notes.
+- User asked about unit conversion and cost-effective comparisons; the implementation approach remains open and is not an approved scope change.
+
+## 2026-11-07 — Unit comparison decision scheduled
+
+- User requested that Week 1 confirm which price-unit and product-size fields are available, followed by a Week 2 decision on conversion and comparison rules.
+- Updated the proposal, tracker, and memory. The decision remains open; no conversion approach has been approved.
