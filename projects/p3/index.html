@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="style.css">
     <!-- p5.js draws the small basket illustration; the page UI stays semantic HTML. -->
     <script src="../../lib/p5.min.js"></script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
     <script src="config.js"></script>
     <script src="api.js"></script>
     <script src="results.js"></script>
@@ -46,9 +47,10 @@
         <form id="meal-form">
           <label class="visually-hidden" for="meal-request">Describe a meal</label>
           <textarea id="meal-request" name="meal-request" maxlength="500" required rows="2" placeholder="Try: beef stew with carrots and potatoes"></textarea>
+          <div id="verification-widget" class="verification-widget" aria-label="Security verification"></div>
           <div class="form-bottom">
             <p class="form-hint">Meal requests aren't saved or used to train AI.</p>
-            <button class="primary-button" id="submit-button" type="submit">
+            <button class="primary-button" id="submit-button" type="submit" disabled>
               <span>Build my basket</span><span aria-hidden="true">→</span>
             </button>
           </div>

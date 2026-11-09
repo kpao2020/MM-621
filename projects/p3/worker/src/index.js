@@ -53,14 +53,27 @@ export default {
       );
     }
 
+    // CORS is not authentication. Apply the limiter to direct clients too.
+    const visitorIp = request.headers.get("CF-Connecting-IP");
+    if (!env.MEAL_LIMITER || !visitorIp || !env.TURNSTILE_SECRET_KEY || !env.TURNSTILE_HOSTNAME) {
+      return jsonResponse({ error: "Verification is temporarily unavailable." }, 503, corsHeaders(request, env));
+    }
+    try {
+      const { success } = await env.MEAL_LIMITER.limit({ key: visitorIp });
+      if (!success) {
+        return jsonResponse({ error: "Too many requests. Please wait a minute and try again." }, 429,
+          { ...corsHeaders(request, env), "Retry-After": "60" });
+      }
+    } catch {
+      return jsonResponse({ error: "Verification is temporarily unavailable." }, 503, corsHeaders(request, env));
+    }
+
     let body;
     try {
-      const rawBody = await request.text();
-      if (rawBody.length > 2_000) {
-        return jsonResponse({ error: "Request is too large." }, 413, corsHeaders(request, env));
-      }
+      const rawBody = await readBodyWithinLimit(request, 4_096);
       body = JSON.parse(rawBody);
-    } catch {
+    } catch (error) {
+      if (error instanceof RangeError) return jsonResponse({ error: "Request is too large." }, 413, corsHeaders(request, env));
       return jsonResponse({ error: "Request body must be valid JSON." }, 400, corsHeaders(request, env));
     }
 
@@ -74,6 +87,26 @@ export default {
         400,
         corsHeaders(request, env),
       );
+    }
+
+    const token = typeof body?.turnstileToken === "string" ? body.turnstileToken : "";
+    if (!token || token.length > 2_048) {
+      return jsonResponse({ error: "Please complete the verification and try again." }, 403, corsHeaders(request, env));
+    }
+    try {
+      const verification = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ secret: env.TURNSTILE_SECRET_KEY, response: token, remoteip: visitorIp }),
+        signal: AbortSignal.timeout(8_000),
+      });
+      if (!verification.ok) throw new Error("Turnstile verification failed.");
+      const checked = await verification.json();
+      if (checked.success !== true || checked.hostname !== env.TURNSTILE_HOSTNAME || checked.action !== "basket_meal") {
+        return jsonResponse({ error: "Verification expired or failed. Please try again." }, 403, corsHeaders(request, env));
+      }
+    } catch {
+      return jsonResponse({ error: "Verification is temporarily unavailable. Please try again." }, 503, corsHeaders(request, env));
     }
 
     if (!env.AI) {
@@ -130,6 +163,26 @@ export default {
     }
   },
 };
+
+// Limit request bytes while reading, rather than buffering an arbitrary-sized body.
+async function readBodyWithinLimit(request, maxBytes) {
+  if (!request.body) return "";
+  const reader = request.body.getReader();
+  const decoder = new TextDecoder();
+  let size = 0;
+  let text = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > maxBytes) {
+      await reader.cancel();
+      throw new RangeError("Request is too large.");
+    }
+    text += decoder.decode(value, { stream: true });
+  }
+  return text + decoder.decode();
+}
 
 function parseModelResponse(response) {
   if (typeof response === "string") return JSON.parse(response);

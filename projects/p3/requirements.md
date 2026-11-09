@@ -16,6 +16,7 @@ Status: implementation in progress; local API flow checked, Chrome/mobile visual
 10. Present results with friendly, playful mobile-first visuals. Do not use chart gridlines or a dense spreadsheet table.
 11. Keep loading, no-match, and API-error states understandable.
 12. Display a compact P2-style data/token footer plus a visible one-line Open Prices credit/disclaimer linked to the source and ODbL 1.0.
+13. Require a valid, single-use Cloudflare Turnstile verification for meal requests and apply an approximate per-IP request limit without requiring user sign-in. These controls reduce abuse and do not authenticate users.
 
 ## Data and response bounds
 

@@ -1,7 +1,7 @@
 // Browser-to-Worker API helper.
 // Provider credentials and Open Prices requests stay on the Worker.
 window.BasketBuddyAPI = {
-  async createBasket(mealRequest) {
+  async createBasket(mealRequest, turnstileToken) {
     const workerUrl = String(window.BASKET_BUDDY_CONFIG?.workerUrl || "")
       .trim()
       .replace(/\/+$/, "");
@@ -12,7 +12,7 @@ window.BasketBuddyAPI = {
       response = await fetch(`${workerUrl}/api/meal`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mealRequest }),
+        body: JSON.stringify({ mealRequest, turnstileToken }),
       });
     } catch (error) {
       console.error("[Basket Buddy] Could not reach the Worker.", error);

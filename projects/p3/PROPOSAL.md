@@ -125,6 +125,7 @@ A 50-mile circle around Hayward can include stores outside the Bay Area. The app
 - `sketch.js` will remain the main p5.js file for the page, application state, and interactions.
 - Separate component files will handle the Worker request, data handling, and results display. I will keep the files focused and use the clear headers and explanatory comments in each JavaScript file.
 - A Cloudflare Worker will handle the AI request and targeted Open Prices lookups. I selected Cloudflare Workers AI after reviewing its free-tier limits and token reporting.
+- Cloudflare Turnstile and a request limit will help reduce automated abuse without requiring a user account.
 - I will enter any required secrets directly in Cloudflare settings. Secret values must not be placed in the public repository, local files, browser code, logs, or Git history.
 
 ### Privacy and data handling

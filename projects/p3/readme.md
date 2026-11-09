@@ -4,7 +4,7 @@ Basket Buddy is a mobile-first p5.js MVP for one simple personalized meal with u
 
 ## Current state
 
-The app and deployed Cloudflare Worker use one AI meal-list call, bounded product searches, and selected category-price searches within 50 miles of Hayward. A production Worker check returned recorded chicken and rice matches. GitHub Pages publication and Chrome/mobile visual verification remain open.
+The app and deployed Cloudflare Worker use one AI meal-list call, bounded product searches, and selected category-price searches within 50 miles of Hayward. The Worker requires a Turnstile verification token and applies an approximate per-IP rate limit. A production Worker check returned recorded chicken and rice matches before protection was enabled. GitHub Pages publication and real-browser verification remain open.
 
 ## Planned interaction
 
@@ -45,13 +45,13 @@ The current MVP excludes travel-time estimates, IP-based location inference, ret
 
 ## Secrets
 
-This repository is public. Do not put API keys or secret values in HTML, JavaScript, Markdown, `.env` files, or Git history. The user will create any required Cloudflare secrets directly in Cloudflare settings. No secret values belong in project documentation.
+This repository is public. Do not put API keys or secret values in HTML, JavaScript, Markdown, `.env` files, or Git history. The Turnstile secret is stored in the Worker's Cloudflare secret store as `TURNSTILE_SECRET_KEY`; the site key in `config.js` is public. No secret values belong in project documentation.
 
 ## Run locally
 
 1. Serve the repository root on port 5500 using VS Code Live Server, or run `python3 -m http.server 5500` from the repository root. The page needs the shared `lib/p5.min.js` file.
-2. Open `http://localhost:5500/projects/p3/` in Chrome. The page uses the deployed Worker URL in `config.js`.
-3. To develop the Worker locally, run `npx wrangler dev --port 8787` from `projects/p3/worker` and temporarily set `workerUrl` in `config.js` to `http://127.0.0.1:8787`. Workers AI requests in local development still use the Cloudflare account's AI resources. Restore the public Worker URL before publishing.
+2. Open `http://localhost:5500/projects/p3/` in Chrome. The page uses the deployed Worker URL in `config.js`, but the production Turnstile widget and Worker only accept the GitHub Pages hostname. Test a real submission on the published GitHub page; local development requires a separately configured test widget and test Worker environment.
+3. To develop the Worker locally, run `npx wrangler dev --port 8787` from `projects/p3/worker` and temporarily set `workerUrl` in `config.js` to `http://127.0.0.1:8787`. Workers AI requests in local development still use the Cloudflare account's AI resources. Restore the public Worker URL before publishing; do not use test secrets in production.
 
 To update the deployed Worker, run `npx wrangler deploy` from `projects/p3/worker` after logging in. The public Worker origin is set in `projects/p3/config.js`; confirm the CORS allowlist before publishing the frontend.
 

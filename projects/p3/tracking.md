@@ -4,7 +4,7 @@ Last updated: 2026-11-08
 
 ## Overall status
 
-**Deployment in progress.** The production Worker is deployed and a chicken-and-rice request returned matches within 50 miles. The frontend was pushed to `ken`; GitHub Pages publishes from `main`. The user declined automatic pull-request creation, so a manual pull request and merge remain open, as does Chrome/phone visual verification.
+**Deployment in progress.** The production Worker is deployed with Turnstile validation and a request limiter. The matching frontend changes need to be pushed and merged from `ken` into `main`, which publishes GitHub Pages. The user declined automatic pull-request creation; manual merge and real-browser token validation remain open.
 
 ## Decisions recorded
 
@@ -25,6 +25,7 @@ Last updated: 2026-11-08
 - [x] Select Cloudflare Workers AI for the meal-list call.
 - [x] Add a local Cloudflare Worker endpoint with request validation, JSON schema output, a 10-product cap, token-usage fields, and configured-origin CORS.
 - [x] Keep Open Prices as the selected data source and apply the two-stage product-discovery then radius-bounded price-search approach.
+- [x] Add Turnstile and a five-per-minute approximate per-IP request limiter without requiring user sign-in; verify with a real browser token after frontend publication.
 
 ## Week 1 — Data and interaction feasibility
 

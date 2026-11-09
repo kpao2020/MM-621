@@ -66,6 +66,52 @@ function wireMealForm() {
   const input = document.getElementById("meal-request");
   const button = document.getElementById("submit-button");
   const status = document.getElementById("status-message");
+  let verificationToken = "";
+  let verificationWidget = null;
+  let submitting = false;
+
+  // Turnstile tokens are short-lived and single-use; a new one is needed after each request.
+  function startVerification(attempt = 0) {
+    const siteKey = String(window.BASKET_BUDDY_CONFIG?.turnstileSiteKey || "").trim();
+    if (!siteKey) {
+      showStatus("Security verification is not configured yet.", "error");
+      return;
+    }
+    if (!window.turnstile?.render) {
+      if (attempt < 60) window.setTimeout(() => startVerification(attempt + 1), 250);
+      else showStatus("Could not load verification. Please refresh the page.", "error");
+      return;
+    }
+    try {
+      verificationWidget = window.turnstile.render("#verification-widget", {
+        sitekey: siteKey,
+        action: "basket_meal",
+        size: "flexible",
+        callback: (token) => {
+          verificationToken = token;
+          if (!submitting) button.disabled = false;
+          if (status.dataset.verification === "waiting") {
+            status.hidden = true;
+            delete status.dataset.verification;
+          }
+        },
+        "expired-callback": () => {
+          verificationToken = "";
+          button.disabled = true;
+        },
+        "error-callback": () => {
+          verificationToken = "";
+          button.disabled = true;
+          status.dataset.verification = "waiting";
+          showStatus("Verification could not load. Please refresh the page.", "error");
+        },
+      });
+    } catch {
+      showStatus("Could not start verification. Please refresh the page.", "error");
+    }
+  }
+
+  startVerification();
 
   document.getElementById("new-meal").addEventListener("click", () => {
     window.BasketBuddyResults.clear();
@@ -84,6 +130,14 @@ function wireMealForm() {
       return;
     }
 
+    if (!verificationToken) {
+      showStatus("Please complete the security check first.", "error");
+      return;
+    }
+
+    const requestToken = verificationToken;
+    verificationToken = "";
+    submitting = true;
     button.disabled = true;
     form.setAttribute("aria-busy", "true");
     button.innerHTML = '<span>Building your basket…</span><span class="loading-spinner" aria-hidden="true"></span>';
@@ -91,7 +145,7 @@ function wireMealForm() {
     window.BasketBuddyResults.clear();
 
     try {
-      const data = await window.BasketBuddyAPI.createBasket(mealRequest);
+      const data = await window.BasketBuddyAPI.createBasket(mealRequest, requestToken);
       window.BasketBuddyResults.render(data);
       showStatus("Your basket is ready. Check each date and store below.", "success");
       document.getElementById("results-heading").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -102,8 +156,19 @@ function wireMealForm() {
       // Preserve the shopper's request so errors never erase what they typed.
       input.value = mealRequest;
       form.removeAttribute("aria-busy");
-      button.disabled = false;
       button.innerHTML = '<span>Build my basket</span><span aria-hidden="true">→</span>';
+      submitting = false;
+      // A verified token cannot be reused, even when the request fails.
+      if (verificationWidget !== null && window.turnstile?.reset) {
+        try {
+          window.turnstile.reset(verificationWidget);
+        } catch {
+          button.disabled = true;
+          showStatus("Could not restart verification. Please refresh the page.", "error");
+        }
+      } else {
+        button.disabled = true;
+      }
     }
   });
 
