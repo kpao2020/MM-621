@@ -71,7 +71,7 @@ function productScore(plan, item) {
   }
   if (plan.kind === "produce" && PRODUCE_PROCESSED.test(title)) return 0;
   if (plan.kind === "rice" && /\b(cooked|fried|seasoned|seasoning|flour|pudding|cakes?|crackers?|curry|garnish|steamed|portable|sticky|beef|chicken|meals?)\b/.test(title)) return 0;
-  if (plan.text === "salt" && /\b(no salt|salt free|salt added|seasoned|garlic|onion|celery|flavoured|flavored|sauce|soup|chips|snack)\b/.test(title)) return 0;
+  if (plan.text === "salt" && (!/\bsalt\b/.test(title) || /\b(no salt|salt free|salt added|seasoned|garlic|onion|celery|flavoured|flavored|sauce|soup|chips|snack)\b/.test(title))) return 0;
   if (plan.kind === "spice" && /\b(sauce|seasoned|soup|chips|snack|salt)\b/.test(title)) return 0;
   if (!title.includes(plan.term)) return 0;
   const words = plan.text.split(" ").filter((word) => word.length > 2);

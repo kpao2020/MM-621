@@ -4,7 +4,7 @@ Last updated: 2026-11-08
 
 ## Overall status
 
-**Deployment in progress.** The Worker searches barcode products and selected category prices, and the page renders compact expandable rows with one price per ingredient. The production Worker is deployed and a chicken-and-rice request returned matches within 50 miles. GitHub Pages publication and Chrome/phone visual verification remain open.
+**Deployment in progress.** The production Worker is deployed and a chicken-and-rice request returned matches within 50 miles. The frontend was pushed to `ken`; GitHub Pages publishes from `main`. The user declined automatic pull-request creation, so a manual pull request and merge remain open, as does Chrome/phone visual verification.
 
 ## Decisions recorded
 
