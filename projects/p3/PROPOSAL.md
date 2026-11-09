@@ -46,14 +46,14 @@
 **Work**
 
 - Choose an example meal request and a phone/browser for the final demo.
-- Check a limited Open Prices response for an ingredient in the example meal within 100 miles of Hayward. Inspect the available records for product, price, currency, store, and observation date, and confirm which price-unit and product-size fields are available or missing.
+- Check a limited Open Prices response for an ingredient in the example meal within 50 miles of Hayward. Inspect the available records for product, price, currency, store, and observation date, and confirm which price-unit and product-size fields are available or missing.
 - Choose an AI provider after reviewing its free-tier limits and token reporting. Prepare Cloudflare settings and enter any required secret directly.
 - Sketch a simple mobile layout.
 
 **Deliverables**
 
 - A documented example request, target browser, and selected AI provider.
-- At least one inspected Open Prices record that matches an ingredient in the example meal, is within 100 miles of Hayward, and has usable price, store, and date information. If the data is not available, document the blocker before Week 2; the price feature will remain incomplete until it is resolved.
+- At least one inspected Open Prices record that matches an ingredient in the example meal, is within 50 miles of Hayward, and has usable price, store, and date information. If the data is not available, document the blocker before Week 2; the price feature will remain incomplete until it is resolved.
 - A note showing which price-unit and product-size fields are available in the inspected data.
 - A mobile layout sketch.
 
@@ -62,7 +62,7 @@
 **Work**
 
 - Build the Cloudflare Worker and connect one AI call for the meal list.
-- Add targeted Open Prices lookups for the generated products within 100 miles of Hayward.
+- Add targeted Open Prices lookups for the generated products within 50 miles of Hayward.
 - Connect the text input to a basic p5.js results view.
 - Review the Week 1 unit and size data and decide whether unit conversion or unit-price comparisons fit the MVP, including how to handle different or missing units.
 - Sort returned prices and calculate the estimated total from the lowest available returned price for each product.
@@ -115,9 +115,9 @@ The app will also display a separate one-line credit and disclaimer:
 
 ## Store Location
 
-I will use Hayward, California, as the center point for finding stores. Project 2 already uses Hayward's coordinates (37.6688, -122.0808). The app will search within a 100-mile radius, approximately 161 km; Open Prices accepts coordinates and a radius in kilometers for location and price searches. [Nearby locations API](https://openfoodfacts.github.io/documentation/docs/Open-prices/locations/locations_nearby_list/), [prices API](https://openfoodfacts.github.io/documentation/docs/Open-prices/prices/prices_list/)
+I will use Hayward, California, as the center point for finding stores. Project 2 already uses Hayward's coordinates (37.6688, -122.0808). The app will search within a 50-mile radius, approximately 80.47 km; Open Prices accepts coordinates and a radius in kilometers for location and price searches. [Nearby locations API](https://openfoodfacts.github.io/documentation/docs/Open-prices/locations/locations_nearby_list/), [prices API](https://openfoodfacts.github.io/documentation/docs/Open-prices/prices/prices_list/)
 
-A 100-mile circle around Hayward can include stores outside the Bay Area. The app will label the search area as within 100 miles of Hayward and show each store's recorded location. Results are not based on the user's location and may be far from the user. The app will use a limited set of API results, so the estimated total is based on returned records and does not claim to find the lowest prices across every store.
+A 50-mile circle around Hayward can include stores outside the Bay Area. The app will label the search area as within 50 miles of Hayward and show each store's recorded location. Results are not based on the user's location and may be far from the user. The app will use a limited set of API results, so the estimated total is based on returned records and does not claim to find the lowest prices across every store.
 
 ## Technical Plan
 
@@ -126,6 +126,10 @@ A 100-mile circle around Hayward can include stores outside the Bay Area. The ap
 - Separate component files will handle the Worker request, data handling, and results display. I will keep the files focused and use the clear headers and explanatory comments in each JavaScript file.
 - A Cloudflare Worker will handle the AI request and targeted Open Prices lookups. I selected Cloudflare Workers AI after reviewing its free-tier limits and token reporting.
 - I will enter any required secrets directly in Cloudflare settings. Secret values must not be placed in the public repository, local files, browser code, logs, or Git history.
+
+### Privacy and data handling
+
+Basket Buddy will not require a user profile or save meal requests for later. The meal request is sent to Cloudflare Workers AI for processing. Cloudflare states that Workers AI does not retain request content after processing or use it to train AI models. The app sends the generated product names to Open Prices to look up price records. The interface will include this short note: “Meal requests aren't saved or used to train AI.” [Cloudflare Workers AI data usage](https://developers.cloudflare.com/workers-ai/platform/data-usage/)
 
 
 ## Risks and Delivery

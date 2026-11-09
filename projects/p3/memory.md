@@ -7,31 +7,35 @@ Last updated: 2026-11-08
 - Project name: **Basket Buddy**.
 - This is a small p5.js MVP for a class project, planned for about six hours across three weeks.
 - MVP supports one simple personalized meal request capped at 10 unique grocery products. Meal preferences are provided in the current prompt; no profile is saved.
-- Search within 100 miles of Hayward, California (37.6688, -122.0808; approximately 161 km). Results may be outside the Bay Area. Do not restrict results to a fixed store-ID list or verify them against nine-county boundaries.
+- Search within 50 miles of Hayward, California (37.6688, -122.0808; approximately 80.47 km). Results may be outside the Bay Area. Do not restrict results to a fixed store-ID list or verify them against nine-county boundaries.
 - AI call budget: one call for a meal request to generate its product list. No AI call analyzes price results.
 - Meal-generation prompt should favor familiar, commonly stocked Bay Area grocery items. This is a heuristic, not a guarantee of Open Prices records or actual store inventory; check products against Open Prices.
 - Missing products show “Price unavailable.” Substitute suggestions and their follow-up AI call are outside the first MVP and belong in the future-feature backlog.
-- Display no more than three returned price records per product, sorted from lowest to highest within the same currency. The displayed records do not claim to represent the lowest prices across every store.
+- Show each AI-returned ingredient in a compact row, with one lowest returned USD amount and expandable store, date, size, and record details. Returned prices may have different units or package sizes and do not establish the best value or lowest price across all stores.
 - Show the price unit and product size when the source provides them.
-- Label the total “Estimated total” and calculate it from the lowest available returned price per product. Show the note “Based on the lowest returned price for each available item. Items without prices are not included.” Do not combine currencies; if no prices are available, mark the total unavailable.
+- Label the total “Estimated total” and add one returned amount per available item only when the recorded amounts are per package or unit. Mark the total unavailable when any selected amount is per weight or volume because the needed quantity is unknown. Missing items are excluded; note that sizes vary.
+- Current price searches request USD only; never add amounts across currencies if this changes.
 - Do not add a serving-count feature to the MVP.
 - Include a one-line Open Prices attribution/disclaimer in the app footer, linked to Open Prices and ODbL 1.0.
 - `sketch.js` remains the primary p5.js entry point; focused components belong in separate JS files.
 - Use text input for the MVP. Voice and microphone input are future features.
-- Do not request browser location in the MVP. Clearly show the recorded store location and label results as within 100 miles of Hayward, not nearby to the user.
+- Do not request browser location in the MVP. Clearly show the recorded store location and label results as within 50 miles of Hayward, not nearby to the user.
 - Do not infer location from IP in this MVP.
 - Removed travel-time estimates and routing from scope.
 - Visual direction: friendly, playful, eye-friendly, mobile-first, and no chart gridlines or game framing.
 - Footer follows P2's one-line convention: last update timestamp, link to checked/pretty-printed API JSON, and session token usage if the AI provider reports it.
 - Secrets are not stored in the repository or local files. The user will set Cloudflare secrets themselves.
+- For local frontend preview, use VS Code Live Server; user has it running on port 5500. Avoid suggesting Python's static server unless asked.
 - Use Cloudflare Workers AI for the one meal-list request; the current model is `@cf/meta/llama-3.3-70b-instruct-fp8-fast` through the Worker `AI` binding.
+- Cloudflare's current Workers AI allowance is 10,000 Neurons per day on Workers Free. On Free, requests stop after the allowance; on Workers Paid, usage above it is billed. Local Wrangler development still sends AI inference to Cloudflare and uses account quota. Recheck pricing before launch because it can change.
 - Open Prices is the selected grocery-price source after comparing retailer feeds, Flipp, MealMe, Algolia, Google Shopping access, SerpApi, and OpenWeb Ninja. Use its bounded public read endpoints and ODbL reuse path; present price records as community-reported observations with dates and sources, since coverage can be sparse or old.
+- Keep Open Prices as the current source choice. SerpApi can return geographically targeted Google Shopping results, but it is a paid search-scraping service after its limited free tier and does not establish exact store inventory. Kroger's public product API can return location-specific prices but only for Kroger-family stores; its Acceptable Use rules appear to rule out comparing its prices with other retailers, which conflicts with Basket Buddy's comparison goal. Do not switch providers without a user decision.
 
 ## Data and response constraints
 
 - Open Prices price and store records are community-contributed; show the observation date and source, and do not describe them as verified live shelf prices.
 - Price searches use the fixed Hayward center and radius. Records may be far from the user and may use another currency; show currency and do not combine totals across currencies.
-- Keep at most three price records per product (up to 30 records at the 10-product cap).
+- Keep at most one displayed price record per ingredient (up to 10 records at the 10-product cap).
 - Enforce API page/result limits and never download the full dataset during a user request.
 - Keep AI output compact and structured; AI must not invent prices, dates, currencies, or store locations.
 
@@ -40,7 +44,6 @@ Last updated: 2026-11-08
 - Whether to calculate normalized prices for value comparisons, and how to handle prices with different or missing units. Inspect unit and product-size fields in Week 1, then make the decision with the user in Week 2; no conversion approach has been approved.
 - Final AI-generated example meal request and the one personalization detail to support. The API feasibility sample is a peanut butter sandwich with white bread and a bowl of strawberries; it is not the final AI prompt.
 - Final demo phone/browser. Chrome is confirmed as the target browser for the API feasibility sample.
-- If multiple currencies are returned, decide how to present separate same-currency totals without mixing currencies.
 - Confirm the final API page-size cap after checking real data coverage.
 
 ## Future ideas (not MVP commitments)
@@ -56,3 +59,30 @@ Last updated: 2026-11-08
 ## Secret handling
 
 Never place secret values here. Keep only non-sensitive setup notes, such as the Cloudflare dashboard location where the user will add a secret.
+
+## 2026-11-08 — Raw beef data check
+
+- User means raw beef suitable for stew, never ground beef or canned stew.
+- A clean Open Prices check found one local category-price observation for `en:beef-steaks` at Trader Joe's in Mountain View: $46.28/kg dated 2025-10-11, within 25 and 50 miles of Hayward; none at 5 miles. This is not a verified stew cut.
+- Exact tested category tags for beef steaks/roasts/cuts/stew meat and local product-linked beef filters produced no confirmed raw stew-cut price at 5/25/50 miles. Wider product filters surface ground, processed, or packaged items. Global catalog results show beef-related prices exist, but this doesn't establish local raw-cut coverage.
+- The Worker now searches barcode-linked product prices and selected category-price tags. It recognizes broad beef and chicken names, excludes several processed-meat matches, and labels the beef-steak category as a broader beef match rather than a verified stew cut. Matching is heuristic and needs continued review.
+- The full query results and caveats are saved in `p3.log` under “Raw beef / stew-cut Open Prices verification.”
+
+### Broader raw meat search
+
+- User clarified that ordinary raw beef or steak that can be cut at home is a useful broader candidate for a stew ingredient. Preserve the source's actual product/category name and do not claim that an unspecified steak is a verified stew cut.
+- On 2026-11-08 the five-mile Open Prices query returned 283 observations from two Castro Valley locations; scanning all three pages did not identify raw beef or raw chicken by name/category. A further scan for chuck, diced beef, ribeye, tri-tip, sirloin, brisket, and other cut names also found none. Every record had a price-level name, catalog name, or category tag, although names may be abbreviated or incomplete.
+- At 25 miles category-price results included the beef-steak observation above, plus chicken drumsticks, thighs, and whole chickens at Costco, Trader Joe's, Whole Foods, and Walmart. Safeway had chicken breast and thigh product-price records with unspecified package quantity. These are historical observations and not live inventory. Detailed prices, IDs, and dates are in `p3.log` under “Broader beef and chicken checks at 5 and 25 miles.”
+- Search all stores with matching Open Prices observations; do not use a store allowlist. Consider a short list of raw-meat synonyms and category tags while rejecting processed food. These checks did not change the configured 100-mile app radius.
+
+## 2026-11-08 — Search/display changes and Pepesto review
+
+- Implemented bounded product discovery and selected category-price lookups in `worker/src/search.js`, including beef/chicken matching guards and a labeled broader beef-steak result. Searches remain fixed at 100 miles, restricted to USD and bounded to one page; the lowest numeric returned amount can have a different unit or size than other records and is not a verified lowest price across stores.
+- The page now displays one record per ingredient in expandable compact rows, offers New meal, labels model tokens, and avoids an estimated total whenever a selected observation is priced per weight or volume. A local Worker request returned ten beef-stew ingredients and the $46.28/kg broader beef-steak observation; matching and rendering fixtures passed. Chrome/mobile visual review remains open because the Browser plugin could not connect to Chrome.
+- Pepesto's API documentation lists European supermarkets only, not Hayward or US stores. It has no free tier; the Starter pack is €29.90, and its API reference lists manual-shopping-list `/products` calls at €0.32. Its API terms permit displayed product data inside an app but make the customer responsible for retailer terms and downstream rights. Open Prices remains selected for Hayward; no Pepesto call or purchase was made.
+- User decided not to pursue Pepesto. Continue with Open Prices. User subsequently authorized deployment; current deployment status is recorded below.
+
+## 2026-11-08 — 50-mile search and deployment
+
+- User authorized deployment and changed the Hayward radius to 50 miles (80.4672 km). Improved local chicken-breast discovery using bounded locally tagged poultry prices and normalized `uncooked white rice` to a white-rice product search; exclude cooked/seasoned/rice flour and obvious salt/pepper mismatches.
+- Cloudflare Worker deployed at `https://basket-buddy-api.xoakuma.workers.dev`; `config.js` uses that public URL. A production chicken-and-rice request returned HTTP 200, radius 50 miles, chicken tenderloins and white rice observations from 2025. GitHub Pages currently publishes from `main`; the project changes remain to be committed, pushed, and merged/published. Do not include `worker/.wrangler/` in Git.
