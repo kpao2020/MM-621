@@ -170,6 +170,19 @@ async function lookup(name, center) {
   // Compare the returned amounts, but keep the unit/size visible: a package and a kg are not equivalent.
   rows.sort((a, b) => a.price - b.price || String(b.date || "").localeCompare(String(a.date || "")));
   const failed = attempts.some((entry) => entry.status === "rejected");
+  if (failed) {
+    // Report only the failure type, never the shopper's ingredient or request.
+    const failures = attempts.filter((entry) => entry.status === "rejected").map((entry) => {
+      const error = entry.reason;
+      const httpStatus = /^Open Prices returned (\d{3})\.$/.exec(String(error?.message || ""));
+      if (httpStatus) return `HTTP ${httpStatus[1]}`;
+      if (error?.name === "TimeoutError" || error?.name === "AbortError") return "timeout";
+      if (error instanceof SyntaxError) return "invalid JSON";
+      if (error?.message === "Open Prices response exceeded the size limit.") return "response too large";
+      return "other error";
+    });
+    console.warn("Open Prices lookup errors:", failures.join(", "));
+  }
   return {
     requestedName: name,
     prices: rows.slice(0, 1),
