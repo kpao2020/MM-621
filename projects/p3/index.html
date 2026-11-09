@@ -2,23 +2,95 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-
-    <!-- Makes the canvas fit device screen width. -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <title>Project 3</title>
-
+    <meta name="theme-color" content="#fbf7ef">
+    <title>Basket Buddy — meal and grocery prices</title>
     <link rel="stylesheet" href="style.css">
-
-    <!-- p5.js 2.3.3 -->
+    <!-- p5.js draws the small basket illustration; the page UI stays semantic HTML. -->
     <script src="../../lib/p5.min.js"></script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+    <script src="config.js"></script>
+    <script src="api.js"></script>
+    <script src="results.js"></script>
+    <script src="sketch.js" defer></script>
   </head>
-
   <body>
-    <main>
-      <div id="sketch-stage" class="sketch-stage">
-        <script src="sketch.js"></script>
-      </div>
+    <main class="page-shell">
+      <header class="topbar">
+        <a class="brand" href="#top" aria-label="Basket Buddy home">
+          <span class="brand-mark" aria-hidden="true">bb</span>
+          <span>Basket Buddy</span>
+        </a>
+        <span class="topbar-note">A little help with the grocery list</span>
+      </header>
+
+      <section class="hero" id="top" aria-labelledby="page-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Plan something good</p>
+          <h1 id="page-title">One meal.<br><span>A clearer basket.</span></h1>
+          <p class="hero-intro">One meal, a grocery list, and recorded prices.</p>
+          <div class="search-area-note">
+            <span class="pin-dot" aria-hidden="true"></span>
+            <span>Searching within 50 miles of Hayward, California</span>
+          </div>
+        </div>
+        <div class="hero-art" id="basket-art" aria-hidden="true"></div>
+      </section>
+
+      <section class="request-card" aria-labelledby="request-heading">
+        <div class="section-heading">
+          <span class="step-number">01</span>
+          <div>
+            <h2 id="request-heading">What would you like to make?</h2>
+          </div>
+        </div>
+        <form id="meal-form">
+          <label class="visually-hidden" for="meal-request">Describe a meal</label>
+          <textarea id="meal-request" name="meal-request" maxlength="500" required rows="2" placeholder="Try: beef stew with carrots and potatoes"></textarea>
+          <div id="verification-widget" class="verification-widget" aria-label="Security verification"></div>
+          <div class="form-bottom">
+            <p class="form-hint">Meal requests aren't saved or used to train AI.</p>
+            <button class="primary-button" id="submit-button" type="submit" disabled>
+              <span>Build my basket</span><span aria-hidden="true">→</span>
+            </button>
+          </div>
+        </form>
+        <div id="status-message" class="status-message" role="status" aria-live="polite" hidden></div>
+      </section>
+
+      <section id="results-section" class="results-section" aria-labelledby="results-heading" hidden>
+        <div class="results-heading-row">
+          <div>
+            <p class="eyebrow">Your basket</p>
+            <h2 id="results-heading">A good place to start</h2>
+          </div>
+          <button id="new-meal" class="secondary-button" type="button">↺ New meal</button>
+        </div>
+        <div class="meal-meta"><span id="meal-title" class="meal-title"></span><span id="result-area" class="area-pill"></span></div>
+        <p class="results-note">Lowest returned amounts; sizes and units can differ.</p>
+        <div id="product-results" class="product-results"></div>
+        <section class="total-card" aria-live="polite">
+          <div>
+            <p class="eyebrow">Estimated total</p>
+            <div id="estimated-total" class="estimated-total"></div>
+            <p id="total-note" class="total-note">Based on one returned price per available item.</p>
+          </div>
+          <span class="total-sparkle" aria-hidden="true">✳</span>
+        </section>
+        <details class="json-details">
+          <summary>View the data used</summary>
+          <pre id="api-json" class="json-view"></pre>
+        </details>
+      </section>
+
+      <footer class="page-footer">
+        <p class="data-credit">Contains information from <a href="https://prices.openfoodfacts.org/" target="_blank" rel="noreferrer">Open Prices (Open Food Facts)</a>, made available under the <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noreferrer">ODbL v1.0</a>; prices are community-reported and may be incomplete or outdated.</p>
+        <div class="footer-meta">
+          <span id="updated-at">No data request yet</span>
+          <span id="token-usage">AI token use: —</span>
+        </div>
+        <p class="local-setup" id="local-setup" hidden>Set the Worker URL in <code>config.js</code> to connect the meal and price search.</p>
+      </footer>
     </main>
   </body>
 </html>

@@ -1,6 +1,6 @@
 # Basket Buddy — MVP Requirements
 
-Status: planning; requirements remain subject to the user's confirmation of the open choices in `memory.md`.
+Status: implementation in progress; local API flow checked, Chrome/mobile visual verification and public deployment remain open.
 
 ## User-facing behavior
 
@@ -8,20 +8,21 @@ Status: planning; requirements remain subject to the user's confirmation of the 
 2. A meal request returns no more than 10 unique grocery products. Personalization comes from the current request; the MVP has no saved profile or serving-count control. Simplify an overlarge meal request rather than silently omitting products.
 3. Use one AI call to generate the ingredient list, then query only those products in Open Prices. Prompt the AI to favor familiar, commonly stocked Bay Area items. Treat this as a preference, not a guarantee of inventory or price-data coverage.
 4. If an ingredient has no suitable record, show “Price unavailable.” Do not suggest substitutes in the MVP.
-5. Search within 100 miles of Hayward, California (37.6688, -122.0808; approximately 161 km). Results may include stores outside the Bay Area; display each store's recorded location and label the search area clearly.
+5. Search within 50 miles of Hayward, California (37.6688, -122.0808; approximately 80.47 km). Results may include stores outside the Bay Area; display each store's recorded location and label the search area clearly.
 6. Do not request browser location or infer location from IP. Do not filter through a preverified store-ID list or nine-county boundary.
-7. Show no more than three returned price records per product, sorted from lowest to highest within the same currency. Do not claim these are the lowest prices across all stores.
+7. Show one lowest returned USD amount per ingredient in a compact expandable row. Explain that units and package sizes may differ; do not claim it is the lowest price across all stores or the best value.
 8. Show only prices supported by Open Prices records. Include currency, observation date, source, recorded store location, and the price unit and product size when available. Do not let the model create or alter factual fields.
-9. Calculate an “Estimated total” in application code using the lowest available returned price per product. Show the note “Based on the lowest returned price for each available item. Items without prices are not included.” Do not combine currencies. If no prices are available, mark the total unavailable.
+9. Calculate an “Estimated total” using one returned package/unit amount per available ingredient; note that missing items are excluded and sizes vary. If a selected price is per weight or volume, show the total unavailable because the needed amount is unknown. Do not combine currencies.
 10. Present results with friendly, playful mobile-first visuals. Do not use chart gridlines or a dense spreadsheet table.
 11. Keep loading, no-match, and API-error states understandable.
 12. Display a compact P2-style data/token footer plus a visible one-line Open Prices credit/disclaimer linked to the source and ODbL 1.0.
+13. Require a valid, single-use Cloudflare Turnstile verification for meal requests and apply an approximate per-IP request limit without requiring user sign-in. These controls reduce abuse and do not authenticate users.
 
 ## Data and response bounds
 
 - Never download the full Open Prices export for an interactive request.
-- Use the fixed Hayward center and radius with bounded product, date, and page-size filters for price lookups.
-- Request cap: up to 10 unique products; price display cap: up to three records per product (up to 30 records maximum).
+- Use the fixed Hayward center and radius with bounded product, category, and page-size filters for price lookups.
+- Request cap: up to 10 unique products; price display cap: one record per ingredient (up to 10 records maximum).
 - Keep the pretty JSON view limited to the bounded response used by the UI. Exclude secrets and the shopper's precise coordinates.
 - Preserve the source observation date; do not imply that an old community report is a current shelf price.
 - Display each store's recorded location and currency, including records outside the Bay Area when they are within the radius.
@@ -55,9 +56,9 @@ Status: planning; requirements remain subject to the user's confirmation of the 
 
 - One request can produce a compact AI list, attach matching Open Prices data, and render results in p5.js.
 - A meal request uses one AI call. No AI call analyzes prices or suggests substitutes in the MVP.
-- A request is capped at 10 unique products, and no product displays more than three price records.
-- Results are bounded to the 100-mile Hayward radius and are not described as nearby to the user.
-- The estimate uses the lowest returned price for each product with a price, excludes missing items, and shows the explanatory note specified above.
+- A request is capped at 10 unique products, and no ingredient displays more than one price record.
+- Results are bounded to the 50-mile Hayward radius and are not described as nearby to the user.
+- The estimate excludes missing items and is unavailable when a selected price is per weight or volume; the note explains the limitation.
 - The app shows an Open Prices / ODbL attribution line.
 - No secret is exposed in browser code or public repository content.
 - The interface remains readable on the agreed phone-sized viewport and follows the no-grid visual direction.
