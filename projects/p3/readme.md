@@ -1,60 +1,57 @@
 # Basket Buddy
 
-Basket Buddy is a mobile-first p5.js MVP for one simple personalized meal with up to 10 unique grocery products. The shopper's current prompt supplies personalization; the app does not save profiles or ask for a serving count. Results use available Open Prices data from within 50 miles of Hayward, California.
+Basket Buddy is a mobile-first p5.js prototype for planning one simple meal and checking its ingredients against a saved Open Prices catalog for a fixed 50-mile radius around Hayward, California.
 
-## Current state
+## Current status
 
-The app and deployed Cloudflare Worker use one AI meal-list call, bounded product searches, and selected category-price searches within 50 miles of Hayward. The Worker requires a Turnstile verification token and applies an approximate per-IP rate limit. A production Worker check returned recorded chicken and rice matches before protection was enabled. GitHub Pages publication and real-browser verification remain open.
+The D1-backed flow is deployed and has returned a live meal response. The saved snapshot reported 24,757 indexed products and 38,568 price observations, retrieved at 2026-11-10 03:24 UTC. A sample request confirmed that D1 candidates and recorded prices are returned. Its selected prices were 100–289 days old, so the Worker correctly marked them as older.
 
-## Planned interaction
+## How it works
 
-1. Type and edit a simple meal request. Meal recommendations favor familiar Bay Area grocery items; the AI does not verify local inventory.
-2. See every ingredient in a compact row with one lowest returned USD amount. Expand it to see the recorded product, store, date, size when available, and source record. Different units and sizes are not equivalent value comparisons.
-3. If an item has no suitable match, show “Price unavailable.” The estimated total excludes unavailable items and becomes unavailable when a selected price is per weight or volume, because the needed quantity is unknown. Use New meal to clear the results.
-4. Use the footer to check the update time, inspect checked/pretty JSON, see token use when available, and read the Open Prices / ODbL credit.
+1. Workers AI turns a request into one concise grocery list, aiming for 12 or fewer items with a hard limit of 16.
+2. Workers AI adds up to four close catalog phrases for each ingredient.
+3. The Worker searches product text in D1 and passes up to eight saved candidates per ingredient to Workers AI.
+4. The model can select only returned candidate IDs. It can choose a practical substitute only for an ingredient marked replaceable.
+5. The Worker validates each selection and reads its price, store, and date from D1. Meal requests do not make product-by-product Open Prices requests.
 
-## Data and limitations
+For each product, the Worker chooses the lowest valid USD observation from the past 30 days. If there are no recent observations, it returns the newest older observation and labels its age. A recorded price is not proof of current shelf price or stock.
 
-Open Prices is community-contributed. A record is a reported price with a date, not a guaranteed current shelf price. Coverage may be sparse. The fixed Hayward radius can include stores outside the Bay Area or far from the shopper. Searches are limited to USD and bounded pages and may miss other records. Ingredient matching is heuristic and broad beef-steak results are labeled accordingly.
+## Data refresh
 
-Planned visible credit line: “Contains information from [Open Prices (Open Food Facts)](https://prices.openfoodfacts.org/), made available under the [Open Database License (ODbL) v1.0](https://opendatacommons.org/licenses/odbl/1-0/); prices are community-reported and may be incomplete or outdated.”
+GitHub Actions checks one regional latest-record ID every 24 hours. If it has not changed and D1 is ready, the full catalog is not downloaded. A changed ID, an unready catalog, or the weekly Sunday reconciliation triggers a regional download and D1 refresh. The workflow stores its download in temporary runner storage; the persistent catalog is D1.
 
-The current MVP excludes travel-time estimates, IP-based location inference, retailer scraping, accounts, and saved history. See `requirements.md` for the acceptance criteria and scope.
+See [DATA-PIPELINE.md](DATA-PIPELINE.md) for setup, refresh, and verification steps. The local JSON/GZIP analysis downloads are ignored by Git and are not required to run the app.
 
-## Future ideas
+## Privacy and secrets
 
-- Add voice input and microphone speech recognition.
-- Add single-product search and browser location for nearby-store prioritization.
-- Let the shopper approve AI-assisted retailer ordering and home delivery.
-- Offer an optional AI-generated substitute for an item with no price record, then check the suggestion against Open Prices.
-- Watch selected products for price drops and send alerts.
-- Add search centers beyond the Hayward radius after checking data coverage.
+Meal requests are sent to Workers AI for planning and candidate selection; they are not saved as user history by Basket Buddy. The app uses a fixed search area and does not request browser location or infer a location from IP.
 
-## File guide
+This repository is public. API credentials and the Turnstile secret must stay in Cloudflare or GitHub Actions secret settings. The Worker URL and Turnstile site key in config.js are public client configuration. The D1 database ID and rate-limit namespace ID are resource identifiers, not credentials.
 
-- `index.html`, `style.css`, `sketch.js`: page structure, visual style, and p5.js app behavior.
-- `config.js`: public Worker URL setting; it contains no secret.
-- `api.js`, `results.js`: Worker request helper and safe results rendering.
-- `worker/src/index.js`, `worker/src/search.js`: one-call AI generation, bounded product/category price searches, and response shaping.
-- `PROPOSAL.md`: project rationale, weekly work plan, deliverables, and metrics.
-- `requirements.md`: behavior and completion criteria.
-- `tracking.md`: week-by-week status and open decisions.
-- `memory.md`: durable project decisions and secret-handling boundary.
-- `agents.md`: collaboration and coding instructions for future work.
-- `p3.log`: dated, append-only progress notes.
+## Limitations
 
-## Secrets
-
-This repository is public. Do not put API keys or secret values in HTML, JavaScript, Markdown, `.env` files, or Git history. The Turnstile secret is stored in the Worker's Cloudflare secret store as `TURNSTILE_SECRET_KEY`; the site key in `config.js` is public. No secret values belong in project documentation.
+Open Prices is community-contributed and is not food-only. Product names, package sizes, stores, and dates can be missing or inconsistent. The catalog can return old records; the freshness label describes the observation date and does not verify availability. Package sizes are shown as reported and are not normalized for value comparisons.
 
 ## Run locally
 
-1. Serve the repository root on port 5500 using VS Code Live Server, or run `python3 -m http.server 5500` from the repository root. The page needs the shared `lib/p5.min.js` file.
-2. Open `http://localhost:5500/projects/p3/` in Chrome. The page uses the deployed Worker URL in `config.js`, but the production Turnstile widget and Worker only accept the GitHub Pages hostname. Test a real submission on the published GitHub page; local development requires a separately configured test widget and test Worker environment.
-3. To develop the Worker locally, run `npx wrangler dev --port 8787` from `projects/p3/worker` and temporarily set `workerUrl` in `config.js` to `http://127.0.0.1:8787`. Workers AI requests in local development still use the Cloudflare account's AI resources. Restore the public Worker URL before publishing; do not use test secrets in production.
+1. Serve the repository root on port 5500 with VS Code Live Server or python3 -m http.server 5500.
+2. Open http://localhost:5500/projects/p3/. The production Turnstile configuration accepts the published GitHub Pages hostname, so a live meal submission should be tested on the published app.
+3. For local Worker development, run npx wrangler dev --port 8787 from projects/p3/worker and temporarily point workerUrl in config.js at the local Worker. Restore the production URL before publishing.
 
-To update the deployed Worker, run `npx wrangler deploy` from `projects/p3/worker` after logging in. The public Worker origin is set in `projects/p3/config.js`; confirm the CORS allowlist before publishing the frontend.
+Deploy the Worker with npx wrangler deploy from projects/p3/worker after Wrangler authentication. Never add credentials to the repository.
 
-## Next planned step
+## Files
 
-Publish the frontend to GitHub Pages and review it in Chrome at desktop and phone sizes. The Worker uses Cloudflare Workers AI through the `AI` binding and does not need a separate model API key. A production Worker request and focused matching/rendering checks passed; Chrome/mobile visual verification remains open. See [Cloudflare's local development docs](https://developers.cloudflare.com/workers/local-development/) for the AI binding requirements and usage notes.
+- index.html, style.css, sketch.js: mobile app shell, visual style, p5.js illustration, and interactions.
+- api.js, results.js: Worker request handling and result rendering.
+- config.js: public Worker URL and Turnstile site key.
+- worker/src: D1 search, meal planning, candidate validation, and price selection.
+- worker/migrations/0001_initial.sql: D1 schema.
+- tools/refresh_open_prices.py: regional check, conditional bulk download, and D1 import.
+- ../../.github/workflows/p3-open-prices-refresh.yml: scheduled and manual refresh.
+- DATA-PIPELINE.md: operational setup and refresh instructions.
+- requirements.md: behavior and completion criteria.
+- PROPOSAL.md: project rationale, research, and plan.
+- tracking.md and memory.md: current status and decisions.
+- agents.md: project-specific collaboration rules.
+- open-prices-hayward-50mi-analysis.md: static analysis of the original regional snapshot.

@@ -1,85 +1,33 @@
 # Basket Buddy — Project Tracker
 
-Last updated: 2026-11-08
+Last updated: 2026-11-09
 
-## Overall status
+## Status
 
-**Published; final browser check pending.** User merged `ken` to `main`, and the Basket Buddy page, frontend assets, p5.js, and Turnstile script returned HTTP 200. The protected Worker is deployed and rejects an unverified request with 403. A real browser meal request and token-replay check remain open.
+The D1-backed flow is operational. The user reports that the implementation commits have been merged into main. The refresh workflow has seeded D1, the Worker is deployed, and a live meal request returned the saved catalog metadata and price evidence. This wrap-up updates the mobile layout and project documentation; those local edits still need to be pushed and published through the Pages branch.
 
-## Decisions recorded
+## Completed
 
-- [x] Project name: Basket Buddy.
-- [x] Use text input for the MVP; move voice and microphone input to future features.
-- [x] No travel-time feature.
-- [x] Use a fixed 50-mile radius centered on Hayward; results can include stores outside the Bay Area. No browser location or fixed store-ID list in the MVP.
-- [x] Display one lowest returned USD amount per ingredient with compact expandable details, noting that sizes and units can differ.
-- [x] Calculate a partial estimated total for returned package/unit amounts; show it unavailable when a selected price is per weight or volume and the required amount is unknown.
-- [x] Use one AI call for meal-list generation; exclude direct product search, substitution suggestions, and follow-up AI calls from the MVP.
-- [x] Ask meal-generation AI to favor familiar Bay Area grocery items; verify products and prices through Open Prices.
-- [x] Include a one-line Open Prices / ODbL attribution and data-quality disclaimer.
-- [x] Do not infer location from IP.
-- [x] Use a friendly, mobile-first p5.js display with no gridlines.
-- [x] Keep `sketch.js` as primary main JS; split components into their own JS files.
-- [x] Keep secrets only in Cloudflare, entered by the user.
-- [x] Create proposal, requirements, README, agent notes, memory, tracker, and progress log.
-- [x] Select Cloudflare Workers AI for the meal-list call.
-- [x] Add a local Cloudflare Worker endpoint with request validation, JSON schema output, a 10-product cap, token-usage fields, and configured-origin CORS.
-- [x] Keep Open Prices as the selected data source and apply the two-stage product-discovery then radius-bounded price-search approach.
-- [x] Add Turnstile and a five-per-minute approximate per-IP request limiter without requiring user sign-in; verify with a real browser token after frontend publication.
+- [x] Created and bound the D1 catalog database.
+- [x] Added the product and catalog metadata schema.
+- [x] Imported the 50-mile Open Prices region: 24,757 indexed products and 38,568 observations.
+- [x] Built daily one-ID change detection, conditional regional refresh, and weekly full reconciliation.
+- [x] Stored product observations in D1; meal requests no longer query Open Prices product by product.
+- [x] Connected Workers AI meal planning, AI phrase expansion, D1 candidate retrieval, and candidate-ID validation.
+- [x] Enforced the 12-item preference, 16-item hard limit, replaceable-only substitutes, and 30-day freshness-first price selection.
+- [x] Deployed the Worker and confirmed a live response with catalogSnapshot.ready=true.
+- [x] Kept credentials out of repository files; API credentials are configured in service secret settings.
+- [x] Added Open Prices attribution and age/inventory caveats.
+- [x] Ignored local regional JSON/GZIP downloads and Python cache files.
 
-## Week 1 — Data and interaction feasibility
+## This wrap-up
 
-- [x] Confirm an API feasibility sample: peanut butter sandwich with white bread and a bowl of strawberries; target browser: Chrome. This is a manual sample, not an AI-generated meal request.
-- [x] Limit MVP to one simple meal request capped at 10 unique grocery products; no serving-count control.
-- [x] Check Open Prices records for matching peanut butter, white bread, and strawberries within 100 miles of Hayward, including price, unit, product size, currency, store, date, and source fields; record which unit and size fields are available.
-- [x] Verify the Hayward-centered 100-mile radius and bounded price query against live API responses.
-- [x] Compare singular vs. plural strawberry product searches and try a Hayward city lookup without a radius; record the coverage and matching tradeoffs in `p3.log`.
-- [ ] Confirm the AI-generated example request and recommendation goal for the final demo.
-- [x] Restrict the current Hayward price searches to USD; never combine currencies in totals.
-- [x] Choose Cloudflare Workers AI and review current model and token reporting documentation.
-- [x] Compare grocery price/search data options and document why Open Prices fits the MVP and its data freshness limitations in the proposal.
-- [x] Add a concise tools and technologies list to the proposal, separate from JavaScript libraries.
+- [ ] Review the centered mobile app shell on the published page after pushing the CSS update.
+- [ ] Push the documentation, ignore-rule, and mobile-layout changes from the current branch.
+- [ ] Verify the Pages publish after the user syncs the merged branch.
 
-Provider research and provider selection are complete. The Worker uses `@cf/meta/llama-3.3-70b-instruct-fp8-fast`; deployment and verification remain open.
+## Standing proposal-format requirement
 
-## Week 2 — Worker and API path (in progress)
+- Preserve the user's exact proposal section titles and wording, required section order, and intentional blank lines/separators. Modify body content only when requested. Do not rewrite, rename, or reorder headings. Leave the Developer note for the user to type manually.
 
-- [ ] Review Week 1 unit and size data with the user, then decide whether unit conversions or unit-price comparisons fit the MVP and how to handle missing or different units.
-- [x] Build a local Cloudflare Worker endpoint without secret values in source; deployment and verification remain open.
-- [x] No separate model API key is needed; the Worker uses Cloudflare's `AI` binding. Cloudflare account setup and deployment remain open.
-- [x] Return a schema-limited AI recommendation with a strict item/output cap.
-- [x] Implement one-call meal list generation and a no-match state without substitute suggestions.
-- [x] Sort returned prices and calculate lowest-price estimates, with totals kept separate by currency.
-- [x] Fetch only bounded Open Prices product and price records around Hayward.
-- [x] Add category-price records, selected ingredient names and filters, broader beef labeling, and no-match/error handling. Search coverage and matches remain limited by the source data and heuristics.
-- [x] Return compact price, product, store, date, and source fields separately from AI text.
-- [x] Provide a pretty JSON view of the bounded response.
-
-## Week 3 — p5.js visual and troubleshooting (local UI implemented; verification open)
-
-- [x] Build component files and keep `sketch.js` as main entry point.
-- [x] Render friendly item/price cards without chart gridlines.
-- [x] Add timestamp, bounded JSON view, and reported session token use footer.
-- [x] Handle no matches, API errors, and small-screen layout in code.
-- [x] Implement compact result rows, expandable details, and a New meal button. Manual Chrome and mobile visual verification remain open.
-- [ ] Deploy Worker, connect GitHub Pages, and verify behavior in Chrome and a phone-sized viewport.
-- [ ] Record limitations for final presentation.
-
-## Open choices
-
-The API sample and target browser are confirmed for feasibility work. The final AI-generated demo request remains open but does not block implementation. Unit normalization is outside the implementation so far.
-
-See `memory.md`. Do not resolve open choices by assumption when they affect API behavior, cost, privacy, or the project scope.
-
-## Future backlog (not MVP)
-
-- Voice input and microphone speech recognition.
-- Direct single-product search and browser location / nearby-store prioritization.
-- Optional shopper-triggered AI substitute suggestions for missing products, followed by targeted Open Prices lookups.
-- Retailer ordering and home delivery, with explicit shopper approval.
-- Price-drop watchlists and alerts.
-- Expand supported search centers beyond the Hayward radius.
-
-## Progress log
-
-Append a dated, concise entry to `p3.log` whenever a meaningful project step is completed.
+See DATA-PIPELINE.md for operations and open-prices-hayward-50mi-analysis.md for the historical snapshot analysis.

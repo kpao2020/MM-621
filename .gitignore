@@ -27,3 +27,7 @@ replay_pid*
 .DS_Store
 
 projects/old_project1_sketch.js
+
+# Local Open Prices downloads and Python cache; the live catalog is stored in D1.
+projects/p3/open-prices-hayward-*.json*
+projects/p3/tools/__pycache__/

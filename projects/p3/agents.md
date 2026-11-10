@@ -2,34 +2,33 @@
 
 ## Working rules
 
-- Work only inside `projects/p3` unless the user explicitly authorizes another path.
-- Respect the user's preference to do one task at a time. State the current step, complete it, and save progress before moving to another step.
-- Do not guess at project decisions. Mark unknowns in `memory.md` and `tracking.md`, and ask when a decision blocks implementation.
-- Keep all credentials and secret values out of this public repository, local files, examples, logs, screenshots, and Git history. The user will create secrets in Cloudflare; never request that they paste a secret into chat.
-- Use the fixed Hayward center and 50-mile radius for MVP price searches. Do not request browser location or infer location from IP.
-- Keep `sketch.js` as the main p5.js file. Put focused behaviors in separate JS component files, loaded before `sketch.js` from `index.html`.
-- Match the P1/P2 style: descriptive file headers, section comments, explanatory inline comments, clear constants, and explicit loading/error states.
-- Keep the design mobile-first, friendly, playful, and eye-friendly. Do not use chart gridlines or game-like framing.
-- Use text input for the MVP. Voice and microphone input are future features.
-- Keep model responses schema-limited and short. Prices, store locations, dates, and currencies must come from API data, never model invention.
-- Show the price unit and product size when available in the source. Unit conversion and normalized value comparison have not been approved; discuss the approach with the user before implementing it.
-- Support one simple personalized meal request capped at 10 unique grocery products. Make one AI call for the list, then call Open Prices for those products.
-- In the meal-generation prompt, favor familiar, commonly stocked Bay Area grocery items. Treat AI familiarity as a heuristic, not verified inventory or price coverage.
-- If a product has no suitable price record, show “Price unavailable.” Do not add substitute suggestions or a follow-up AI call to the MVP; substitutions are a future feature.
-- Do not fetch whole Open Prices exports for a user request. Apply strict query/page/result caps and display no more than three price records per product, sorted by price within the same currency. Label the search area as within 50 miles of Hayward; results may be outside the Bay Area.
-- Label the total “Estimated total” and calculate it using the lowest available returned price per product. Show the note “Based on the lowest returned price for each available item. Items without prices are not included.” Do not combine currencies or show zero when every price is unavailable.
-- Keep a visible one-line Open Prices attribution/disclaimer linked to the source and ODbL 1.0 license. Do not claim the disclaimer alone settles every ODbL obligation; preserve the source/license requirements in the project docs.
-- Do not add a formal PRD or duplicate documents without a clear need. `requirements.md` is the acceptance checklist; `PROPOSAL.md` is the project plan.
-- Keep future ideas (retailer checkout/home delivery, price-drop alerts, browser location, and single-product search) in the roadmap only; do not implement them as part of the MVP. In the proposal, mention future features only in its Future Features section.
+- Work inside projects/p3; the repository-level P3 GitHub Actions workflow and root .gitignore entries for P3 downloads are in scope.
+- Work one task at a time. State the current step, complete it, and save progress before moving on.
+- During active work, send a concise progress/status update at least every two minutes.
+- Record confirmed decisions in memory.md and status changes in tracking.md. Ask only when a missing decision blocks implementation.
+- For PROPOSAL.md, preserve the user's exact section titles and wording, section order, required sections, and deliberate blank-line/separator formatting. Edit body context only when asked; never rename, rewrite, reorder, or normalize headings. Leave the Developer note for the user to type manually.
+- Keep credentials out of source, docs, logs, screenshots, and Git history. The user enters secrets directly in Cloudflare/GitHub settings.
+- Use the fixed Hayward center and 50-mile radius. Do not request browser location or infer location from IP.
+- Keep sketch.js as the main p5.js file; use focused JS components loaded before it.
+- Design Basket Buddy as a mobile app shell: narrow centered viewport, centered brand and main prompt, thumb-friendly full-width actions, and concise status. Keep product names and price facts easy to scan.
+- Keep the interaction playful, compact, and clear. Use explicit loading/error states; avoid chart gridlines.
+- Use text input. Voice and microphone input remain future features.
+- Aim for 12 or fewer grocery ingredients, with a hard cap of 16. Simplify elaborate requests to one simple meal.
+- Flow: Workers AI drafts ingredients and close catalog search phrases; D1 returns candidates; Workers AI selects only returned IDs; code validates selections and returns exact D1 evidence.
+- A substitute may be selected only for an ingredient marked replaceable. If no suitable candidate exists, show “Price unavailable.” Do not claim a price record confirms current stock.
+- Never issue product-by-product Open Prices API requests during a meal request. The scheduled refresh checks one newest regional ID, downloads bulk data only when needed, and reconciles weekly.
+- Choose the lowest valid USD price in the past 30 days; if none exist, show the newest older record with its age. Never use AI for price facts.
+- Keep package sizes and units visible; do not normalize them without an approved approach. Do not combine currencies.
+- Preserve Open Prices attribution and ODbL obligations.
+- Keep future ideas (ordering, alerts, location, single-product search) in the roadmap. Avoid duplicate documents.
 - Do not run tests unless the user asks for testing or verification.
 
 ## Continuity files
 
-- `PROPOSAL.md`: project direction and weekly plan.
-- `requirements.md`: behavior and acceptance criteria.
-- `tracking.md`: task status and weekly progress.
-- `memory.md`: current decisions and unresolved choices.
-- `p3.log`: append-only dated progress notes.
-- `readme.md`: project overview and handoff entry point.
-
-Update the relevant continuity files when a user confirms a decision or when work is completed. Never log secrets.
+- PROPOSAL.md: project rationale, research, and delivery plan.
+- requirements.md: product behavior and completion criteria.
+- DATA-PIPELINE.md: D1 storage, daily update behavior, and operating steps.
+- tracking.md: current implementation status and remaining user review.
+- memory.md: durable decisions.
+- p3.log: dated progress notes.
+- readme.md: project overview and handoff.
