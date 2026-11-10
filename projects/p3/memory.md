@@ -26,6 +26,10 @@ Basket Buddy is a mobile-first p5.js prototype that plans one simple meal and se
 - Ignore local JSON/GZIP snapshots and Python cache files. The production catalog is in D1.
 - Instacart was researched as a possible shopper handoff, not selected as a price feed or integrated.
 
+## Proposal editing preference
+
+- The user owns the proposal structure. Preserve every section title and its wording, required section order, and intentional spacing/separators exactly. Only edit or add body text when requested. Never rewrite headings. Leave the Developer note for the user to enter manually.
+
 ## Current verification
 
 - D1 import completed with 24,757 indexed products and 38,568 observations.

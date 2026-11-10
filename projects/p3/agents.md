@@ -6,6 +6,7 @@
 - Work one task at a time. State the current step, complete it, and save progress before moving on.
 - During active work, send a concise progress/status update at least every two minutes.
 - Record confirmed decisions in memory.md and status changes in tracking.md. Ask only when a missing decision blocks implementation.
+- For PROPOSAL.md, preserve the user's exact section titles and wording, section order, required sections, and deliberate blank-line/separator formatting. Edit body context only when asked; never rename, rewrite, reorder, or normalize headings. Leave the Developer note for the user to type manually.
 - Keep credentials out of source, docs, logs, screenshots, and Git history. The user enters secrets directly in Cloudflare/GitHub settings.
 - Use the fixed Hayward center and 50-mile radius. Do not request browser location or infer location from IP.
 - Keep sketch.js as the main p5.js file; use focused JS components loaded before it.

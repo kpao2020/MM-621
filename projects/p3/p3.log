@@ -351,3 +351,9 @@ Append-only notes. Never include credentials, precise user coordinates, or priva
 - Deployed Worker has the PRODUCT_DB binding, Workers AI, and the rate limiter. Its public health endpoint returned HTTP 200.
 - Local raw JSON/GZIP downloads and Python cache are now ignored. These downloads are not required at runtime; D1 is the persistent catalog.
 - The user reports the runtime commits were merged to main. This wrap-up revises the app shell to a centered, narrow mobile layout and reconciles the proposal, README, requirements, pipeline, tracker, memory, and agent notes. Browser-based visual review is unavailable in this session; the user should review the published mobile layout after syncing these edits.
+
+## 2026-11-09 — Proposal structure preference
+
+- User manually maintains the proposal's required section titles, exact heading wording, section order, and intentional spacing/separators. Future edits may update requested body text only; never rewrite or normalize proposal headings or structure. Leave the Developer note for the user to type manually.
+- The JavaScript libraries list was verified against the P3 page: p5.js 2.3.3 and Cloudflare Turnstile's client script are loaded. Project files such as api.js, results.js, and sketch.js are application code, not external libraries.
+- Added Open Prices/ODbL and original illustration attribution under the existing Credits heading without changing proposal headings or the Developer note.

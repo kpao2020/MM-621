@@ -26,4 +26,8 @@ The D1-backed flow is operational. The user reports that the implementation comm
 - [ ] Push the documentation, ignore-rule, and mobile-layout changes from the current branch.
 - [ ] Verify the Pages publish after the user syncs the merged branch.
 
+## Standing proposal-format requirement
+
+- Preserve the user's exact proposal section titles and wording, required section order, and intentional blank lines/separators. Modify body content only when requested. Do not rewrite, rename, or reorder headings. Leave the Developer note for the user to type manually.
+
 See DATA-PIPELINE.md for operations and open-prices-hayward-50mi-analysis.md for the historical snapshot analysis.

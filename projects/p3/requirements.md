@@ -39,6 +39,7 @@ Status: D1-backed meal search is deployed and confirmed by a live response. A mo
 - Require valid Turnstile verification and retain the per-IP rate limit.
 - Keep API credentials and the Turnstile secret outside source files and Git history. Public configuration may contain the Worker URL and Turnstile site key.
 - Keep raw local Open Prices snapshots out of Git.
+- Proposal edits must preserve the user's exact section titles, wording, order, and intentional spacing. Edit body text only when requested; leave the Developer note for the user to type manually.
 
 ## Verified behavior
 
