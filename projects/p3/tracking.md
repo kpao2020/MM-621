@@ -4,7 +4,7 @@ Last updated: 2026-11-08
 
 ## Overall status
 
-**Deployment in progress.** The production Worker is deployed with Turnstile validation and a request limiter. The matching frontend changes need to be pushed and merged from `ken` into `main`, which publishes GitHub Pages. The user declined automatic pull-request creation; manual merge and real-browser token validation remain open.
+**Published; final browser check pending.** User merged `ken` to `main`, and the Basket Buddy page, frontend assets, p5.js, and Turnstile script returned HTTP 200. The protected Worker is deployed and rejects an unverified request with 403. A real browser meal request and token-replay check remain open.
 
 ## Decisions recorded
 

@@ -3,7 +3,7 @@
 
 import { findPricesForProducts } from "./search.js";
 
-const AI_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+const AI_MODEL = "@cf/ibm-granite/granite-4.0-h-micro";
 const MAX_REQUEST_LENGTH = 500;
 const MAX_PRODUCTS = 10;
 const HAYWARD = { lat: 37.6688, lon: -122.0808, radiusKm: 80.4672 };
@@ -131,7 +131,7 @@ export default {
         temperature: 0.2,
       });
 
-      const parsed = parseModelResponse(result?.response);
+      const parsed = parseModelResponse(result?.choices?.[0]?.message?.content ?? result?.response);
       const products = normalizeProducts(parsed?.products);
       const mealName = typeof parsed?.mealName === "string"
         ? parsed.mealName.trim().slice(0, 80)
@@ -200,7 +200,12 @@ function normalizeProducts(value) {
     if (typeof item !== "string") continue;
 
     const name = item.trim().replace(/\s+/g, " ").slice(0, 80);
-    const key = name.toLocaleLowerCase();
+    const key = name.toLocaleLowerCase().replace(/\b([a-z]+)\b/g, (word) => {
+      if (word.length > 4 && word.endsWith("ies")) return `${word.slice(0, -3)}y`;
+      if (word.length > 4 && word.endsWith("oes")) return word.slice(0, -2);
+      if (word.length > 3 && word.endsWith("s") && !/(ss|us|is)$/.test(word)) return word.slice(0, -1);
+      return word;
+    });
     if (!name || seen.has(key)) continue;
 
     seen.add(key);

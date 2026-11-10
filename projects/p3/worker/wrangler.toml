@@ -8,6 +8,11 @@ compatibility_date = "2026-11-08"
 [ai]
 binding = "AI"
 
+[[d1_databases]]
+binding = "PRODUCT_DB"
+database_name = "basket-buddy-prices"
+database_id = "c01ed6cd-32f2-49f4-98d5-7816707f707d"
+
 [vars]
 # Include the GitHub Pages origin and local development origins.
 # CORS controls browser access; it is not authentication for the public endpoint.
