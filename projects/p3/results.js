@@ -9,7 +9,10 @@ window.BasketBuddyResults = {
     document.getElementById("estimated-total").innerHTML = total.value;
     document.getElementById("total-note").textContent = total.note;
     document.getElementById("api-json").textContent = JSON.stringify(data, null, 2);
-    document.getElementById("updated-at").textContent = `Data checked ${formatDateTime(data.generatedAt)}`;
+    const snapshotAt = data.catalogSnapshot?.retrievedAt;
+    document.getElementById("updated-at").textContent = snapshotAt
+      ? `Catalog snapshot ${formatDateTime(snapshotAt)} · checked ${formatDateTime(data.generatedAt)}`
+      : `Catalog timestamp unavailable · checked ${formatDateTime(data.generatedAt)}`;
     document.getElementById("token-usage").textContent = `Model tokens: ${formatUsage(data.usage)}`;
     document.getElementById("results-section").hidden = false;
   },
@@ -30,7 +33,12 @@ function renderProduct(item) {
 
   const place = price.address || [price.store, price.city].filter(Boolean).join(", ");
   const facts = [price.brand, price.quantity].filter(Boolean).map(escapeHTML).join(" · ");
-  const matchNote = price.matchType ? `<p class="match-note">Broader beef match; check the cut.</p>` : "";
+  const matchNote = item.matchType === "substitute"
+    ? `<p class="match-note">Suggested substitute: ${escapeHTML(item.requestedName)} → ${escapeHTML(price.productName)}.</p>`
+    : "";
+  const ageLabel = price.freshness === "older"
+    ? `Older price · last seen ${price.ageDays} days ago`
+    : `Recent price · ${price.ageDays} days ago`;
   const partialNote = item.partial ? `<p class="match-note">Some price searches could not be completed.</p>` : "";
   const recordLink = Number.isInteger(price.id)
     ? `<a href="https://prices.openfoodfacts.org/api/v1/prices/${price.id}" target="_blank" rel="noreferrer">View price record ↗</a>` : "";
@@ -46,6 +54,7 @@ function renderProduct(item) {
       ${facts ? `<p>${facts}</p>` : ""}
       <p>${escapeHTML(place || "Store location unavailable")}</p>
       <p>Recorded ${escapeHTML(formatDate(price.date))}</p>
+      <p class="price-age ${price.freshness === "older" ? "price-age-stale" : "price-age-recent"}">${escapeHTML(ageLabel)}</p>
       ${matchNote}${partialNote}${recordLink}
     </div>
   </details>`;
@@ -80,7 +89,7 @@ function renderTotals(items) {
   }
   return {
     value: [...totals.entries()].map(([currency, amount]) => `<span class="total-amount">${escapeHTML(formatMoney(amount, currency))}</span>`).join('<span class="total-separator">·</span>'),
-    note: "One returned amount per available item; missing items are excluded. Sizes vary.",
+    note: "One recorded amount per matched item; missing items are excluded. Sizes vary.",
   };
 }
 

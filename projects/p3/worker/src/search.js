@@ -1,206 +1,144 @@
-// Open Prices searches for Basket Buddy.
-// Products with barcodes and prices for loose foods use different API paths.
+// Match AI-provided grocery phrases against the saved D1 catalog and select source prices.
 
-const API = "https://prices.openfoodfacts.org/api/v1";
-const PAGE_SIZE = 100;
 const MAX_CANDIDATES = 8;
-const MAX_CONCURRENT_ITEMS = 4;
+const MAX_SEARCH_ROWS = 40;
+const MAX_CONCURRENT_SEARCHES = 4;
+const FRESH_DAYS = 30;
+const STOP_WORDS = new Set(["a", "an", "and", "for", "of", "the", "to", "with"]);
 
-// Keep this list small and explicit: a broad food name must not become a meal or snack.
-const PRODUCE = [
-  { pattern: /\bstrawberr(?:y|ies)\b/, term: "strawberry", tags: ["en:strawberries"] },
-  { pattern: /\bpotato(?:es)?\b/, term: "potato", tags: ["en:potatoes"] },
-  { pattern: /\bcarrots?\b/, term: "carrot", tags: ["en:carrots"] },
-  { pattern: /\bonions?\b/, term: "onion", tags: ["en:onions"] },
-  { pattern: /\bcelery\b/, term: "celery", tags: ["en:celery-stalk"] },
-  { pattern: /\bgarlic\b/, term: "garlic", tags: ["en:garlic"] },
-  { pattern: /\btomato(?:es)?\b/, term: "tomato", tags: ["en:tomatoes"] },
-];
-
-const PROCESSED = /\b(jerky|dried meat|sausage|franks?|hot dogs?|patt(?:y|ies)|burgers?|meatballs?|chorizo|deli|canned|soup|broth|stock|bouillon|seasoning|sauce|gravy|meals?|prepared|fully cooked|cooked|rotisserie|breaded|nuggets?|plant based|vegan|vegetarian|liver|heart|kidney|ground|minced|homestyle|calories)\b/;
-const PRODUCE_PROCESSED = /\b(jam|jelly|preserves?|yogurt|yoghurt|ice cream|flavou?r(?:ed)?|cereal|snacks?|candy|drink|smoothie|juice|bars?|sauce|paste|soup|chips?|powder)\b/;
-
-function normalize(value) {
-  return String(value || "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+function normalizedPhrase(value) {
+  return String(value || "")
+    .toLocaleLowerCase()
+    .normalize("NFKD")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
 }
 
-function searchPlan(name) {
-  const text = normalize(name);
-  const isPrepared = /\b(broth|stock|bouillon|soup|sauce|gravy|seasoning|ground|minced|jerky|sausage|bacon|canned|cooked)\b/.test(text);
-  if (!isPrepared && /\b(beef|steak|chuck|brisket|ribeye|rib eye|tri tip|sirloin)\b/.test(text)) {
-    return { term: "beef", tags: ["en:beef-steaks"], kind: "beef", text };
+function makeSearchTerms(ingredient) {
+  const phrases = [ingredient.name, ...(Array.isArray(ingredient.searchTerms) ? ingredient.searchTerms : [])];
+  const terms = new Map();
+  for (const [index, value] of phrases.entries()) {
+    const phrase = normalizedPhrase(value).slice(0, 80);
+    if (!phrase) continue;
+    const phraseWeight = index === 0 ? 6 : 4;
+    terms.set(phrase, Math.max(terms.get(phrase) || 0, phraseWeight));
+    for (const word of phrase.split(" ")) {
+      if (word.length < 2 || STOP_WORDS.has(word)) continue;
+      terms.set(word, Math.max(terms.get(word) || 0, 1));
+      if (word.length > 4 && word.endsWith("ies")) {
+        const singular = `${word.slice(0, -3)}y`;
+        terms.set(singular, Math.max(terms.get(singular) || 0, 1));
+      } else if (word.length > 3 && word.endsWith("s") && !/(ss|us|is)$/.test(word)) {
+        const singular = word.slice(0, -1);
+        terms.set(singular, Math.max(terms.get(singular) || 0, 1));
+      }
+    }
   }
-  if (!isPrepared && /\b(chicken|poultry)\b/.test(text)) {
-    let tags = ["en:whole-chickens", "en:chicken-thighs", "en:chicken-drumsticks"];
-    if (/\b(breast|breasts|tenderloin|tenderloins)\b/.test(text)) tags = ["en:chicken-breasts"];
-    else if (/\b(thigh|thighs)\b/.test(text)) tags = ["en:chicken-thighs"];
-    else if (/\b(drumstick|drumsticks|leg|legs)\b/.test(text)) tags = ["en:chicken-drumsticks"];
-    else if (/\bwhole\b/.test(text)) tags = ["en:whole-chickens"];
-    return { term: "chicken", tags, kind: "chicken", text };
+  return [...terms].map(([term, weight]) => ({ term, weight })).slice(0, 24);
+}
+
+function observationAgeDays(date, now) {
+  const timestamp = Date.parse(`${date}T00:00:00Z`);
+  if (!Number.isFinite(timestamp)) return null;
+  return Math.max(0, Math.floor((now - timestamp) / 86_400_000));
+}
+
+function selectPrice(observations, now = Date.now()) {
+  const rows = observations
+    .filter((row) => Number.isFinite(row.price) && row.price > 0 && row.currency === "USD")
+    .map((row) => ({ ...row, ageDays: observationAgeDays(row.date, now) }))
+    .filter((row) => row.ageDays !== null);
+  const recent = rows.filter((row) => row.ageDays <= FRESH_DAYS);
+  if (recent.length) {
+    recent.sort((a, b) => a.price - b.price || b.date.localeCompare(a.date) || a.priceId - b.priceId);
+    return { row: recent[0], freshness: "recent", recentOptions: recent.length };
   }
-  if (/\bwhite rice\b/.test(text) && !/\b(fried|cooked|seasoned|pudding|flour)\b/.test(text.replace(/\buncooked\b/g, ""))) {
-    return { term: "white rice", tags: ["en:white-rice"], kind: "rice", text };
+  rows.sort((a, b) => b.date.localeCompare(a.date) || a.price - b.price || a.priceId - b.priceId);
+  return rows.length ? { row: rows[0], freshness: "older", recentOptions: 0 } : null;
+}
+
+function parseJsonArray(value) {
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
   }
-  if (text === "pepper" || text === "black pepper") return { term: "black pepper", tags: [], kind: "spice", text };
-  const produce = PRODUCE.find((entry) => entry.pattern.test(text));
-  if (produce && !PRODUCE_PROCESSED.test(text)) return { ...produce, kind: "produce", text };
-  const words = text.split(" ").filter((word) => word && !["fresh", "raw", "ripe", "chopped"].includes(word));
-  if (words.length) {
-    const last = words.length - 1;
-    if (words[last].endsWith("ies") && words[last].length > 5) words[last] = `${words[last].slice(0, -3)}y`;
-    else if (words[last].endsWith("s") && words[last].length > 3 && !words[last].endsWith("ss")) words[last] = words[last].slice(0, -1);
-  }
-  return { term: words.join(" ").slice(0, 80), tags: [], kind: "other", text };
 }
 
-function productScore(plan, item) {
-  const title = normalize(item.product_name);
-  const categories = normalize((item.categories_tags || []).join(" "));
-  if (!title) return 0;
-  if (plan.kind === "beef" || plan.kind === "chicken") {
-    const description = `${title} ${categories} ${normalize(item.brands)} ${normalize(item.quantity)}`;
-    if (PROCESSED.test(description) || Number(item.nova_group) >= 3) return 0;
-  }
-  if (plan.kind === "beef" && /\bstew\b/.test(title) && !/\b(stew meat|stewing beef|beef cubes|diced beef)\b/.test(title)) return 0;
-  if (plan.kind === "chicken") {
-    if (/\b(breast|breasts|tenderloin|tenderloins)\b/.test(plan.text) && !/\b(breast|breasts|tenderloin|tenderloins)\b/.test(title)) return 0;
-    if (/\b(thigh|thighs)\b/.test(plan.text) && !/\b(thigh|thighs)\b/.test(title)) return 0;
-    if (/\b(drumstick|drumsticks|leg|legs)\b/.test(plan.text) && !/\b(drumstick|drumsticks|leg|legs)\b/.test(title)) return 0;
-    if (/\bwhole\b/.test(plan.text) && !/\bwhole\b/.test(title)) return 0;
-  }
-  if (plan.kind === "produce" && PRODUCE_PROCESSED.test(title)) return 0;
-  if (plan.kind === "rice" && /\b(cooked|fried|seasoned|seasoning|flour|pudding|cakes?|crackers?|curry|garnish|steamed|portable|sticky|beef|chicken|meals?)\b/.test(title)) return 0;
-  if (plan.text === "salt" && (!/\bsalt\b/.test(title) || /\b(no salt|salt free|salt added|seasoned|garlic|onion|celery|flavoured|flavored|sauce|soup|chips|snack)\b/.test(title))) return 0;
-  if (plan.kind === "spice" && /\b(sauce|seasoned|soup|chips|snack|salt)\b/.test(title)) return 0;
-  if (!title.includes(plan.term)) return 0;
-  const words = plan.text.split(" ").filter((word) => word.length > 2);
-  return (title === plan.text ? 100 : 25) + words.filter((word) => title.includes(word)).length * 10;
+function candidateQuery(terms) {
+  const score = terms.map(() => "CASE WHEN instr(search_text, ?) > 0 THEN ? ELSE 0 END").join(" + ");
+  return `SELECT product_id, product_name, brands, quantity, categories_json, observations_json,
+                 (${score}) AS score
+          FROM products
+          WHERE (${score}) > 0
+          ORDER BY score DESC, product_name ASC
+          LIMIT ${MAX_SEARCH_ROWS}`;
 }
 
-async function getJSON(url) {
-  const response = await fetch(url, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(12_000) });
-  if (!response.ok) throw new Error(`Open Prices returned ${response.status}.`);
-  const text = await response.text();
-  if (text.length > 1_500_000) throw new Error("Open Prices response exceeded the size limit.");
-  return JSON.parse(text);
-}
-
-function priceURL(center) {
-  const url = new URL(`${API}/prices`);
-  url.searchParams.set("lat", String(center.lat));
-  url.searchParams.set("lon", String(center.lon));
-  url.searchParams.set("radius_km", String(center.radiusKm));
-  url.searchParams.set("currency", "USD");
-  url.searchParams.set("size", String(PAGE_SIZE));
-  url.searchParams.set("page", "1");
-  return url;
-}
-
-async function productPrices(plan, center) {
-  if (!plan.term) return { candidates: [], rows: [] };
-  const url = new URL(`${API}/products`);
-  url.searchParams.set("product_name__like", plan.term);
-  url.searchParams.set("price_count__gte", "1");
-  url.searchParams.set("size", String(PAGE_SIZE));
-  url.searchParams.set("page", "1");
-  const data = await getJSON(url);
-  const candidates = (Array.isArray(data.items) ? data.items : [])
-    .filter((item) => Number.isInteger(item?.id))
-    .map((item) => ({ ...item, score: productScore(plan, item) }))
-    .filter((item) => item.score > 0)
-    .sort((a, b) => b.score - a.score || (b.price_count || 0) - (a.price_count || 0))
-    .slice(0, plan.kind === "rice" ? 30 : MAX_CANDIDATES);
-  // An empty ID filter would search unrelated prices, so never send one.
-  if (!candidates.length) return { candidates, rows: [] };
-  const prices = priceURL(center);
-  prices.searchParams.set("type", "PRODUCT");
-  prices.searchParams.set("product_id__in", candidates.map((item) => item.id).join(","));
-  const found = await getJSON(prices);
-  const ids = new Set(candidates.map((item) => item.id));
-  return { candidates, rows: (found.items || []).filter((row) => ids.has(row.product_id)) };
-}
-
-async function categoryPrices(tag, center) {
-  const url = priceURL(center);
-  url.searchParams.set("type", "CATEGORY");
-  url.searchParams.set("category_tag", tag);
-  const data = await getJSON(url);
-  return (data.items || []).filter((row) => row.type === "CATEGORY" && row.category_tag === tag);
-}
-
-// Search locally tagged poultry as well: a globally ranked catalog page can miss local chicken.
-async function nearbyPoultryPrices(plan, center) {
-  const url = priceURL(center);
-  url.searchParams.set("type", "PRODUCT");
-  url.searchParams.set("product__categories_tags__contains", "en:poultries");
-  const first = await getJSON(url);
-  const rows = Array.isArray(first.items) ? first.items : [];
-  if (Number(first.pages) > 1) {
-    url.searchParams.set("page", "2");
-    const second = await getJSON(url);
-    if (Array.isArray(second.items)) rows.push(...second.items);
-  }
-  return rows.filter((row) => row.product && productScore(plan, row.product) > 0);
-}
-
-function makePrice(row, plan) {
-  if (!Number.isFinite(row?.price) || row.price <= 0 || row.currency !== "USD" || row.duplicate_of != null) return null;
-  const product = row.product || {};
-  const location = row.location || {};
-  const categoryName = String(row.category_tag || "").replace(/^en:/, "").replace(/-/g, " ");
+function toPrice(product, selected) {
+  const row = selected.row;
   return {
-    id: row.id, productId: row.product_id || null,
-    productName: row.type === "CATEGORY" ? (row.product_name || categoryName) : (product.product_name || row.product_name || "Product name unavailable"),
-    brand: product.brands || null, quantity: product.quantity || null,
-    price: row.price, currency: row.currency, pricePer: row.price_per || null,
-    date: row.date || null, source: row.source || row.proof?.source || null,
-    store: location.osm_name || "Store name unavailable", address: location.osm_display_name || null,
-    city: location.osm_address_city || null, proofType: row.proof?.type || null,
-    matchType: row.type === "CATEGORY" && plan.kind === "beef" ? "broader beef category" : null,
+    id: Number(row.priceId),
+    productId: Number(product.product_id),
+    productName: product.product_name,
+    brand: product.brands || null,
+    quantity: product.quantity || null,
+    price: row.price,
+    currency: row.currency,
+    pricePer: row.pricePer || null,
+    date: row.date,
+    ageDays: row.ageDays,
+    freshness: selected.freshness,
+    recentPriceOptions: selected.recentOptions,
+    source: row.source || null,
+    store: row.store || "Store name unavailable",
+    address: row.address || null,
+    city: row.city || null,
+    proofType: row.proofType || null,
   };
 }
 
-async function lookup(name, center) {
-  const plan = searchPlan(name);
-  const attempts = await Promise.allSettled([productPrices(plan, center), ...plan.tags.map((tag) => categoryPrices(tag, center)), ...(plan.kind === "chicken" ? [nearbyPoultryPrices(plan, center)] : [])]);
-  const productResult = attempts[0].status === "fulfilled" ? attempts[0].value : { candidates: [], rows: [] };
-  const categoryRows = attempts.slice(1).flatMap((entry) => entry.status === "fulfilled" ? entry.value : []);
-  const rows = [...productResult.rows, ...categoryRows].map((row) => makePrice(row, plan)).filter(Boolean);
-  // Compare the returned amounts, but keep the unit/size visible: a package and a kg are not equivalent.
-  rows.sort((a, b) => a.price - b.price || String(b.date || "").localeCompare(String(a.date || "")));
-  const failed = attempts.some((entry) => entry.status === "rejected");
-  if (failed) {
-    // Report only the failure type, never the shopper's ingredient or request.
-    const failures = attempts.filter((entry) => entry.status === "rejected").map((entry) => {
-      const error = entry.reason;
-      const httpStatus = /^Open Prices returned (\d{3})\.$/.exec(String(error?.message || ""));
-      if (httpStatus) return `HTTP ${httpStatus[1]}`;
-      if (error?.name === "TimeoutError" || error?.name === "AbortError") return "timeout";
-      if (error instanceof SyntaxError) return "invalid JSON";
-      if (error?.message === "Open Prices response exceeded the size limit.") return "response too large";
-      return "other error";
+async function retrieveForIngredient(ingredient, env) {
+  const terms = makeSearchTerms(ingredient);
+  if (!terms.length) return { candidates: [], error: false };
+
+  const sql = candidateQuery(terms);
+  const bindings = [...terms, ...terms].flatMap(({ term, weight }) => [term, weight]);
+  const response = await env.PRODUCT_DB.prepare(sql).bind(...bindings).all();
+  const now = Date.now();
+  const candidates = [];
+  for (const product of response.results || []) {
+    const observations = parseJsonArray(product.observations_json);
+    const selected = selectPrice(observations, now);
+    if (!selected) continue;
+    candidates.push({
+      productId: Number(product.product_id),
+      name: product.product_name,
+      brand: product.brands || null,
+      quantity: product.quantity || null,
+      categories: parseJsonArray(product.categories_json),
+      score: Number(product.score) || 0,
+      price: toPrice(product, selected),
     });
-    console.warn("Open Prices lookup errors:", failures.join(", "));
+    if (candidates.length === MAX_CANDIDATES) break;
   }
-  return {
-    requestedName: name,
-    prices: rows.slice(0, 1),
-    status: rows.length ? "ok" : failed ? "error" : "unmatched",
-    partial: failed && rows.length > 0,
-  };
+  return { candidates, error: false };
 }
 
-export async function findPricesForProducts(products, center) {
-  const results = new Array(products.length);
+export async function findCandidatesForIngredients(ingredients, env) {
+  if (!env.PRODUCT_DB) throw new Error("The product D1 database is not configured.");
+  const results = new Array(ingredients.length);
   let next = 0;
-  await Promise.all(Array.from({ length: Math.min(MAX_CONCURRENT_ITEMS, products.length) }, async () => {
-    while (next < products.length) {
+  await Promise.all(Array.from({ length: Math.min(MAX_CONCURRENT_SEARCHES, ingredients.length) }, async () => {
+    while (next < ingredients.length) {
       const index = next++;
-      try { results[index] = await lookup(products[index], center); }
-      catch (error) {
-        console.warn("Open Prices lookup failed for an ingredient.", error);
-        results[index] = { requestedName: products[index], prices: [], status: "error" };
+      try {
+        results[index] = await retrieveForIngredient(ingredients[index], env);
+      } catch (error) {
+        console.warn("D1 catalog retrieval failed for one ingredient.", error);
+        results[index] = { candidates: [], error: true };
       }
     }
   }));

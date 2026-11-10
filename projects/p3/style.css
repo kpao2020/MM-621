@@ -295,6 +295,9 @@ details[open] .expand-arrow { transform: rotate(180deg); }
 .product-details p { margin: 3px 0; overflow-wrap: anywhere; }
 .product-details a { display: inline-block; margin-top: 5px; color: var(--green-dark); }
 .match-note { color: #906048; }
+.price-age { display: inline-block; width: fit-content; padding: 2px 7px; border-radius: 999px; font-size: 10px; font-weight: 650; }
+.price-age-recent { color: #376c49; background: #e6f1e7; }
+.price-age-stale { color: #785f50; background: #eee9e5; }
 
 @media (max-width: 620px) {
   .page-shell { width: min(100% - 28px, 460px); }
