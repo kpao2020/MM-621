@@ -113,8 +113,9 @@ Open Prices is community-contributed. The app preserves source and date informat
 
 ## Developer note
 - This project concept is original and owned by Ken Pao. AI assisted with research and drafting proposal.
-- As an experiment, even for a simple task, I found many limitation and how generally available data to users are not available for developers use.
+- As an experiment, even for a simple task, I found many limitation and how generally available pricing data to users are not available for developers use.
 - Using AI to develop an AI-powered app with p5js is both fun and frustrated experience. The fun part is about speed and ability to build more complex features with less headache. The frustrated part is AI-generated bugs that cause extra time and effort to debug, and then find out this is completely not needed and end up deleting that block of code.
+- Based on initial user feedback and Tyler's feedback, might have to pivot a bit to use AI for a more heavy lifting to shift the focus, and lessen the price part or completely use it as a reference point only.
 
 ## Credits
 

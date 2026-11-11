@@ -123,13 +123,29 @@ def d1_query(sql, account_id, database_id, token):
 
 
 def load_schema(account_id, database_id, token):
-    schema_path = WORKER_DIR / "migrations" / "0001_initial.sql"
-    d1_query(schema_path.read_text(encoding="utf-8"), account_id, database_id, token)
+    migration_dir = WORKER_DIR / "migrations"
+    for schema_path in sorted(migration_dir.glob("*.sql")):
+        d1_query(schema_path.read_text(encoding="utf-8"), account_id, database_id, token)
+
+    results = d1_query(
+        "SELECT index_version FROM catalog_search_meta WHERE id = 1",
+        account_id, database_id, token,
+    )
+    rows = results[0].get("results", []) if results else []
+    index_version = int(rows[0].get("index_version", 0)) if rows else 0
+    if index_version < 1:
+        d1_query(
+            "INSERT INTO products_fts(products_fts) VALUES ('rebuild'); "
+            "UPDATE catalog_search_meta SET index_version = 1 WHERE id = 1",
+            account_id, database_id, token,
+        )
 
 
 def read_state(account_id, database_id, token):
     results = d1_query(
-        "SELECT latest_price_id, is_ready FROM catalog_meta WHERE id = 1",
+        "SELECT latest_price_id, is_ready, "
+        "COALESCE((SELECT index_version FROM catalog_search_meta WHERE id = 1), 0) AS search_index_version "
+        "FROM catalog_meta WHERE id = 1",
         account_id, database_id, token,
     )
     rows = results[0].get("results", []) if results else []
@@ -258,6 +274,12 @@ def import_snapshot(snapshot, marker, account_id, database_id, token):
         d1_query(";\n".join(statements[start:start + SQL_BATCH_SIZE]), account_id, database_id, token)
         print(json.dumps({"status": "importing", "batch": batch_index, "batches": total_batches}))
 
+    d1_query(
+        "INSERT INTO products_fts(products_fts) VALUES ('rebuild'); "
+        "UPDATE catalog_search_meta SET index_version = 1 WHERE id = 1",
+        account_id, database_id, token,
+    )
+
     retrieved_at = snapshot["query"]["retrieved_at"]
     d1_query(
         "INSERT OR REPLACE INTO catalog_meta (id, latest_price_id, retrieved_at, price_rows, product_count, is_ready) "
@@ -276,7 +298,13 @@ def run(output_dir):
     previous = read_state(account_id, database_id, token)
     weekly_audit = datetime.now(timezone.utc).weekday() == 6
     force = os.environ.get("P3_FORCE_REFRESH") == "1" or weekly_audit
-    if previous and int(previous.get("latest_price_id", 0)) == marker["latestPriceId"] and previous.get("is_ready") == 1 and not force:
+    if (
+        previous
+        and int(previous.get("latest_price_id", 0)) == marker["latestPriceId"]
+        and previous.get("is_ready") == 1
+        and int(previous.get("search_index_version", 0)) >= 1
+        and not force
+    ):
         print(json.dumps({"status": "unchanged", **marker, "checkedAt": datetime.now(timezone.utc).isoformat()}))
         return
 

@@ -19,12 +19,14 @@ The D1-backed flow is operational. The user reports that the implementation comm
 - [x] Kept credentials out of repository files; API credentials are configured in service secret settings.
 - [x] Added Open Prices attribution and age/inventory caveats.
 - [x] Ignored local regional JSON/GZIP downloads and Python cache files.
+- [x] Replaced the per-ingredient full catalog scan with an FTS5-backed D1 search; added an idempotent index migration and refresh rebuild logic.
 
 ## This wrap-up
 
 - [ ] Review the centered mobile app shell on the published page after pushing the CSS update.
 - [ ] Push the documentation, ignore-rule, and mobile-layout changes from the current branch.
 - [ ] Verify the Pages publish after the user syncs the merged branch.
+- [ ] Apply the FTS5 index migration/rebuild with the D1 refresh workflow, then deploy the updated Worker.
 
 ## Standing proposal-format requirement
 

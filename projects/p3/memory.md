@@ -14,6 +14,7 @@ Basket Buddy is a mobile-first p5.js prototype that plans one simple meal and se
 - Prefer the lowest valid USD price observed in the past 30 days. If there is no recent observation, show the newest older observation and its age.
 - Price facts, location, package information, and dates come from the catalog, never from model output.
 - Daily refresh checks one newest regional record ID. It downloads and imports the region only after a change, an unready state, or for the weekly reconciliation.
+- Ingredient candidate retrieval uses a D1 FTS5 inverted index over product search text; catalog refreshes rebuild the index before marking the catalog ready. After the index migration is applied, searches should inspect matches instead of scanning every product row.
 - Catalog data is community-reported; it does not confirm current inventory.
 - Keep Open Prices attribution and ODbL terms visible.
 
