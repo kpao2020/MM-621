@@ -199,7 +199,7 @@ h2 { margin: 0; font-size: 20px; letter-spacing: -.035em; line-height: 1.2; }
 
 #meal-request::placeholder { color: #9a9d8e; }
 #meal-request:focus { border-color: #7d9b72; box-shadow: 0 0 0 3px rgba(125, 155, 114, .15); }
-.verification-widget { max-width: 100%; margin-top: 12px; }
+.verification-widget { max-width: 100%; }
 
 .form-bottom { display: flex; align-items: center; flex-direction: column; gap: 11px; padding-top: 13px; }
 .form-hint { order: 2; margin: 0; color: var(--muted); font-size: 11px; text-align: center; }

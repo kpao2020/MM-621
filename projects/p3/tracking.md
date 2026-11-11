@@ -1,6 +1,22 @@
 # Basket Buddy — Project Tracker
 
-Last updated: 2026-11-09
+Last updated: 2026-11-11
+
+## Weather-based direction — November 11
+
+- Confirmed direction: combine Project 2's weather/location approach with Project 3's AI backend to generate one simple healthy meal from a forecast. Add optional browser location with city fallback, an accurate location-purpose notice, and meal-only AI safeguards.
+- Inspected Project 2: its four cities are Hayward, Oakland, San Francisco, and San Jose; its current request loads observations. Forecast retrieval still needs implementation.
+- Recommended scope: one explicit forecast period, one recipe with quantities and short steps, structured meal controls, and a reusable p5.js illustration. The initial substitution interaction remains to be scoped.
+- Applied Turnstile cleanup locally in sketch.js and style.css. It appears only when interaction is needed, collapses on success, and is restored for expiry/error/reset; server validation remains unchanged. Live browser verification and deployment are pending.
+- Current step: provide feasibility and effort advice. Forecast-to-AI integration, location controls, privacy copy, and the new recipe UI are not implemented. Project 2 and PROPOSAL.md are unchanged.
+
+## Pivot discussion — November 10
+
+- Reviewed the existing app and the radius-expansion analysis in response to the user's request to resume Project 3.
+- The user narrowed the concept to common ingredients with quantities in one list, simple cooking steps, a stylized p5.js meal drawing, and an ingredient-substitution option.
+- Price estimates, shopping locations, separate pantry/buy lists, and Open Prices are out of the revised product scope. Time/effort estimates are not confirmed in the narrowed scope.
+- Current step: evaluate the project's value and recommend a substitution interaction. The user is still considering whether to pursue this direction; implementation and proposal edits have not started.
+- The operational status and checklist below describe the existing Open Prices version.
 
 ## Status
 
