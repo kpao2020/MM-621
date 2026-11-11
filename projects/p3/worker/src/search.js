@@ -68,13 +68,21 @@ function parseJsonArray(value) {
 }
 
 function candidateQuery(terms) {
-  const score = terms.map(() => "CASE WHEN instr(search_text, ?) > 0 THEN ? ELSE 0 END").join(" + ");
-  return `SELECT product_id, product_name, brands, quantity, categories_json, observations_json,
+  const score = terms.map(() => "CASE WHEN instr(products.search_text, ?) > 0 THEN ? ELSE 0 END").join(" + ");
+  const matchExpression = terms
+    .map(({ term }) => `"${term.replace(/"/g, '""')}"`)
+    .join(" OR ");
+  return {
+    sql: `SELECT products.product_id, products.product_name, products.brands, products.quantity,
+                 products.categories_json, products.observations_json, products.search_text,
                  (${score}) AS score
-          FROM products
-          WHERE (${score}) > 0
-          ORDER BY score DESC, product_name ASC
-          LIMIT ${MAX_SEARCH_ROWS}`;
+          FROM products_fts
+          JOIN products ON products.product_id = products_fts.rowid
+          WHERE products_fts MATCH ?
+          ORDER BY score DESC, products.product_name ASC
+          LIMIT ${MAX_SEARCH_ROWS}`,
+    matchExpression,
+  };
 }
 
 function toPrice(product, selected) {
@@ -104,12 +112,13 @@ async function retrieveForIngredient(ingredient, env) {
   const terms = makeSearchTerms(ingredient);
   if (!terms.length) return { candidates: [], error: false };
 
-  const sql = candidateQuery(terms);
-  const bindings = [...terms, ...terms].flatMap(({ term, weight }) => [term, weight]);
-  const response = await env.PRODUCT_DB.prepare(sql).bind(...bindings).all();
+  const query = candidateQuery(terms);
+  const bindings = terms.flatMap(({ term, weight }) => [term, weight]);
+  const response = await env.PRODUCT_DB.prepare(query.sql).bind(...bindings, query.matchExpression).all();
   const now = Date.now();
   const candidates = [];
   for (const product of response.results || []) {
+    if (!(Number(product.score) > 0)) continue;
     const observations = parseJsonArray(product.observations_json);
     const selected = selectPrice(observations, now);
     if (!selected) continue;

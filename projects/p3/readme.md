@@ -6,11 +6,13 @@ Basket Buddy is a mobile-first p5.js prototype for planning one simple meal and 
 
 The D1-backed flow is deployed and has returned a live meal response. The saved snapshot reported 24,757 indexed products and 38,568 price observations, retrieved at 2026-11-10 03:24 UTC. A sample request confirmed that D1 candidates and recorded prices are returned. Its selected prices were 100–289 days old, so the Worker correctly marked them as older.
 
+The FTS5 search-index optimization is implemented in the repository but is not yet live. Run the D1 refresh workflow to create/backfill the index, then deploy the updated Worker.
+
 ## How it works
 
 1. Workers AI turns a request into one concise grocery list, aiming for 12 or fewer items with a hard limit of 16.
 2. Workers AI adds up to four close catalog phrases for each ingredient.
-3. The Worker searches product text in D1 and passes up to eight saved candidates per ingredient to Workers AI.
+3. The Worker searches D1's FTS5 index and passes up to eight saved candidates per ingredient to Workers AI.
 4. The model can select only returned candidate IDs. It can choose a practical substitute only for an ingredient marked replaceable.
 5. The Worker validates each selection and reads its price, store, and date from D1. Meal requests do not make product-by-product Open Prices requests.
 
@@ -46,7 +48,7 @@ Deploy the Worker with npx wrangler deploy from projects/p3/worker after Wrangle
 - api.js, results.js: Worker request handling and result rendering.
 - config.js: public Worker URL and Turnstile site key.
 - worker/src: D1 search, meal planning, candidate validation, and price selection.
-- worker/migrations/0001_initial.sql: D1 schema.
+- worker/migrations: D1 schema and FTS5 search index.
 - tools/refresh_open_prices.py: regional check, conditional bulk download, and D1 import.
 - ../../.github/workflows/p3-open-prices-refresh.yml: scheduled and manual refresh.
 - DATA-PIPELINE.md: operational setup and refresh instructions.
@@ -55,3 +57,4 @@ Deploy the Worker with npx wrangler deploy from projects/p3/worker after Wrangle
 - tracking.md and memory.md: current status and decisions.
 - agents.md: project-specific collaboration rules.
 - open-prices-hayward-50mi-analysis.md: static analysis of the original regional snapshot.
+- open-prices-radius-expansion-analysis-2026-11-10.md: live comparison of recent 50-, 200-, and 300-mile coverage.

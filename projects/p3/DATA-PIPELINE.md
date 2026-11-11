@@ -4,11 +4,13 @@
 
 The first regional import completed and the deployed Worker has read the D1 catalog in a live meal request. The last reported snapshot retrieval was 2026-11-10 03:24 UTC (2026-11-09 Pacific): 24,757 indexed products and 38,568 price observations.
 
+The FTS5 search-index migration and query are implemented locally. To activate them, run the D1 refresh workflow first so it creates/backfills the index, then deploy the updated Worker. Until both steps are complete, production still uses the previous search query.
+
 ## Meal request flow
 
 1. Workers AI drafts one simple meal, aims for 12 or fewer grocery ingredients, and never returns more than 16.
 2. The meal plan includes up to four close catalog phrases for each ingredient.
-3. The Worker matches these phrases against searchable product text in D1 and retrieves up to eight product candidates.
+3. The Worker queries D1's FTS5 inverted index with these phrases, scores only matching products, and retrieves up to eight candidates per ingredient.
 4. Workers AI selects only IDs from the candidates for the corresponding ingredient. It may select a practical substitute only when that ingredient is marked replaceable.
 5. The Worker validates each ID and returns price evidence saved in D1. Meal requests make no product-by-product Open Prices requests.
 
@@ -34,7 +36,7 @@ The latest import recorded 24,757 products and 38,568 price observations. Raw do
 
 ## D1 data shape
 
-The products table stores one named catalog product per row, including searchable product text, category/store summaries, and its saved price observations. The catalog_meta row stores latest record ID, retrieval time, counts, and ready state.
+The products table stores one named catalog product per row, including searchable product text, category/store summaries, and its saved price observations. The products_fts FTS5 virtual table indexes search_text so ingredient searches do not scan every product row. catalog_search_meta tracks the index version. A refresh rebuilds the index after importing products and before marking the catalog ready; the importer also builds it once for an existing catalog when this migration is first applied.
 
 ## Credentials
 
