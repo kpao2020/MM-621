@@ -1,6 +1,38 @@
 # Basket Buddy — Project Tracker
 
-Last updated: 2026-11-09
+Last updated: 2026-11-11
+
+## Readme aligned with proposal — November 11
+
+- Rewrote readme.md around Forecast Meal using PROPOSAL.md as the source of truth. Included planned controls, nutrition-table direction, research findings, privacy and service limits, technology, and the three-week plan.
+- Distinguished planned Forecast Meal behavior from existing Basket Buddy code and retained local-running instructions and historical data attribution. No app code or proposal text was changed.
+- Confirmed the live proposal URL returns HTTP 200. The user chose a single PDF, playful colorful style, minimal text, and a five-minute presentation.
+- Completed a seven-slide, colorful, minimal-text PDF for a five-minute presentation at Forecast-Meal-Proposal-Deck.pdf. Rendered and inspected all slides; verified the final slide's proposal hyperlink targets the live GitHub Pages proposal.
+- Revised the cover and closing graphics to fit within the slide edges and removed the “five-minute proposal” cover line. Re-rendered and inspected both slides; confirmed the proposal link remains active.
+- Styled the live proposal URL on the closing slide in blue with an underline; re-rendered and confirmed the clickable target.
+
+## Proposal proofreading — November 11
+
+- Reviewed the manually updated PROPOSAL.md for grammar and spelling and identified suggested corrections, including in Developer Note. Left the proposal unchanged.
+- Completed a second proofreading pass after the user's corrections; reported a remaining sentence fragment, permission-request wording, and p5.js name formatting. Proposal edits remain with the user.
+- Final scan confirmed those three fixes; noted one remaining introductory-phrase issue in Developer Note ("As an experiment" should be "During this experiment"). Left PROPOSAL.md unchanged.
+- Saved the user's preference to report proofreading issues and suggested corrections while preserving wording, meaning, headings, and formatting; apply proposal edits only when requested.
+
+## Weather-based direction — November 11
+
+- Confirmed direction: combine Project 2's weather/location approach with Project 3's AI backend to generate one simple healthy meal from a forecast. Add optional browser location with city fallback, an accurate location-purpose notice, and meal-only AI safeguards.
+- Inspected Project 2: its four cities are Hayward, Oakland, San Francisco, and San Jose; its current request loads observations. Forecast retrieval still needs implementation.
+- Recommended scope: one explicit forecast period, one recipe with quantities and short steps, structured meal controls, and a reusable p5.js illustration. The initial substitution interaction remains to be scoped.
+- Applied Turnstile cleanup locally in sketch.js and style.css. It appears only when interaction is needed, collapses on success, and is restored for expiry/error/reset; server validation remains unchanged. Live browser verification and deployment are pending.
+- Current step: provide feasibility and effort advice. Forecast-to-AI integration, location controls, privacy copy, and the new recipe UI are not implemented. Project 2 and PROPOSAL.md are unchanged.
+
+## Pivot discussion — November 10
+
+- Reviewed the existing app and the radius-expansion analysis in response to the user's request to resume Project 3.
+- The user narrowed the concept to common ingredients with quantities in one list, simple cooking steps, a stylized p5.js meal drawing, and an ingredient-substitution option.
+- Price estimates, shopping locations, separate pantry/buy lists, and Open Prices are out of the revised product scope. Time/effort estimates are not confirmed in the narrowed scope.
+- Current step: evaluate the project's value and recommend a substitution interaction. The user is still considering whether to pursue this direction; implementation and proposal edits have not started.
+- The operational status and checklist below describe the existing Open Prices version.
 
 ## Status
 

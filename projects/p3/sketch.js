@@ -66,6 +66,7 @@ function wireMealForm() {
   const input = document.getElementById("meal-request");
   const button = document.getElementById("submit-button");
   const status = document.getElementById("status-message");
+  const verificationContainer = document.getElementById("verification-widget");
   let verificationToken = "";
   let verificationWidget = null;
   let submitting = false;
@@ -87,8 +88,10 @@ function wireMealForm() {
         sitekey: siteKey,
         action: "basket_meal",
         size: "flexible",
+        appearance: "interaction-only",
         callback: (token) => {
           verificationToken = token;
+          verificationContainer.hidden = true;
           if (!submitting) button.disabled = false;
           if (status.dataset.verification === "waiting") {
             status.hidden = true;
@@ -97,10 +100,12 @@ function wireMealForm() {
         },
         "expired-callback": () => {
           verificationToken = "";
+          verificationContainer.hidden = false;
           button.disabled = true;
         },
         "error-callback": () => {
           verificationToken = "";
+          verificationContainer.hidden = false;
           button.disabled = true;
           status.dataset.verification = "waiting";
           showStatus("Verification could not load. Please refresh the page.", "error");
@@ -161,6 +166,7 @@ function wireMealForm() {
       // A verified token cannot be reused, even when the request fails.
       if (verificationWidget !== null && window.turnstile?.reset) {
         try {
+          verificationContainer.hidden = false;
           window.turnstile.reset(verificationWidget);
         } catch {
           button.disabled = true;
