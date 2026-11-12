@@ -6,7 +6,10 @@ Last updated: 2026-11-11
 
 - Rewrote readme.md around Forecast Meal using PROPOSAL.md as the source of truth. Included planned controls, nutrition-table direction, research findings, privacy and service limits, technology, and the three-week plan.
 - Distinguished planned Forecast Meal behavior from existing Basket Buddy code and retained local-running instructions and historical data attribution. No app code or proposal text was changed.
-- Confirmed the live proposal URL returns HTTP 200. Discussed designed PDF and editable PPTX output; presentation creation has not started.
+- Confirmed the live proposal URL returns HTTP 200. The user chose a single PDF, playful colorful style, minimal text, and a five-minute presentation.
+- Completed a seven-slide, colorful, minimal-text PDF for a five-minute presentation at Forecast-Meal-Proposal-Deck.pdf. Rendered and inspected all slides; verified the final slide's proposal hyperlink targets the live GitHub Pages proposal.
+- Revised the cover and closing graphics to fit within the slide edges and removed the “five-minute proposal” cover line. Re-rendered and inspected both slides; confirmed the proposal link remains active.
+- Styled the live proposal URL on the closing slide in blue with an underline; re-rendered and confirmed the clickable target.
 
 ## Proposal proofreading — November 11
 

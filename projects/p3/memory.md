@@ -7,7 +7,7 @@ Last updated: 2026-11-11
 - The user designated PROPOSAL.md as the source of truth and requested that readme.md be updated from it. Forecast Meal's proposed scope includes six cities (Hayward, Oakland, San Francisco, San Jose, San Mateo, Dublin), optional device location, dietary and ingredient-exclusion controls, one to four servings, and one-at-a-time substitutions that update recipe quantities, instructions, and nutrition estimates.
 - The planned visual is now a per-serving nutrition table with p5.js category icons, superseding the earlier meal-illustration direction. Nutrient values are AI estimates informed by USDA reference data, with an accuracy disclaimer; the proposal does not specify ingredient-by-ingredient USDA API nutrient calculation.
 - The user declined the final suggested rewrite of the Developer Note's "As an experiment" opening. Keep the user's chosen wording and leave PROPOSAL.md unchanged.
-- The user asked about a modern, visually designed PDF slide deck and alternative presentation formats. The final slide must include the live proposal link: https://kpao2020.github.io/MM-621/projects/p3/PROPOSAL.html (HTTP 200 confirmed). Deck creation preferences are not yet confirmed.
+- The user requested a five-minute proposal presentation and confirmed preferences for one PDF, a playful colorful style, and minimal text. They had no further questions. The seven-slide PDF is saved as projects/p3/Forecast-Meal-Proposal-Deck.pdf; its final slide links to the published proposal at https://kpao2020.github.io/MM-621/projects/p3/PROPOSAL.html (HTTP 200 confirmed).
 
 ## Weather-based direction — November 11
 
