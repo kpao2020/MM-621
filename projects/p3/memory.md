@@ -2,6 +2,13 @@
 
 Last updated: 2026-11-11
 
+## Proposal authority and presentation request — November 11
+
+- The user designated PROPOSAL.md as the source of truth and requested that readme.md be updated from it. Forecast Meal's proposed scope includes six cities (Hayward, Oakland, San Francisco, San Jose, San Mateo, Dublin), optional device location, dietary and ingredient-exclusion controls, one to four servings, and one-at-a-time substitutions that update recipe quantities, instructions, and nutrition estimates.
+- The planned visual is now a per-serving nutrition table with p5.js category icons, superseding the earlier meal-illustration direction. Nutrient values are AI estimates informed by USDA reference data, with an accuracy disclaimer; the proposal does not specify ingredient-by-ingredient USDA API nutrient calculation.
+- The user declined the final suggested rewrite of the Developer Note's "As an experiment" opening. Keep the user's chosen wording and leave PROPOSAL.md unchanged.
+- The user asked about a modern, visually designed PDF slide deck and alternative presentation formats. The final slide must include the live proposal link: https://kpao2020.github.io/MM-621/projects/p3/PROPOSAL.html (HTTP 200 confirmed). Deck creation preferences are not yet confirmed.
+
 ## Weather-based direction — November 11
 
 - The user wants Project 3 to reuse Project 2's weather/location work and generate one healthy meal suggestion from a local forecast, with quantities, simple cooking steps, and the previously discussed stylized p5.js meal drawing.
@@ -50,6 +57,7 @@ Basket Buddy's revised concept uses local weather forecasts to suggest one simpl
 ## Proposal editing preference
 
 - The user owns the proposal structure. Preserve every section title and its wording, required section order, and intentional spacing/separators exactly. Only edit or add body text when requested. Never rewrite headings. Leave the Developer note for the user to enter manually.
+- When the user manually updates the proposal and requests proofreading, check grammar and spelling and report issues with suggested corrections. Preserve the user's wording and meaning; do not apply proposal edits unless requested. Suggestions may include the Developer Note, which remains for the user to edit manually.
 
 ## Current verification
 

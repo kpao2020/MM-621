@@ -2,6 +2,19 @@
 
 Last updated: 2026-11-11
 
+## Readme aligned with proposal — November 11
+
+- Rewrote readme.md around Forecast Meal using PROPOSAL.md as the source of truth. Included planned controls, nutrition-table direction, research findings, privacy and service limits, technology, and the three-week plan.
+- Distinguished planned Forecast Meal behavior from existing Basket Buddy code and retained local-running instructions and historical data attribution. No app code or proposal text was changed.
+- Confirmed the live proposal URL returns HTTP 200. Discussed designed PDF and editable PPTX output; presentation creation has not started.
+
+## Proposal proofreading — November 11
+
+- Reviewed the manually updated PROPOSAL.md for grammar and spelling and identified suggested corrections, including in Developer Note. Left the proposal unchanged.
+- Completed a second proofreading pass after the user's corrections; reported a remaining sentence fragment, permission-request wording, and p5.js name formatting. Proposal edits remain with the user.
+- Final scan confirmed those three fixes; noted one remaining introductory-phrase issue in Developer Note ("As an experiment" should be "During this experiment"). Left PROPOSAL.md unchanged.
+- Saved the user's preference to report proofreading issues and suggested corrections while preserving wording, meaning, headings, and formatting; apply proposal edits only when requested.
+
 ## Weather-based direction — November 11
 
 - Confirmed direction: combine Project 2's weather/location approach with Project 3's AI backend to generate one simple healthy meal from a forecast. Add optional browser location with city fallback, an accurate location-purpose notice, and meal-only AI safeguards.

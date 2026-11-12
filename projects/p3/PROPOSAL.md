@@ -1,4 +1,7 @@
-# Forecast Meal — Project 3 Proposal
+# Project 3 Proposal
+
+
+## Forecast Meal
 
 - Student designer: Ken Pao
 - Course: MM-621, Interaction Design Studio II
@@ -17,13 +20,13 @@
 
 Forecast Meal is a lightweight, mobile-first class experiment that uses today's local weather forecast to generate one healthy meal suggestion. A user chooses one of six Bay Area cities — Hayward, Oakland, San Francisco, San Jose, San Mateo, or Dublin — or explicitly allows the browser to use their current location. The result is one recipe with quantities, simple cooking steps, adjustable servings from one to four, and a per-serving nutrition table with an icon for each category.
 
-The app has no open-ended request box. Users can choose their dietary preference, vegetarian, vegan, or pescatarian, and can exclude ingredients from the generated recipe. With no exclusions or dietary selection, the app asks for a generally balanced meal containing vegetables, a protein, and a grain or starch. Users can request an AI-suggested substitute for one listed ingredient at a time. Applying a substitute updates its quantity, affected instructions, and nutrition estimates.
+Users can choose a dietary preference (vegetarian, vegan, or pescatarian) and can exclude ingredients from the generated recipe. With no exclusions or dietary selection, the app asks for a generally balanced meal containing vegetables, a protein, and a grain or starch. Users can request an AI-suggested substitute for one listed ingredient at a time. Applying a substitute updates its quantity, affected instructions, and nutrition estimates.
 
 The table shows AI-estimated calories, protein, carbohydrates, total fat, fiber, and sodium per serving, informed by USDA FoodData Central reference data. Nutrition values are AI-generated estimates informed by USDA reference data and may be inaccurate; use for reference only.
 
-Existing apps already offer weather-based meal suggestions. This project is a small, no-charge experiment in joining an existing weather-data project to a meal-planning interaction and presenting one recipe with a visual nutrition summary. It does not provide nutrition tracking, a weekly plan, grocery prices, store inventory, or ordering. Its “healthy” default is a simple class-project guideline, not an assessment of a person's medical or nutritional needs.
+There are apps that already offer weather-based meal suggestions. This project is a small, no-charge experiment in joining an existing weather-data project to a meal-planning interaction and presenting one recipe with a visual nutrition summary. It does not provide nutrition tracking, a weekly plan, grocery prices, store inventory, or ordering. Its “healthy” default is a simple class-project guideline, not an assessment of a person's medical or nutritional needs.
 
-Forecast Meal is meant to be free for classmates to try. It uses public weather data and free service plans, without paid grocery or price integrations. Free AI and hosting plans have usage limits, and availability depends on the account and model. Before sharing the app, I’ll confirm the selected services are covered by a free plan and set meal suggestions to pause if a limit is reached, so the project does not incur unexpected charges.
+Forecast Meal is meant to be free for classmates to try. It uses public weather data and free service plans, without paid grocery or price integrations. I hope that classmates will enjoy using this free app.
 
 
 ## JavaScript Libraries
@@ -44,7 +47,7 @@ Forecast Meal is meant to be free for classmates to try. It uses public weather 
 
 ## Research
 
-The first direction, Basket Buddy, tested whether community-reported Open Prices records could support a useful local grocery basket. The 50-mile Hayward snapshot included 42,342 price observations; 3,904 were dated within the previous 30 days, and the median observation was 288 days old. That's only 9.2% useful data. In a live sample, the selected records were 100, 271, and 289 days old. These are reported-price dates, not current availability.
+The first prototype, Basket Buddy, tested whether community-reported Open Prices records could support a useful local grocery basket. The 50-mile Hayward snapshot included 42,342 price observations; 3,904 (9.2%) were dated within the previous 30 days, and the median observation was 288 days old. Too many outdated prices and missing product prices undermine one of the project's core values. In a live sample, the selected records were 100, 271, and 289 days old. These are reported-price dates, not current availability.
 
 A radius check showed that widening the search did little to improve recent results: the 50-mile sample had 3,904 observations in the previous 30 days, while the 300-mile sample had 3,907—only three more. Keyword and category matches also did not reliably mean usable fresh ingredients; some matches referred to prepared food, sauces, or other products. In the prototype, ingredient and package matching could produce impractical shopping suggestions, such as buying a full bottle of soy sauce for one recipe. The results explain why a larger search area would not solve the main problem. [The saved analysis](open-prices-hayward-50mi-analysis.md) and [radius comparison](open-prices-radius-expansion-analysis-2026-11-10.md) contain the methods and snapshot details.
 
@@ -52,7 +55,7 @@ Instructor Tyler and Associate Professor Ian also asked how the original concept
 
 **Competitive Analysis.** This quick comparison uses current public product descriptions.
 
-| Service | What its public product information describes | What Forecast Meal tests |
+| App | What its public product information describes | What Forecast Meal tests |
 |---|---|---|
 | [Eat AI: Weather Meal Planner](https://apps.apple.com/us/app/eat-ai-weather-meal-planner/id6767874649) | The closest match: weather-adaptive meal plans, personalized recipes, dietary restrictions, step-by-step cooking instructions, AI food scanning, and calorie and macro tracking. The U.S. App Store lists the app as free with in-app purchases and publishes paid premium options. | A much smaller weather-to-one-meal flow, dietary controls and one-at-a-time substitutions, with an AI-estimated per-serving nutrition table and category icons. This is a class experiment, not an attempt to match Eat AI's nutrition tools. |
 | [Mealime](https://www.mealime.com/) | Weekly meal planning, recipes, personalization, serving choices, organized grocery lists, and guided cooking. Mealime describes its core app as free and offers optional Pro features, including expanded nutrition information. | A single meal selected from today's forecast, with no weekly plan, shopping integration, or nutrition dashboard. Its purpose is to test the weather-informed interaction, not to replace a mature meal-planning service. |
@@ -132,7 +135,7 @@ The existing Basket Buddy backend has not yet been adapted to this proposal. For
 
 ## Interaction and System Flow
 
-1. The user chooses Hayward, Oakland, San Francisco, San Jose, San Mateo, or Dublin, California, or taps “Use my location.” Only the explicit device-location choice prompts the browser permission. If location is denied or the forecast fails, the user can choose a city.
+1. The user chooses Hayward, Oakland, San Francisco, San Jose, San Mateo, or Dublin, California, or taps “Use my location.” Only explicitly choosing device location triggers the browser's permission request. If location is denied or the forecast fails, the user can choose a city.
 2. The app retrieves and displays today's local forecast. It sends the weather summary and supported meal controls—not the device coordinates or unrestricted user text—to the meal-generation service.
 3. The user selects one dietary pattern (no preference, vegetarian, vegan, or pescatarian), chooses ingredients to exclude from the generated recipe, and chooses 1–4 servings. A blank/no-preference selection gives one balanced default meal.
 4. After Turnstile verification, the meal endpoint accepts only supported controls, gets one recipe in the selected model's structured format, and checks the result before returning the recipe, quantities, steps, and per-serving estimates for the six nutrient categories. Other topics cannot be entered through the interface; unsupported direct API inputs and invalid results are rejected.
@@ -155,10 +158,10 @@ Forecast Meal does not create accounts, persist location, or save meal history. 
 
 ## Developer Note
 
-- This project concept is original and owned by Ken Pao. AI assisted with research and drafting proposal.
-- As an experiment, even for a simple task, I found many limitation and how generally available pricing data to users are not available for developers use.
-- Using AI to develop an AI-powered app with p5js is both fun and frustrated experience. The fun part is about speed and ability to build more complex features with less headache. The frustrated part is AI-generated bugs that cause extra time and effort to debug, and then find out this is completely not needed and end up deleting that block of code.
-- Based on initial user feedback and Instructor Tyler's feedback, might have to pivot a bit to use AI for a more heavy lifting to shift the focus, and lessen the price part or completely use it as a reference point only.
+- This project concept is original and owned by Ken Pao. AI assisted with research and drafting the proposal.
+- As an experiment, even for a simple task, I found many limitations and learned that pricing data generally available to users is not available for developers to use.
+- Using AI to develop an AI-powered app with p5.js is both a fun and frustrating experience. The fun part is the speed and ability to build more complex features with fewer headaches. The frustrating part is spending extra time and effort debugging AI-generated bugs, only to discover that the code is unnecessary and end up deleting it.
+- Based on initial user feedback and Instructor Tyler's feedback, I might have to pivot a bit, using AI to do more of the heavy lifting and reducing the emphasis on pricing or using it only as a reference point.
 - November 11, 2026 — I tested Basket Buddy's Open Prices approach and built a 50-mile product catalog. The snapshot had 42,342 observations, but only 3,904 were from the previous 30 days; a sample returned prices 100, 271, and 289 days old. Expanding to 300 miles added only three recent observations. I also found uneven ingredient/package matching. For example, a full bottle of soy sauce for one meal is not a practical shopping suggestion. These results made a larger search radius an ineffective fix. ([50-mile snapshot analysis](open-prices-hayward-50mi-analysis.md); [radius comparison](open-prices-radius-expansion-analysis-2026-11-10.md))
 - Instructor Tyler and Associate Professor Ian also asked why the project searched a 50-mile area, why a user could not substitute an ingredient, why the list could require shopping at multiple places instead of one convenient shop, and why there were no cuisine or dietary choices. I took that feedback as evidence that the original project focused on product-price matching before it had a practical cooking interaction.
 - I looked at two existing products before changing direction. Eat AI already advertises meals adapted to local weather; Mealime offers established meal planning, personalization, recipes, servings, grocery lists, and guided cooking. Forecast Meal is not a new commercial idea and does not try to compete feature-for-feature. I am keeping it as a small, no-charge class experiment that combines Project 2's local forecast data with one meal, preference and substitution controls, and a p5.js nutrition table with category icons. ([Eat AI](https://apps.apple.com/us/app/eat-ai-weather-meal-planner/id6767874649); [Mealime](https://www.mealime.com/))
