@@ -1,6 +1,18 @@
 # Basket Buddy — Project Memory
 
-Last updated: 2026-11-11
+Last updated: 2026-11-12
+
+## Presentation updated from latest proposal — November 12
+
+- The user requested an update to the existing presentation PDF using the latest PROPOSAL.md. Retained the established playful, colorful style, minimal text, and five-minute presentation intent.
+- Forecast-Meal-Proposal-Deck.pdf now has nine slides: added a combined Project Goal/Target Audience slide and a full Mood Board slide after the cover. Preserved the existing seven slides' content, sequence, vector artwork, and closing proposal hyperlink; updated section and page numbering.
+- The mood board is embedded in the PDF, so the presentation does not depend on the image's public URL. The proposal text was not edited during this task.
+- Final PDF pages were rendered and individually inspected; verified nine pages, selectable text, embedded mood board, correct numbering, and the closing proposal hyperlink. Build sources, original PDF backup, and previews are under /private/tmp/forecast-meal-proposal.
+
+## Authorized proposal proofreading — November 12
+
+- The user added Project Goal, Target Audience, and Mood Board and explicitly requested applied grammar, spelling, and tone edits. Preserve the user's straightforward student voice, exact headings, section order, and deliberate spacing. This request authorizes body edits for this pass; the standing Developer Note preference remains unchanged.
+- The mood board reference, ../../assets/images/p3_moodboard.png, resolves correctly from PROPOSAL.md, and the local image opens. The published image URL returned HTTP 404 on November 12. The PNG is untracked and must be included in a future publish with the proposal; no commit, push, or deployment was requested.
 
 ## Proposal authority and presentation request — November 11
 

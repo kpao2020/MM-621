@@ -1,14 +1,34 @@
 # Forecast Meal
 
+## Project Goal
+
+I am building a lightweight app to help busy college students choose a healthy meal based on their local weather forecast.
+
+
+## Target Audience
+
+My target audience is college students who prefer cooking at home and want simple, healthy recipes.
+ 
+
+## Mood Board
+
+![Forecast Meal app moodboard](../../assets/images/p3_moodboard.png)
+Note: AI-generated image
+
+
+## Overview
+
 Forecast Meal is a lightweight, mobile-first class experiment by Ken Pao for MM-621, Interaction Design Studio II. The proposed app uses today's local weather forecast to suggest one healthy meal, with ingredient quantities, simple cooking steps, adjustable servings, and a per-serving nutrition table with p5.js category icons. It is intended to be free for classmates to try.
 
 The [Project 3 proposal](PROPOSAL.md), dated November 11, 2026, is the source of truth for the project direction, scope, and delivery plan. Read the [published proposal](https://kpao2020.github.io/MM-621/projects/p3/PROPOSAL.html) on GitHub Pages; the local proposal may contain updates that have not yet been published.
+
 
 ## Current status
 
 Forecast Meal is a proposed redesign of the earlier Basket Buddy prototype. The existing Basket Buddy backend has not yet been adapted to this proposal. Forecast Meal development and cleanup of the earlier price-search code await approval of the plan. The features below describe the planned experience.
 
 The repository still contains Basket Buddy's Open Prices catalog, D1 search, meal-request flow, and refresh tooling. Those files document the earlier experiment and do not define Forecast Meal's scope. Where older implementation documents differ from the proposal, follow the proposal.
+
 
 ## Planned experience
 
@@ -21,11 +41,13 @@ The repository still contains Basket Buddy's Open Prices catalog, D1 search, mea
 
 Nutrition values are AI-generated estimates informed by USDA FoodData Central reference data and may be inaccurate; use for reference only. The prototype does not calculate nutrients ingredient by ingredient from the USDA API. Its “healthy” default is a class-project guideline, not an assessment of a person's medical or nutritional needs. Dietary labels and exclusions do not verify allergies or provide medical nutrition advice.
 
+
 ## Scope
 
 The project tests one contextual meal suggestion, dietary and ingredient-exclusion controls, one-at-a-time substitutions, serving adjustments, and a visual nutrition summary. The result visual is a nutrition table with category icons.
 
 Nutrition tracking, weekly meal planning, grocery prices, store inventory, ordering, accounts, and saved meal history are outside the proposed scope.
+
 
 ## Why the direction changed
 
@@ -41,6 +63,7 @@ The proposal compares Eat AI and Mealime and acknowledges that weather-based mea
 
 See the [50-mile analysis](open-prices-hayward-50mi-analysis.md), [radius comparison](open-prices-radius-expansion-analysis-2026-11-10.md), and the proposal's Research section for details.
 
+
 ## Planned technology
 
 - p5.js 2.3.3, HTML, CSS, and JavaScript for the mobile interface, recipe controls, nutrition table, and category icons. The local p5.js copy is at `../../lib/p5.min.js`.
@@ -53,6 +76,7 @@ See the [50-mile analysis](open-prices-hayward-50mi-analysis.md), [radius compar
 
 The server will accept only supported meal controls and reject unsupported request fields and malformed or unsupported model output. Turnstile verifies requests; meal-topic restrictions are enforced separately through the supported inputs, meal-specific instructions, and response validation. After successful verification, the challenge will collapse and a visible “Verified” status will remain; expired or invalid verification will restore the challenge.
 
+
 ## Privacy and service limits
 
 Device location is optional and requires an explicit user action and browser permission. The proposed implementation uses a one-time reading only to retrieve the local forecast. The weather service receives the location needed for that request; the meal-generation service receives the forecast summary and supported meal controls, without device coordinates or unrestricted user text.
@@ -60,6 +84,7 @@ Device location is optional and requires an explicit user action and browser per
 Coordinates must stay out of AI prompts, meal history, and application logs. The proposed app does not persist location or save meal history. Provider handling and Worker logs must be checked before publishing the location notice.
 
 The free-use goal depends on the selected model and account's verified free allocations. The implementation must enforce request limits and pause generation when the free allocation is unavailable. Credentials and the Turnstile secret belong in Cloudflare or GitHub secret settings and must stay out of the public repository.
+
 
 ## Proposed three-week plan
 
@@ -71,6 +96,7 @@ The free-use goal depends on the selected model and account's verified free allo
 
 The proposal's Success Criteria section defines the complete acceptance criteria.
 
+
 ## Run the existing prototype locally
 
 These steps open the current Basket Buddy implementation. Forecast Meal's planned controls and forecast-to-recipe flow are not yet implemented.
@@ -80,6 +106,7 @@ These steps open the current Basket Buddy implementation. Forecast Meal's planne
 3. For local Worker development, run `npx wrangler dev --port 8787` from `projects/p3/worker` and temporarily point `workerUrl` in `config.js` at the local Worker. Restore the production URL before publishing.
 
 The earlier catalog's operating instructions remain in [DATA-PIPELINE.md](DATA-PIPELINE.md). Adapting the app and retiring the old price-search behavior are future implementation work under the proposal.
+
 
 ## Project files
 
@@ -91,6 +118,7 @@ The earlier catalog's operating instructions remain in [DATA-PIPELINE.md](DATA-P
 - [requirements.md](requirements.md): implementation requirements document; consult the proposal for the current direction when they differ.
 - [tracking.md](tracking.md) and [memory.md](memory.md): work status and confirmed decisions, including historical implementation notes.
 - [agents.md](agents.md): project collaboration instructions; legacy product rules are superseded by the current proposal and confirmed user decisions.
+
 
 ## Credits and references
 
