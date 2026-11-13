@@ -1,6 +1,19 @@
 # Basket Buddy — Project Tracker
 
-Last updated: 2026-11-11
+Last updated: 2026-11-12
+
+## Presentation PDF updated — November 12
+
+- Updated Forecast-Meal-Proposal-Deck.pdf from the latest proposal, adding Project Goal/Target Audience and Mood Board slides. Nine slides total; preserved the existing playful style and minimal-text format.
+- Embedded the complete local mood board without cropping, retained the original research and feature content, and updated section/page numbering. The closing blue, underlined proposal hyperlink remains clickable.
+- Rendered and individually inspected all nine final PDF pages. Verified page count and dimensions, selectable text, embedded image, page numbering, and hyperlink target. Proposal and application code were unchanged by this task.
+- No commit, push, or deployment was performed. Temporary sources, backup, and final previews are under /private/tmp/forecast-meal-proposal.
+
+## Proposal proofreading and mood board check — November 12
+
+- Applied the requested grammar, spelling, and light tone edits to PROPOSAL.md, including the new Project Goal, Target Audience, and Mood Board sections. Simplified repetitive wording and used first person in selected rationale passages while retaining project scope and research figures.
+- Preserved the exact headings, section order, separators, blank-line formatting, and Developer Note.
+- Opened the local mood board and confirmed that its relative reference resolves correctly. The public image URL returned HTTP 404; assets/images/p3_moodboard.png remains untracked and needs to be included when publishing. No commit, push, or deployment was performed.
 
 ## Readme aligned with proposal — November 11
 
