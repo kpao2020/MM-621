@@ -1,4 +1,7 @@
-# Project 3 Proposal
+---
+layout: default
+title: Project 3 Proposal
+---
 
 
 ## Forecast Meal
