@@ -11,9 +11,18 @@ const EXCLUSION_CHOICES = [
   ["fish", "Fish"], ["shellfish", "Shellfish"], ["beef", "Beef"], ["pork", "Pork"], ["poultry", "Chicken and turkey"],
 ];
 
-function setup() {
+async function setup() {
+  if (document.readyState === "loading") {
+    await new Promise((resolve) => document.addEventListener("DOMContentLoaded", resolve, { once: true }));
+  }
+  const artContainer = document.getElementById("forecast-art");
+  if (!artContainer) {
+    noCanvas();
+    noLoop();
+    return;
+  }
   const canvas = createCanvas(208, 154);
-  canvas.parent("forecast-art");
+  canvas.parent(artContainer);
   pixelDensity(1);
   noLoop();
   illustrationReady = true;
@@ -53,8 +62,25 @@ function draw() {
   fill("#f2c766"); ellipse(97, 107, 29, 7);
 }
 
-// Initialize independently of p5, so a missing illustration cannot block forecasts.
-initializeForecastApp();
+// Initialize independently of p5, after the page controls are available.
+function startForecastApp() {
+  try {
+    initializeForecastApp();
+  } catch {
+    const status = document.getElementById("weather-status");
+    if (status) {
+      status.textContent = "The forecast could not start. Refresh the page and try again.";
+      status.className = "status-message status-error";
+      status.hidden = false;
+    }
+    document.getElementById("weather-section")?.setAttribute("aria-busy", "false");
+  }
+}
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", startForecastApp, { once: true });
+} else {
+  startForecastApp();
+}
 
 function initializeForecastApp() {
   const service = window.ForecastWeather;

@@ -39,4 +39,4 @@ Status: the forecast/location and first recipe phase are implemented in local so
 - Manually review each city and device-location success, denial, unavailable, and timeout states on a phone and desktop. Include switching to a city during an outstanding permission/weather request, NWS errors, overnight/midnight behavior, and a device configured to a different time zone.
 - Review mobile width, keyboard operation, status announcements, reduced motion, source links, and loading/error recovery.
 - Confirm that only NWS receives weather coordinates and the recipe request sends no coordinates or legacy Open Prices requests.
-- Changes are local; no Cloudflare migration/deployment or GitHub Pages publish has happened. Legacy catalog refresh files remain in the repository but the new recipe route does not call them.
+- The recipe Worker is deployed without D1. Confirm the published frontend and Worker together with a real recipe request.

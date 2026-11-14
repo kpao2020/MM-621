@@ -1,5 +1,5 @@
 # Forecast Meal API Worker. Deploy the static frontend separately through GitHub Pages.
-name = "basket-buddy-api"
+name = "forecast-meal-api"
 main = "src/index.js"
 compatibility_date = "2026-11-08"
 
