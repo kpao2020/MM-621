@@ -2,9 +2,10 @@
 
 ## Working rules
 
+- **Strict model approval rule:** The only approved Forecast Meal Workers AI model is `@cf/meta/llama-3.1-8b-instruct-fp8-fast`. Never select, test, substitute, or deploy another model, and never change this model ID, unless the user first reviews and explicitly approves that exact change. Model choice is not an implementation detail. Do not use `@cf/meta/llama-3.3-70b-instruct-fp8-fast` again.
 - Work inside projects/p3; the repository-level P3 GitHub Actions workflow and root .gitignore entries for P3 downloads are in scope.
 - Work one task at a time. State the current step, complete it, and save progress before moving on.
-- Follow review-queue.md and obtain the user's confirmation before moving to each next item.
+- Keep active review/troubleshooting items in p3.log and obtain the user's confirmation before moving to each next item. Preserve closed queues in p3.log as history.
 - During active work, send a concise progress/status update at least every two minutes.
 - Record confirmed decisions in memory.md and status changes in tracking.md. Ask only when a missing decision blocks implementation.
 - For PROPOSAL.md, preserve the user's exact section titles and wording, section order, required sections, and deliberate blank-line/separator formatting. Edit body context only when asked; never rename, rewrite, reorder, or normalize headings. Leave the Developer note for the user to type manually.

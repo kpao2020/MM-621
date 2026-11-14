@@ -377,3 +377,155 @@ Append-only notes. Never include credentials, precise user coordinates, or priva
 ## 2026-11-13 — User review queue
 
 - User requested one item at a time with confirmation before moving on. Removed Forecast Meal D1 binding and the shared daily counter, including its un-applied migration; retained the per-IP burst limiter and historical Basket Buddy files. Saved all requested items in review-queue.md. No deployment or tests.
+
+
+## 2026-11-14 — One-at-a-time ingredient swaps
+
+- User asked to build one-at-a-time ingredient swaps and confirmed Turnstile remains removed for now.
+- Added a per-ingredient “Suggest swap” action. A single suggestion can be pending; the user applies or skips it before another request. Applying the replacement updates its amount and the revised cooking steps, with serving scaling preserved.
+- Added `/api/swap` to the Worker. It validates the recipe, fixed preferences, forecast freshness, replacement shape, exclusions, dietary pattern, and balanced meal roles. The server replaces only the selected ingredient and keeps all others unchanged.
+- Updated the active page, API client, Worker, README, requirements, tracking, memory, and review queue. Local implementation only; no tests, deployment, publish, commit, or push.
+- Next: user review of this feature, then implement the per-serving nutrition estimates/table and p5.js category icons.
+
+
+## 2026-11-14 — Local Chrome troubleshooting queue
+
+- The user reported that the forecast says today but its timestamp is hard to find; the yellow warning's meaning is unclear, and it stays after Refresh. They saw an NWS update time around 1:01 AM PST and a page retrieval time around 7:45 AM PST.
+- The user also reported redundant forecast UI: a green “Forecast loaded for Hayward” message directly above a second Hayward heading.
+- Recipe generation in VS Code Live Server failed with “Could not reach the recipe service.” The user suspects the Worker only accepts the GitHub Pages origin.
+- The user requested troubleshooting one issue at a time, with their review/approval before moving to the next. Start with forecast update age, warning placement, and timestamp clarity; then pause for review. Keep the duplicate heading and local Worker connection error queued as separate follow-ups.
+- First item updated locally: moved the freshness warning directly above the timestamp line, labeled NWS update time separately from the page-check time, and included the elapsed age. The warning now explains that refreshing checks NWS again but cannot clear a warning if NWS still reports the same old update. The reported 1:01 AM to 7:45 AM interval is about 6h 44m, so it correctly exceeds the six-hour threshold. No browser check or test run; awaiting user review before the next issue.
+- After user review, revised the interaction: a successful manual Refresh now acknowledges and hides the warning for that same NWS update, while the timestamp still displays the update's age. A different NWS update can trigger the warning again. Kept the warning adjacent to the timestamps. No browser check or test run; awaiting user review.
+- User clarified that Refresh must fetch current NWS data, not dismiss a stale-data warning. Confirmed the button makes a new GET to the resolved forecast URL with browser cache disabled; the local “Last fetched here” timestamp updates on each successful response. NWS's `updateTime` is the publication time for the forecast data and may stay unchanged until NWS publishes a newer forecast. Reverted the dismiss-on-refresh behavior and clarified the labels/warning. NWS docs describe the API as cache-friendly and forecasts as created by local Weather Forecast Offices: https://www.weather.gov/documentation/services-web-api. Awaiting user review; no browser check or test run.
+- User requested a simpler forecast display: keep only the NWS-published timestamp, remove the retrieval timestamp and stale-warning box, and rewrite the explanation in playful, fifth-grade-friendly language. Updated the local page to show “Latest forecast published by NWS,” removed stale-warning logic, and replaced the paragraph with: “This is the latest forecast from the National Weather Service. Temperatures are weather’s best guess, not live readings. We show the parts of today still ahead.” Updated requirements and memory. Awaiting user review before the next troubleshooting item; no browser check or test run.
+- User approved the forecast display except for its last sentence. Replaced it with: “Here’s what the rest of today might bring.”
+
+- User approved the forecast freshness display and moved to the duplicate Hayward message. Removed the visible green success box and kept a short screen-reader-only “Forecast loaded” announcement. Awaiting user review; the local Worker connection issue remains queued and untouched.
+- User asked to simplify the forecast date/time display. Designer recommendation: keep “Today’s local forecast” as the heading and show one full NWS publication date/time beneath the selected location. Removed the redundant local date/time-zone row and lower publication timestamp; the single line now includes the NWS publication date, time, and local abbreviation (PST/PDT). Awaiting user review; no browser check or test run.
+- User approved the weather display and moved to the local recipe connection issue. Source diagnosis: `config.js` pointed local pages at the deployed Worker, whose CORS allowlist contains only GitHub Pages. The browser therefore surfaced the rejected cross-origin request as a generic connection error. Added `worker/wrangler.local.toml` for local origins only, routed localhost/127.0.0.1 previews to a local Wrangler server on port 8787, and clarified the error shown when that server is not running. Production config and CORS remain unchanged. README now documents two-terminal startup. Local AI binding is remote and can use Cloudflare allocation. No Worker was started and no recipe request/test was made; awaiting user review.
+- User started the local Worker; Wrangler logged two successful `POST /api/recipe 200 OK` responses after successful preflights, but the recipe was not visible in Chrome. Frontend source parses `{recipe}` and renders it with HTML; p5.js only draws the weather illustration. The project history records a similar blank-result symptom that was isolated by serving from the repository root with Python. Next single diagnostic: stop Live Server, keep Wrangler running on 8787, and use `python3 -m http.server 5500` from the repository root. No browser-side conclusion yet.
+- User reported the recipe now partially works but the per-ingredient swap buttons were greyed out and inactive. The cause was a state bug: ingredient controls were rendered while `recipeBusy` was true and not refreshed after completion. User requested batch swaps instead: select any ingredients, click one action, and update them together.
+- Redesigned the local swap UI to use ingredient checkboxes and one batch button. One follow-up Workers AI call returns a replacement for every selected ingredient plus revised steps; the Worker validates each replacement and preserves all unselected ingredients. The complete updated recipe is applied automatically. The button now stays actionable when idle, prompts for selection, and explicitly shows its busy state. Updated README, requirements, tracking, and memory. One additional AI call is used per selected batch; no AI call/test, deployment, or browser review was run. Awaiting user review before the next issue.
+
+
+## Superseded weather UI cue iteration
+
+- The first iteration used a button-like “Show details”/“Hide details” cue. The user preferred a lighter text treatment; see the later 2026-11-14 entry for the current design.
+
+## Ingredient replacement failure — recovered on retry
+
+- User reports that clicking the batch replacement button shows “A substitute could not be suggested. Please try again.” The Worker intentionally masks AI and validation exceptions, so the cause is not visible yet.
+- Added a privacy-safe local Worker log that reports only the failure stage (`ai-call`, `response-parse`, or `response-validation`); it does not log recipe data or model output. User retried and confirmed replacement is working; the failure stage was not needed. No tests or deployment.
+
+
+## Archived user review queue — closed November 14, 2026
+
+The separate `review-queue.md` file was closed and archived here at the user's request. Its historical instructions and item statuses are preserved verbatim.
+
+# Forecast Meal: user review queue
+
+Work one item at a time. Stop after each item and get the user's confirmation before proceeding. Items may change during review.
+
+1. **Reviewed** — Remove D1 from Forecast Meal. User reported no Worker D1 binding, disabled the GitHub workflow, deleted the D1 database, and committed and pushed the workflow-file removal; PR deferred until remaining items are complete.
+2. **Reviewed** — The shared five-per-day limit and D1 counter are absent. The separate existing per-IP burst limit of five requests per minute remains.
+3. **Superseded** — User requested complete removal of Turnstile, including the Cloudflare widget, for a fresh setup later.
+4. **Reviewed** — Added Balanced (vegetable, protein, grain or starch) and Meat eater (meat or poultry) choices, with corresponding Worker validation.
+5. **Reviewed** — Added preferred cuisines: American, Chinese, Filipino, French, Greek, Indian, Italian, Japanese, Korean, Mexican, Middle Eastern, Spanish, Thai, and Vietnamese, plus no preference. Eating style and preferred cuisine each have an inline label and dropdown, with spacing between rows.
+6. **Reviewed** — Changed “Leave out” to “Ingredients to exclude.”
+7. **Reviewed** — Removed “there is no open-ended meal prompt” from the ingredient section.
+8. **Reviewed** — Removed “Class prototype” from the top.
+9. **Reviewed** — Centered Forecast Meal in the top bar.
+10. **Reviewed** — Replaced the FM initials with a sun and meal-bowl mark.
+11. **Reviewed** — Kept “Use my location,” changed the result label to “Your location,” and simplified the notice to consistently say “location.”
+12. **Reviewed for now** — Made forecast periods compact with an icon, temperature, short condition and expandable details. Forecast data remains available for AI. Discuss a mobile-first screen-based p5.js experience during week 3.
+13. **Reviewed** — Set the default recipe serving to one.
+14. **Reviewed** — Centered selected text in all dropdowns. Servings matches the eating style and cuisine rows and appears below cuisine, before ingredient exclusions.
+15. **Reviewed** — Ingredient exclusions start as a compact expandable row; selected checkboxes remain selected when closed.
+16. **Reviewed** — Moved the diet and ingredient note below the recipe button.
+
+17. **Reviewed** — The renamed Worker is deployed and the user reported multiple successful recipe requests on GitHub Pages. Cloudflare-frame console messages and an intermittent challenge retry were observed.
+18. **Published** — Renamed the recipe instructions heading to “Simple Cooking Steps.”
+19. **Superseded** — The verification flow is being removed at the user's request.
+20. **Pending review** — Automatic weather refresh clears a displayed recipe and can invalidate an in-flight recipe request. Decide how to preserve a recipe during refresh.
+21. **Pending review** — Recipe requests have no timeout; a stalled connection can leave the page waiting indefinitely.
+22. **Superseded** — The widget is being removed at the user's request.
+23. **In progress** — Local frontend and final Worker no longer use Turnstile. A temporary Worker accepts old and new page requests without token verification; a live synthetic request returned a recipe. Publish the new frontend, deploy the final Worker, then delete the existing Cloudflare widget. The old Worker secret is no longer listed. Keep the existing per-IP limiter. User may choose a fresh Turnstile setup later.
+24. **Reviewed locally** — Batch ingredient swaps allow a selected group to update together once per recipe. Production review still requires deploying the matching Worker and frontend.
+
+## Superseded weather UI cue iteration
+
+- The first iteration used a button-like “Show details”/“Hide details” cue. The user preferred a lighter text treatment; see the later 2026-11-14 entry for the current design.
+
+## 2026-11-14 — Ingredient list and one-time swap refinement
+
+- User confirmed replacement is working and asked to keep long ingredient names readable: place quantity with the core name, and trailing parenthetical examples on a second line.
+- User chose one successful batch change per recipe. After a successful batch, hide ingredient checkboxes and the replacement button, and use “Ingredient swap complete! Want another change? Start a new recipe below.” Failed requests remain retryable.
+- User reviewed the local flow and confirmed replacement works. No tests, deployment, or publication.
+
+## 2026-11-14 — Per-serving nutrition table and p5.js icons
+
+- Added six rough per-serving estimates (calories, protein, carbohydrates, total fat, fiber, sodium) to both recipe and ingredient-swap responses. Worker validates bounded numeric values; a successful swap refreshes the estimates.
+- Added an accessible HTML nutrition table, six distinct p5.js nutrient icons, and plain-language accuracy guidance referencing USDA FoodData Central. The app does not calculate nutrients ingredient by ingredient through the USDA API.
+- User reviewed the local nutrition table and confirmed it works. Local only; no tests, deployment, or publication.
+
+## Nutrition icon spinner — local fix
+
+- User saw one small persistent spinner and provided a Chrome console trace from p5.js `visitBezierSegment`, pointing to the fat icon's Bézier path in `nutrient-icons.js`.
+- Replaced that path with a polygon using regular p5.js vertices to avoid the crash. User confirmed the fix; no tests or deployment.
+
+## 2026-11-14 — Forecast details affordance
+
+- User preferred a text cue instead of a button treatment and asked to use the same affordance on the “Ingredients to exclude” row. Replaced the forecast cue with bold dark-green “More details”/“Less details” text and a chevron; kept “Optional · Select,” made it bold dark green, and added a matching chevron. Both disclosures retain their full-row touch area and keyboard focus; reduced-motion preferences are respected.
+- User then asked to place the forecast cue below the temperature and reduce the gap between the exclusion label and its chevron. Moved the cue under the temperature and attached the chevron directly to “Optional · Select.”
+- User reviewed and approved the local design. No tests or deployment.
+
+## Remaining P3 work — browser review and matched public release
+
+- Group 1, preserve recipes during forecast refresh: implemented locally and user confirmed it works.
+- Group 2, stalled recipe/swap request recovery: implemented locally with a 45-second timeout and retry message; user review remains pending.
+- Group 3, browser/accessibility review: source-level review is recorded below. Real browser, phone, keyboard, location-permission, and failure-state checks remain for the user's review.
+- Group 4, matched public release: local frontend and Worker are ready to review together. Production has not been changed. Before release, decide whether to leave the token-free public Worker available under its five-per-IP-per-minute limiter or temporarily disable recipe routes; either option has a tradeoff. The user does not want Turnstile added now.
+
+## 2026-11-14 — Remaining groups prepared for user review
+
+- Corrected the shared project README: localhost previews use Wrangler on port 8787; nutrition icons/table are implemented locally; frontend and Worker must be released together. It now states that the per-IP limiter is not bot protection and that Origin checks are not authentication.
+- Static accessibility pass found semantic labels and controls, keyboard-operable native disclosure rows, focus-visible styles, live status regions, a captioned/scoped nutrition table, decorative icons hidden from screen readers, and reduced-motion support. This does not replace actual keyboard, screen-reader, phone, or browser testing.
+- Group 3 review checklist for the user: test a preset city and device location success/denial/unavailable; switch cities during pending work; check mobile and desktop widths; operate forecast details and controls by keyboard; inspect loading/errors and reduced motion; confirm recipe and nutrition layout; refresh while a recipe is shown; force a stalled recipe/swap and confirm the 45-second recovery.
+- Group 4 release checklist: after local review, deploy `worker/wrangler.toml` source first, then publish the matching `projects/p3` frontend; confirm `/api/recipe`, `/api/swap`, and six nutrition fields on GitHub Pages. Verify Worker AI allocation and decide whether the public routes stay enabled while Turnstile is off. No deploy, publish, test, commit, or push was done in this pass.
+- Fixed contradictory setup notes that still said local pages call the deployed Worker. `config.js` routes localhost/127.0.0.1 to the separate local Wrangler server; non-local pages use production configuration.
+
+## 2026-11-14 — Preserve recipe during forecast refresh
+
+- Manual refresh, automatic refresh, and refresh after returning to the page now keep the current recipe visible. Pending recipe/swap responses are invalidated; stale recipe completion cannot reset a newer request's state. Changing cities still clears the prior recipe.
+- Local only; awaiting user review. No tests or deployment.
+
+## 2026-11-14 — Recipe request timeout
+
+- Added a 45-second client timeout for recipe and ingredient-swap Worker requests, with a clear retry message. The timer covers fetch and response-body parsing and is always cleared when a request finishes.
+- Local only; awaiting user review. No tests or deployment.
+
+## 2026-11-14 — Turnstile publication status clarification
+
+- User believes the previous Cloudflare widget was already removed and does not want Turnstile re-added yet. Current local frontend has no Turnstile code; the fetched live GitHub Pages HTML also showed no Turnstile script. Cloudflare dashboard state is not verifiable from this workspace. The deployed Worker remains token-free.
+- User asked whether to disable the public Worker while Turnstile stays off. Waiting for their choice: disabling production recipe routes would stop recipes/swaps on GitHub Pages but preserve local preview through Wrangler.
+
+
+## 2026-11-14 — User local review passed; release plan confirmed
+
+- User reports the local app works after review. They confirmed that “Refresh” means the in-app forecast button; a full browser reload clears the recipe because recipes are not persisted.
+- Group 1 (preserve recipe on forecast refresh) is user-confirmed. Group 2 (45-second recipe/swap timeout) is implemented; the user did not separately report testing a deliberately stalled request. Group 3 (browser/accessibility review) is complete based on the user's report that everything works.
+- User will push the local `ken` changes, open and merge a PR to `main`, and disable the public Worker until Turnstile work resumes. No push, PR, merge, Worker disable, or deployment has occurred yet.
+- While the public Worker is disabled, recipe and swap requests on GitHub Pages will be unavailable; local Wrangler remains available. Turnstile stays off until the user requests that work.
+
+## 2026-11-14 — Cloudflare Worker domains paused by user
+
+- User reports disabling both the production and preview domains for `forecast-meal-api` in the Cloudflare dashboard.
+- The GitHub Pages app's configured public Worker address is paused; recipe and swap requests through it are unavailable. Local Wrangler runs separately.
+- The user will push the local `ken` changes and open/merge a PR to `main`. No GitHub action or production code deployment has happened here.
+- Note for the next Worker deployment: Cloudflare may re-enable the `workers.dev` route unless production Wrangler config sets `workers_dev = false`. Confirm the intended pause before deploying.
+
+## 2026-11-14 — User-selected Workers AI model locked
+
+- User explicitly selected `@cf/meta/llama-3.1-8b-instruct-fp8-fast` for the local Worker source; updated `worker/src/index.js` to use that exact ID. It has not been deployed.
+- Strict rule: never change, replace, test, or deploy another model until the user has reviewed and explicitly approved that exact model change. Model choice is not an implementation detail. Never use `@cf/meta/llama-3.3-70b-instruct-fp8-fast` again.
+- The earlier 70B selection was made by the assistant without the user's knowledge or approval and is superseded. No inference, test, push, or deployment was run for this change.
