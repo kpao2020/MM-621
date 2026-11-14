@@ -29,9 +29,10 @@ replay_pid*
 # Local Wrangler secrets and overrides; never commit these files.
 .dev.vars
 .dev.vars.*
+.wrangler/
 
 projects/old_project1_sketch.js
 
-# Local Open Prices downloads and Python cache; the live catalog is stored in D1.
+# Historical local Open Prices downloads and Python cache.
 projects/p3/open-prices-hayward-*.json*
-projects/p3/tools/__pycache__/
+__pycache__/

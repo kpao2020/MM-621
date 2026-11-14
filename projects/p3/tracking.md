@@ -3,6 +3,8 @@
 
 ## 2026-11-13 — User review queue
 
+- Worker rename in progress: confirmed `forecast-meal-api` did not already exist, deployed it as a separate Worker (version f09da83e-c313-4fb4-9499-184978f1b39f), and prepared the frontend URL. The new Worker still needs the matching Turnstile secret and an end-to-end check before publishing the frontend and eventually removing the old Worker.
+- Cleaned up the obsolete Basket Buddy frontend, D1 search and migrations, catalog refresh script, pipeline guide, and tracked Wrangler development state. Kept the two Open Prices analyses because the proposal cites them, and retained the project history and attribution. Wrangler state is now ignored by Git.
 - Published-page startup fix: wait for the document before initializing the forecast or attaching the p5 canvas; skip the illustration if its container is missing and show a forecast startup error instead of an indefinite spinner. Node syntax and simulated startup checks passed with and without the illustration. The fix still needs frontend publication and a real browser check.
 - User requested GitHub Pages deployment only. Removed local-address support and deployed Worker version d7c13fba-b9ea-4e47-8a68-86c841591ff4 with only https://kpao2020.github.io allowed and its hostname checked. Frontend publication and a real production recipe request remain pending. Do not commit, push, open or merge a PR without user confirmation.
 
@@ -121,4 +123,4 @@ The D1-backed flow is operational. The user reports that the implementation comm
 
 - Preserve the user's exact proposal section titles and wording, required section order, and intentional blank lines/separators. Modify body content only when requested. Do not rewrite, rename, or reorder headings. Leave the Developer note for the user to type manually.
 
-See DATA-PIPELINE.md for operations and open-prices-hayward-50mi-analysis.md for the historical snapshot analysis.
+The former DATA-PIPELINE.md was removed during Forecast Meal cleanup; see open-prices-hayward-50mi-analysis.md for the historical snapshot analysis.

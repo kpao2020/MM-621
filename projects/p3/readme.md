@@ -32,13 +32,15 @@ The [Project 3 proposal](PROPOSAL.md), dated November 11, 2026, is the source of
 
 ## Current status
 
+The Worker rename is in progress: `forecast-meal-api` has been deployed separately and `config.js` is prepared to use its new URL. The new Worker needs the matching Turnstile secret before the frontend change is published and tested. The previously deployed Worker remains available during the transition.
+
 The local app now includes both the NWS forecast/location flow and the first forecast-to-recipe flow. It offers six Bay Area cities or an explicit one-time device location. Once a forecast loads, choose no preference, balanced, meat eater, vegetarian, vegan, or pescatarian; select a preferred cuisine and exclusions from fixed lists; choose one to four servings; and request a single recipe after Turnstile verification. Ingredient amounts scale when servings change. The page contains no free-text meal prompt.
 
 The Worker validates the request fields and forecast freshness, sends only normalized forecast categories and the selected controls to Workers AI, checks the structured recipe against the controls, and returns it without saving the request or recipe. It applies the existing per-IP burst limit and does not use a database or shared daily recipe counter. The local code uses a Workers AI model documented for JSON Mode. The updated Worker has been deployed; the updated frontend has not yet been published. End-to-end recipe generation still needs a successful browser check.
 
 Ingredient substitutions and the estimated nutrition table with p5.js icons remain the next project steps. The nutrition estimates are not part of this recipe response.
 
-The repository still contains Basket Buddy's Open Prices catalog, D1 search, meal-request flow, and refresh tooling. Those files document the earlier experiment and do not define Forecast Meal's scope. Where older implementation documents differ from the proposal, follow the proposal.
+The two Open Prices analysis documents preserve research from the earlier Basket Buddy experiment. The Forecast Meal app does not use the old price catalog or D1.
 
 
 ## Planned experience
@@ -130,17 +132,15 @@ For production activation, from `projects/p3/worker`, deploy the Worker:
 npx wrangler deploy
 ```
 
-Check the Worker URL, `forecast_recipe` Turnstile action, allowed production origin, hostname, and secret before publishing the updated frontend. The latest Worker is deployed; the updated frontend still needs publishing and an end-to-end check. The earlier catalog's operating instructions remain in [DATA-PIPELINE.md](DATA-PIPELINE.md); the Forecast Meal recipe route does not use the price catalog.
+Check the Worker URL, `forecast_recipe` Turnstile action, allowed production origin, hostname, and secret before publishing the updated frontend. The deployed recipe route does not use the earlier price catalog.
 
 
 ## Project files
 
 - [PROPOSAL.md](PROPOSAL.md): source of truth for Forecast Meal's rationale, research, scope, flow, privacy requirements, and plan.
 - `index.html`, `style.css`, `sketch.js`, `weather-api.js`, `recipe-api.js`, and `config.js`: active forecast/recipe interface, p5.js illustration, NWS client, supported meal controls, and public service configuration.
-- `api.js` and `results.js`: retained legacy Basket Buddy client code; not loaded by the Forecast Meal page.
 - `worker/src/index.js`: recipe-only Worker route, Turnstile verification, structured response validation, and request limits.
-- Other files under `worker/` and `tools/refresh_open_prices.py` are retained from the earlier Basket Buddy experiment. Its scheduled GitHub workflow was removed.
-- [DATA-PIPELINE.md](DATA-PIPELINE.md): earlier Open Prices setup and operations.
+- [open-prices-hayward-50mi-analysis.md](open-prices-hayward-50mi-analysis.md) and [open-prices-radius-expansion-analysis-2026-11-10.md](open-prices-radius-expansion-analysis-2026-11-10.md): historical research cited in the proposal.
 - [requirements.md](requirements.md): current forecast requirements and remaining meal-service work.
 - [tracking.md](tracking.md) and [memory.md](memory.md): work status and confirmed decisions, including historical implementation notes.
 - [agents.md](agents.md): project collaboration instructions; legacy product rules are superseded by the current proposal and confirmed user decisions.

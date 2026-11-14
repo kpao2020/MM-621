@@ -3,6 +3,8 @@
 
 ## 2026-11-13 — User review queue
 
+- User requested renaming the Worker. Deployed `forecast-meal-api` separately and updated local configuration to its URL. The new Worker requires the matching Turnstile secret before the frontend is published and tested. Do not delete `basket-buddy-api` until the new path is confirmed.
+- User requested removal of obsolete Basket Buddy files. Removed the old client, D1 search and migrations, refresh script, pipeline guide, and tracked generated Wrangler state; kept the research analyses cited by the proposal and the historical record. Existing Worker name and public URL remain in use for Forecast Meal.
 - The user reported a stuck published page and supplied a p5 canvas-parent error. The forecast artwork container existed when inspected after load. Startup now waits for the document and tolerates a missing illustration; a real browser check is still required after publication.
 - User requested GitHub Pages deployment only. Removed local-address support and deployed Worker version d7c13fba-b9ea-4e47-8a68-86c841591ff4 with only https://kpao2020.github.io allowed and its hostname checked. Frontend publication and a real production recipe request remain pending. Do not commit, push, open or merge a PR without user confirmation.
 
@@ -15,7 +17,7 @@
 
 - User prefers the human verification badge in the footer to preserve space for meal controls. Verification area moved there; await review.
 - Item 3: use “Verify you're human” and collapse successful verification to a compact badge; await user review before proceeding to item 4.
-- User requires one item at a time and confirmation before proceeding. Removed the Forecast Meal D1 binding and shared daily counter; retained the per-IP burst limit. Review queue: review-queue.md. Historical Basket Buddy D1 files are retained.
+- User requires one item at a time and confirmation before proceeding. Removed the Forecast Meal D1 binding and shared daily counter; retained the per-IP burst limit. Review queue: review-queue.md. Obsolete Basket Buddy implementation files were later removed.
 
 Last updated: 2026-11-13
 
