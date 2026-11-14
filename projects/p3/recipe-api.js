@@ -1,6 +1,6 @@
 // Browser-to-Worker recipe request. This payload never includes location coordinates.
 window.ForecastMealAPI = Object.freeze({
-  async createRecipe(input, turnstileToken) {
+  async createRecipe(input) {
     const workerUrl = String(window.FORECAST_MEAL_CONFIG?.workerUrl || "")
       .trim()
       .replace(/\/+$/, "");
@@ -11,7 +11,7 @@ window.ForecastMealAPI = Object.freeze({
       response = await fetch(`${workerUrl}/api/recipe`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...input, turnstileToken }),
+        body: JSON.stringify(input),
         cache: "no-store",
         credentials: "omit",
         referrerPolicy: "no-referrer",

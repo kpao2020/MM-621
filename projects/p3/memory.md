@@ -3,6 +3,9 @@
 
 ## 2026-11-13 — User review queue
 
+- During Turnstile removal, the deployment tool displayed the previous secret in its output; treat that key as exposed. The transitional Worker has no listed Turnstile secret and does not verify tokens. Delete the old widget after the new frontend is published, then deploy the final Worker without compatibility handling.
+- User requested removal of Turnstile from the app and Worker and explicitly confirmed deletion of the existing Cloudflare widget. Rebuild a fresh Turnstile setup only when requested later. The per-IP limiter remains; the user wants to observe behavior without the widget.
+- Turnstile troubleshooting: use Cloudflare's compact widget below a 300px container width; this fixes a mobile sizing concern but has not been shown to resolve Cloudflare-frame console messages. Simulated checks used fake tokens; real browser review is pending.
 - The user requested no immediate repeat verification while reading a recipe. The local change defers a fresh Turnstile check until another recipe or a retry is requested; each request still uses a single-use token.
 - User requested renaming the Worker. Deployed `forecast-meal-api` separately and updated local configuration to its URL. The new Worker requires the matching Turnstile secret before the frontend is published and tested. Do not delete `basket-buddy-api` until the new path is confirmed.
 - User requested removal of obsolete Basket Buddy files. Removed the old client, D1 search and migrations, refresh script, pipeline guide, and tracked generated Wrangler state; kept the research analyses cited by the proposal and the historical record. Existing Worker name and public URL remain in use for Forecast Meal.

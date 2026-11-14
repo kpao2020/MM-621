@@ -95,10 +95,6 @@ function initializeForecastApp() {
   const recipeStatus = document.getElementById("recipe-status");
   const recipeResult = document.getElementById("recipe-result");
   const generateButton = document.getElementById("generate-recipe");
-  const verificationWidgetContainer = document.getElementById("verification-widget");
-  const verificationArea = document.getElementById("verification-area");
-  const verificationStatus = document.getElementById("verification-status");
-  const verificationPrompt = document.getElementById("verification-prompt");
   let recipeControls = [...recipeForm.querySelectorAll("select, input")];
   const servingsSelect = document.getElementById("recipe-servings");
   const resultServings = document.getElementById("result-servings");
@@ -110,101 +106,16 @@ function initializeForecastApp() {
   let locating = false;
   let locationDeadline = null;
   let recipeBusy = false;
-  let verificationToken = "";
-  let verificationWidget = null;
-  let verificationNeedsRestart = false;
   let renderedRecipe = null;
   let recipeRequestId = 0;
-
-  function setVerificationStatus(message, kind) {
-    verificationStatus.textContent = message;
-    verificationStatus.className = `verification-status status-${kind}`;
-    verificationArea.classList.toggle("is-verified", kind === "success");
-    verificationPrompt.hidden = kind === "success";
-  }
 
   function updateGenerateButton() {
     let hasFreshForecast = false;
     try { hasFreshForecast = Boolean(activeForecast && service.mealContext(activeForecast)); }
     catch { hasFreshForecast = false; }
-    generateButton.disabled = recipeBusy || !hasFreshForecast || (!verificationToken && !verificationNeedsRestart);
+    generateButton.disabled = recipeBusy || !hasFreshForecast;
     generateButton.textContent = recipeBusy ? "Making your recipe…" : "Get one recipe →";
     for (const control of recipeControls) control.disabled = recipeBusy;
-  }
-
-  function startVerification(attempt = 0) {
-    const siteKey = String(window.FORECAST_MEAL_CONFIG?.turnstileSiteKey || "").trim();
-    if (!siteKey) {
-      verificationWidgetContainer.hidden = true;
-      setVerificationStatus("Human verification is not configured yet.", "error");
-      updateGenerateButton();
-      return;
-    }
-    if (!window.turnstile?.render) {
-      if (attempt < 60) window.setTimeout(() => startVerification(attempt + 1), 250);
-      else {
-        setVerificationStatus("Could not load verification. Refresh the page and try again.", "error");
-        updateGenerateButton();
-      }
-      return;
-    }
-    try {
-      verificationWidget = window.turnstile.render("#verification-widget", {
-        sitekey: siteKey,
-        action: "forecast_recipe",
-        size: "flexible",
-        appearance: "always",
-        callback: (token) => {
-          verificationToken = token;
-          verificationWidgetContainer.hidden = true;
-          setVerificationStatus("✓ Verified: human", "success");
-          updateGenerateButton();
-        },
-        "expired-callback": () => {
-          verificationToken = "";
-          verificationWidgetContainer.hidden = false;
-          setVerificationStatus("Verification expired. Complete the check to continue.", "error");
-          updateGenerateButton();
-        },
-        "error-callback": () => {
-          verificationToken = "";
-          verificationWidgetContainer.hidden = false;
-          setVerificationStatus("Verification could not complete. Please try again.", "error");
-          updateGenerateButton();
-        },
-      });
-    } catch {
-      setVerificationStatus("Could not start the security check. Refresh the page and try again.", "error");
-    }
-    updateGenerateButton();
-  }
-
-  function prepareNextVerification(recipeReady) {
-    verificationToken = "";
-    verificationNeedsRestart = true;
-    if (verificationWidget !== null && window.turnstile?.remove) {
-      try {
-        window.turnstile.remove(verificationWidget);
-        verificationWidget = null;
-      } catch { /* A later request can retry resetting the existing widget. */ }
-    }
-    verificationWidgetContainer.hidden = true;
-    setVerificationStatus(recipeReady ? "✓ Verified: human" : "Verify to try another request.", recipeReady ? "success" : "error");
-    updateGenerateButton();
-  }
-
-  function restartVerification() {
-    if (!verificationNeedsRestart) return;
-    verificationNeedsRestart = false;
-    verificationWidgetContainer.hidden = false;
-    setVerificationStatus("Complete verification to request a recipe.", "loading");
-    if (verificationWidget !== null && window.turnstile?.reset) {
-      try { window.turnstile.reset(verificationWidget); }
-      catch { setVerificationStatus("Could not restart verification. Refresh the page and try again.", "error"); }
-      updateGenerateButton();
-    } else {
-      startVerification();
-    }
   }
 
   function clearRecipe() {
@@ -427,7 +338,6 @@ function initializeForecastApp() {
   citySelect.addEventListener("change", selectCity);
   buildExclusionOptions();
   recipeControls = [...recipeForm.querySelectorAll("select, input")];
-  startVerification();
   recipeForm.addEventListener("submit", requestRecipe);
   for (const control of recipeControls) control.addEventListener("change", () => {
     const count = recipeForm.querySelectorAll('input[name="excludedIngredients"]:checked').length;
@@ -435,10 +345,8 @@ function initializeForecastApp() {
     updateGenerateButton();
   });
   resultServings.addEventListener("change", renderRecipeIngredients);
-  verificationPrompt.querySelector("a").addEventListener("click", restartVerification);
   document.getElementById("new-recipe").addEventListener("click", () => {
     clearRecipe();
-    restartVerification();
     document.getElementById("meal-heading").scrollIntoView({ behavior: "smooth", block: "start" });
   });
   locationButton.addEventListener("click", useDeviceLocation);
@@ -545,13 +453,6 @@ function initializeForecastApp() {
 
   async function requestRecipe(event) {
     event.preventDefault();
-    if (!verificationToken) {
-      restartVerification();
-      showStatus(recipeStatus, "Complete human verification first.", "error");
-      verificationWidgetContainer.hidden = false;
-      verificationWidgetContainer.scrollIntoView({ behavior: "smooth", block: "center" });
-      return;
-    }
     let input;
     try { input = collectRecipeRequest(); }
     catch {
@@ -559,8 +460,6 @@ function initializeForecastApp() {
       return;
     }
 
-    const token = verificationToken;
-    verificationToken = "";
     const requestId = ++recipeRequestId;
     const requestForecast = activeForecast;
     recipeBusy = true;
@@ -569,19 +468,16 @@ function initializeForecastApp() {
     recipeResult.hidden = true;
     showStatus(recipeStatus, "Pairing one simple recipe with today's forecast…", "loading");
     updateGenerateButton();
-    let recipeReady = false;
     try {
-      const data = await window.ForecastMealAPI.createRecipe(input, token);
+      const data = await window.ForecastMealAPI.createRecipe(input);
       if (requestId !== recipeRequestId || requestForecast !== activeForecast) return;
       renderRecipe(data.recipe, requestForecast);
-      recipeReady = true;
       recipeResult.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (error) {
       if (requestId === recipeRequestId) showStatus(recipeStatus, error.message || "The recipe could not be generated. Please try again.", "error");
     } finally {
       recipeBusy = false;
       recipeForm.removeAttribute("aria-busy");
-      prepareNextVerification(recipeReady);
       updateGenerateButton();
     }
   }
