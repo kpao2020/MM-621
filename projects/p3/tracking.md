@@ -3,6 +3,7 @@
 
 ## 2026-11-13 — User review queue
 
+- Verification experience: after a recipe request, remove the used widget and wait for the user to request another recipe or initiate a retry before starting a fresh check. Await review and publication.
 - Worker rename in progress: confirmed `forecast-meal-api` did not already exist, deployed it as a separate Worker (version f09da83e-c313-4fb4-9499-184978f1b39f), and prepared the frontend URL. The new Worker still needs the matching Turnstile secret and an end-to-end check before publishing the frontend and eventually removing the old Worker.
 - Cleaned up the obsolete Basket Buddy frontend, D1 search and migrations, catalog refresh script, pipeline guide, and tracked Wrangler development state. Kept the two Open Prices analyses because the proposal cites them, and retained the project history and attribution. Wrangler state is now ignored by Git.
 - Published-page startup fix: wait for the document before initializing the forecast or attaching the p5 canvas; skip the illustration if its container is missing and show a forecast startup error instead of an indefinite spinner. Node syntax and simulated startup checks passed with and without the illustration. The fix still needs frontend publication and a real browser check.

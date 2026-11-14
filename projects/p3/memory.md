@@ -3,6 +3,7 @@
 
 ## 2026-11-13 — User review queue
 
+- The user requested no immediate repeat verification while reading a recipe. The local change defers a fresh Turnstile check until another recipe or a retry is requested; each request still uses a single-use token.
 - User requested renaming the Worker. Deployed `forecast-meal-api` separately and updated local configuration to its URL. The new Worker requires the matching Turnstile secret before the frontend is published and tested. Do not delete `basket-buddy-api` until the new path is confirmed.
 - User requested removal of obsolete Basket Buddy files. Removed the old client, D1 search and migrations, refresh script, pipeline guide, and tracked generated Wrangler state; kept the research analyses cited by the proposal and the historical record. Existing Worker name and public URL remain in use for Forecast Meal.
 - The user reported a stuck published page and supplied a p5 canvas-parent error. The forecast artwork container existed when inspected after load. Startup now waits for the document and tolerates a missing illustration; a real browser check is still required after publication.

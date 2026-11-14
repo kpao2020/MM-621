@@ -20,3 +20,5 @@ Work one item at a time. Stop after each item and get the user's confirmation be
 16. **Reviewed** — Moved the diet and ingredient note below the recipe button.
 
 17. **Awaiting publication and end-to-end review** — Deployed the recipe Worker with GitHub Pages as its only allowed browser origin and Turnstile hostname. User requested removal of local-address support. Publish the updated frontend through the user’s PR, then confirm a recipe request on GitHub Pages.
+18. **Done locally; awaiting review** — Rename the recipe instructions heading to “Simple Cooking Steps.”
+19. **Done locally; awaiting review** — After a recipe request, stop the Turnstile widget and defer a new verification until the user requests another recipe or chooses to verify for a retry.
