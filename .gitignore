@@ -26,6 +26,10 @@ replay_pid*
 
 .DS_Store
 
+# Local Wrangler secrets and overrides; never commit these files.
+.dev.vars
+.dev.vars.*
+
 projects/old_project1_sketch.js
 
 # Local Open Prices downloads and Python cache; the live catalog is stored in D1.

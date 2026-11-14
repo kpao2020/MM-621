@@ -357,3 +357,23 @@ Append-only notes. Never include credentials, precise user coordinates, or priva
 - User manually maintains the proposal's required section titles, exact heading wording, section order, and intentional spacing/separators. Future edits may update requested body text only; never rewrite or normalize proposal headings or structure. Leave the Developer note for the user to type manually.
 - The JavaScript libraries list was verified against the P3 page: p5.js 2.3.3 and Cloudflare Turnstile's client script are loaded. Project files such as api.js, results.js, and sketch.js are application code, not external libraries.
 - Added Open Prices/ODbL and original illustration attribution under the existing Credits heading without changing proposal headings or the Developer note.
+
+## 2026-11-13 — Forecast Meal forecast/location phase
+
+- Authorized by the user's request to resume Project 3 and adapt the copied weather API file. Implemented NWS forecasts for six cities plus explicitly triggered one-time device location, with city fallback and location/time-zone/period/source display.
+- Added today/tonight filtering, missing/stale data handling, abort/late-callback protection, timeouts, refresh without re-reading device coordinates, privacy-aware NWS requests, semantic HTML controls, and p5 weather/bowl artwork.
+- Active page does not load or call the legacy grocery/Worker/Turnstile flow. Legacy service/catalog/tooling remain for separate retirement; recipe generation, swaps, and nutrition remain next phases.
+- Updated README, requirements, agent guidance, memory, and tracking. JavaScript syntax and diff whitespace checks passed; live NWS point metadata was read for all six cities, along with Hayward's forecast. No automated tests or production deployment. Browser/device and six-city interface review remain pending.
+
+## 2026-11-13 — Continued Forecast Meal with one-recipe flow
+
+- In response to the user's “next,” added no-preference/vegetarian/vegan/pescatarian controls, supported ingredient exclusions, 1–4 servings, Turnstile state, and one AI recipe with quantity scaling and short steps.
+- Replaced the old D1 price-search meal endpoint in Worker source with a recipe-only structured endpoint. Server validates an exact fixed-choice payload, freshness/time zone, model shape, supported dietary choices, exclusions, and the balanced default. The model receives normalized weather categories and controls only; no coordinates, location label, or free text.
+- Retained IP rate limiting and server-side Turnstile validation with a distinct `forecast_recipe` action; added one-row D1-backed shared five-attempt UTC-day cap. Added migration 0003. The current production Worker is still the old deployment and does not serve this endpoint.
+- Changed AI model to the current Cloudflare JSON Mode documented supported model. Updated README, requirements, memory, and tracker. No AI inference, automated tests, remote migration, deployment, or frontend publish was run.
+- Next: apply migration and deploy Worker/site as a separate release step, then add substitutions and the per-serving nutrition table/icons. Verify current Cloudflare account allocation and billing before describing production generation as free.
+
+
+## 2026-11-13 — User review queue
+
+- User requested one item at a time with confirmation before moving on. Removed Forecast Meal D1 binding and the shared daily counter, including its un-applied migration; retained the per-IP burst limiter and historical Basket Buddy files. Saved all requested items in review-queue.md. No deployment or tests.

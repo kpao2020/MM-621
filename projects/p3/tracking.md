@@ -1,6 +1,49 @@
 # Basket Buddy — Project Tracker
 
-Last updated: 2026-11-12
+
+## 2026-11-13 — User review queue
+
+- User requested GitHub Pages deployment only. Removed local-address support and deployed Worker version d7c13fba-b9ea-4e47-8a68-86c841591ff4 with only https://kpao2020.github.io allowed and its hostname checked. Frontend publication and a real production recipe request remain pending. Do not commit, push, open or merge a PR without user confirmation.
+
+- Earlier deployment 81b517bb-36be-4448-8b57-f51cc097eff3 temporarily supported local origins; it was superseded and local support removed at the user’s request. User uses 127.0.0.1:5500. Awaiting a real browser recipe request; no browser was available to the agent. Production still requires the configured GitHub Pages hostname and Turnstile action.
+
+- User reported the UI changes done and asked about testing. Recipe integration still requires a matching Worker deployment and Turnstile configuration for the frontend hostname; local page currently points to the deployed Worker.
+- Item 15: made ingredient exclusions a compact expandable panel. Await user review.
+- Item 14: centered selected text in dropdowns. Await user review.
+- Item 13: set default servings to one. Item 14, centering dropdown text, is pending user confirmation before proceeding.
+- Item 12: forecast periods now use compact expandable quick views with condition icons, temperature and full details on demand. Weather data for recipe requests remains intact. Await user review; discuss screen-based mobile navigation separately in week 3.
+- Item 11: kept “Use my location,” changed the forecast label to “Your location,” and simplified the notice to consistently use “location.” Await user review before item 12.
+- Item 10: replaced the FM initials with a sun and meal-bowl mark. Await user review before item 11.
+- Item 9: centered Forecast Meal in the top bar. Await user review before item 10.
+- Item 8: removed “Class prototype” from the top of the page. Await user review before item 9.
+- Item 7: removed the open-ended prompt sentence from the ingredient section. Await user review before item 8.
+- Item 6: changed the ingredient section label to “Ingredients to exclude,” including matching introductory wording. Await user review before item 7.
+- Item 5: added a preferred cuisine selector and allowlisted Worker input for the six requested cuisines plus Filipino, French, Greek, Indian, Mexican, Middle Eastern, Spanish, and Thai. Await user review before item 6.
+
+- Item 4 adds Balanced (vegetable, protein, and grain or starch) and Meat eater (meat or poultry), respecting exclusions. Await review before item 5.
+
+- Item 3 follow-up: user saw the verified badge and requested it in the footer. Moved the verification area there; awaiting review before item 4.
+- Item 3 implemented locally: human verification wording and compact verified badge. Verification widget returns on expiry, error, or reset. Await user review before item 4.
+- User reported the Worker has no D1 binding, disabled the workflow, deleted the D1 database, and committed and pushed the workflow-file deletion on ken. The PR will wait until all review items are complete. Item 2: local Worker source has no shared daily limit; the separate five-per-minute per-IP limiter remains. Await user confirmation before item 3.
+- Item 1 complete locally, awaiting user review: removed Forecast Meal D1 binding, migration 0003, and shared daily counter. Item 2 is confirmation of that removal. See review-queue.md; stop for user confirmation before the next item.
+
+Last updated: 2026-11-13
+
+## Forecast and recipe phases implemented in local source — November 13
+
+- Completed the active Forecast Meal weather/location interface, replacing Basket Buddy's public form for this phase. Added six preset cities plus explicitly requested one-time browser/device location, default Hayward, manual fallback, and clear permission/loading/error states.
+- Adapted the copied weather-api.js from current observations to NWS forecasts. Added forecast-local today/tonight filtering, values and attribution, freshness handling, safe refresh, obsolete-request cancellation, and privacy boundaries. p5.js draws weather/bowl artwork; HTML handles accessible controls and weather data.
+- Updated requirements/README/agent guidance and continuity notes to distinguish completed local forecast work from planned recipe/Worker work. Preserved proposal text, legacy backend/client files, and scheduled catalog tooling.
+- JavaScript syntax and whitespace checks passed. Read live NWS point metadata for all six cities and confirmed usable forecast links and America/Los_Angeles; also read Hayward's live forecast response. Full browser/device permission and six-city interface review remain pending; no automated test suite was run, following the project instruction.
+- No commit, push, Cloudflare deployment, or GitHub Pages publish for the forecast phase. The user then asked to continue with the recipe phase, documented above; next are substitutions and nutrition summary.
+
+## Recipe phase continued — November 13 (historical; D1 cap subsequently removed)
+
+- Added fixed dietary choices, allowlisted exclusion checkboxes, one to four servings, an always-visible managed Turnstile widget with verified/expired/error states, and one-recipe result controls. The result shows ingredient quantities and steps; servings scale quantities in the browser.
+- Replaced the legacy Worker meal/price path with `POST /api/recipe`. The Worker rejects extra or malformed input, stale forecast, unsupported diets/exclusions, and conflicting/incomplete model results; only controlled weather categories and the selected controls enter its fixed prompt. Coordinates and free text are excluded.
+- Reused the existing per-IP limiter and D1 binding, adding migration `0003_recipe_daily_usage.sql` for five shared recipe attempts per UTC day. The Worker fails closed until the migration, AI binding, rate-limit binding, and Turnstile secret/hostname are set.
+- Switched the model to Cloudflare's currently documented JSON Mode supported Llama 3.3 model. No inference was called. The model cap is one request per recipe and 1,100 output tokens; the D1 cap allows at most five attempts daily.
+- Updated requirements, README, and continuity notes. Neither the migration nor Worker/frontend has been deployed; production generation remains unavailable on the currently deployed legacy Worker. Recipe substitutions and nutrition estimates/icons remain next.
 
 ## Presentation PDF updated — November 12
 

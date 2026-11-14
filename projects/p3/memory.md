@@ -1,6 +1,39 @@
-# Basket Buddy — Project Memory
+# Forecast Meal — Project Memory
 
-Last updated: 2026-11-12
+
+## 2026-11-13 — User review queue
+
+- User requested GitHub Pages deployment only. Removed local-address support and deployed Worker version d7c13fba-b9ea-4e47-8a68-86c841591ff4 with only https://kpao2020.github.io allowed and its hostname checked. Frontend publication and a real production recipe request remain pending. Do not commit, push, open or merge a PR without user confirmation.
+
+- Earlier deployment 81b517bb-36be-4448-8b57-f51cc097eff3 temporarily supported local origins; it was superseded and local support removed at the user’s request. User uses 127.0.0.1:5500. Awaiting a real browser recipe request; no browser was available to the agent. Production still requires the configured GitHub Pages hostname and Turnstile action.
+
+- Item 6 wording proposed in the local page: “Ingredients to exclude.” Await user review.
+- Item 5: added a preferred cuisine selector and allowlisted Worker input for the six requested cuisines plus Filipino, French, Greek, Indian, Mexican, Middle Eastern, Spanish, and Thai. Await user review before item 6.
+
+- Item 4 adds Balanced (vegetable, protein, and grain or starch) and Meat eater (meat or poultry), respecting exclusions. Await review before item 5.
+
+- User prefers the human verification badge in the footer to preserve space for meal controls. Verification area moved there; await review.
+- Item 3: use “Verify you're human” and collapse successful verification to a compact badge; await user review before proceeding to item 4.
+- User requires one item at a time and confirmation before proceeding. Removed the Forecast Meal D1 binding and shared daily counter; retained the per-IP burst limit. Review queue: review-queue.md. Historical Basket Buddy D1 files are retained.
+
+Last updated: 2026-11-13
+
+## Forecast-to-recipe implementation — November 13
+
+- The user acknowledged that location works and asked to continue. Implemented fixed eating-style choices (none, vegetarian, vegan, pescatarian), an allowlist of ingredient exclusions, servings 1–4, and one recipe generated from normalized today's forecast. The result has scaled ingredient amounts, short steps, and a control for changing servings.
+- Added one Worker route (`POST /api/recipe`) with exact request-field validation, current-date/time-zone and 20-minute forecast checks, an allowlisted forecast classification, fixed server prompt, structured output, ingredient/exclusion/diet checks, and an explicit balanced default check. No location, arbitrary text, user identifier, saved recipe, or meal history enters the AI request or storage.
+- Turnstile uses the separate `forecast_recipe` action and must match the configured hostname. The existing per-IP burst limit remains. The previously added D1 daily cap and migration 0003 were removed at the user's request.
+- Selected `@cf/meta/llama-3.3-70b-instruct-fp8-fast` because current Cloudflare JSON Mode docs list it among supported models; the previous Granite model is not on that supported list. No model call or deployment was run. Cloudflare documents its structured response mode, Turnstile's five-minute single-use server-verified tokens, and a 10,000-neuron/day free allocation; account billing/allocation still needs checking before claiming generation is guaranteed free.
+- The updated Worker and frontend are not deployed. Recipe generation remains unavailable at the current legacy production Worker until the new Worker route is deployed. Follow the user review queue one item at a time before further feature work. Proposal and presentation remain unchanged.
+
+## Forecast and location implementation — November 13
+
+- The user authorized resuming Project 3 and updating the copied weather-api.js to meet the forecast requirements, including all six cities and optional browser/device location. This authorizes the forecast implementation phase under PROPOSAL.md; no further plan approval is pending for this phase.
+- Replaced the copied observation/station/sunrise flow with NWS points -> forecast, supporting Hayward, Oakland, San Francisco, San Jose, San Mateo, and Dublin. The active index/sketch/style are now Forecast Meal's forecast-only interface; old API/results/config and backend remain in the repository but are not loaded or contacted by it.
+- Hayward loads by default. Explicit device-button click is the only location permission entry point; a one-time reading goes directly to NWS, rounded to four decimals. No coordinate persistence, application logging, meal Worker request, or AI request. Refresh retains the resolved grid in memory without obtaining device location again.
+- Filter unexpired periods by the NWS location's local day, including overnight and tonight. Display place/source, date/time zone, period validity, Fahrenheit, summary/details, wind, precipitation probability, NWS update/retrieval times, and source. Refresh after 20 minutes, period expiry, or midnight while visible, including on returning to the page.
+- Added abort/request guards and timeouts, permission/coverage/network/data errors, city fallback, semantic HTML, and a p5 weather/bowl illustration. ForecastWeather.mealContext prepares a weather-only allowlist for later Worker integration.
+- That forecast/location phase was completed locally. The user then asked to continue with the recipe phase, documented above. The legacy catalog refresh remains in the repository; neither phase changed the proposal or presentation.
 
 ## Presentation updated from latest proposal — November 12
 

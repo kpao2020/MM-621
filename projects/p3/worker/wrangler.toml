@@ -1,6 +1,4 @@
-# Basket Buddy API Worker
-# Deploy this Worker separately from the GitHub Pages frontend.
-
+# Forecast Meal API Worker. Deploy the static frontend separately through GitHub Pages.
 name = "basket-buddy-api"
 main = "src/index.js"
 compatibility_date = "2026-11-08"
@@ -8,18 +6,11 @@ compatibility_date = "2026-11-08"
 [ai]
 binding = "AI"
 
-[[d1_databases]]
-binding = "PRODUCT_DB"
-database_name = "basket-buddy-prices"
-database_id = "c01ed6cd-32f2-49f4-98d5-7816707f707d"
-
 [vars]
-# Include the GitHub Pages origin and local development origins.
-# CORS controls browser access; it is not authentication for the public endpoint.
-ALLOWED_ORIGINS = "https://kpao2020.github.io,http://localhost:5500,http://127.0.0.1:5500"
+# CORS is a browser boundary, not authentication. Turnstile and rate limits also apply.
+ALLOWED_ORIGINS = "https://kpao2020.github.io"
 TURNSTILE_HOSTNAME = "kpao2020.github.io"
 
-# Approximate per-visitor burst limit; the secret is configured separately in Cloudflare.
 [[ratelimits]]
 name = "MEAL_LIMITER"
 namespace_id = "620621001"

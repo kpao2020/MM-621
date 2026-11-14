@@ -4,91 +4,162 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#fbf7ef">
-    <title>Basket Buddy — meal and grocery prices</title>
+    <meta name="referrer" content="no-referrer">
+    <meta name="description" content="Start with today's local forecast. Choose a Bay Area city or use your device location in this Forecast Meal class prototype.">
+    <title>Forecast Meal — today's local forecast</title>
     <link rel="stylesheet" href="style.css">
-    <!-- p5.js draws the small basket illustration; the page UI stays semantic HTML. -->
-    <script src="../../lib/p5.min.js"></script>
+    <script src="../../lib/p5.min.js" defer></script>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
-    <script src="config.js"></script>
-    <script src="api.js"></script>
-    <script src="results.js"></script>
+    <script src="config.js" defer></script>
+    <script src="weather-api.js" defer></script>
+    <script src="recipe-api.js" defer></script>
     <script src="sketch.js" defer></script>
   </head>
   <body>
     <main class="page-shell">
       <header class="topbar">
-        <a class="brand" href="#top" aria-label="Basket Buddy home">
-          <span class="brand-mark" aria-hidden="true">bb</span>
-          <span>Basket Buddy</span>
-        </a>
+        <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40" focusable="false"><circle cx="20" cy="11" r="5" fill="#f2c766"/><path d="M20 3v2M10 11h2M28 11h2M13.5 4.5l1.5 1.5M25 6l1.5-1.5" fill="none" stroke="#f2c766" stroke-linecap="round" stroke-width="2"/><path d="M7 21h26c-.8 7-5.7 12-13 12S7.8 28 7 21Z" fill="#f2f5e8"/><path d="M11 21c1.5-3 4-4 6-2 2-4 5-4 7 0 2-2 4-1 5 2" fill="none" stroke="#a9cd93" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/><path d="M15 35h10" stroke="#f2f5e8" stroke-linecap="round" stroke-width="2"/></svg></span>Forecast Meal</a>
       </header>
 
       <section class="hero" id="top" aria-labelledby="page-title">
-        <div class="hero-copy">
-          <p class="eyebrow">Plan something good</p>
-          <h1 id="page-title">One meal.<br><span>A clearer basket.</span></h1>
-          <p class="hero-intro">One meal, a grocery list, and recorded prices.</p>
-          <div class="search-area-note">
-            <span class="pin-dot" aria-hidden="true"></span>
-            <span>Searching within 50 miles of Hayward, California</span>
-          </div>
-        </div>
-        <div class="hero-art" id="basket-art" aria-hidden="true"></div>
+        <div class="hero-art" id="forecast-art" aria-hidden="true"></div>
+        <p class="eyebrow">A little weather. A little inspiration.</p>
+        <h1 id="page-title">Today's forecast.<br><span>Tonight's inspiration.</span></h1>
+        <p class="hero-intro">Start with the weather where you are.</p>
       </section>
 
-      <section class="request-card" aria-labelledby="request-heading">
+      <section class="request-card" aria-labelledby="location-heading">
+        <p class="eyebrow">01 / Find your forecast</p>
+        <h2 id="location-heading">Where are you cooking?</h2>
+        <label for="city-select">Choose a city in California</label>
+        <select id="city-select" aria-describedby="location-notice">
+          <option value="hayward">Hayward</option>
+          <option value="oakland">Oakland</option>
+          <option value="san-francisco">San Francisco</option>
+          <option value="san-jose">San Jose</option>
+          <option value="san-mateo">San Mateo</option>
+          <option value="dublin">Dublin</option>
+        </select>
+        <p class="or-divider">or</p>
+        <button class="secondary-button" id="use-location" type="button" aria-describedby="location-notice">◎ Use my location</button>
+        <p class="location-notice" id="location-notice">Your location is optional. When you tap “Use my location,” your browser asks permission to share your location once. Your location is sent to the National Weather Service to get your forecast. This app does not save or log your location or send it to AI. You can choose a city instead. Forecasts are available for supported U.S. locations.</p>
+        <p id="location-status" class="status-message" role="status" aria-live="polite" hidden></p>
+      </section>
+
+      <section class="weather-section" aria-labelledby="weather-heading" aria-busy="true" id="weather-section">
         <div class="section-heading">
-          <div>
-            <h2 id="request-heading">What would you like to make?</h2>
-          </div>
+          <div><p class="eyebrow">02 / A look outside</p><h2 id="weather-heading">Today's local forecast</h2></div>
+          <button id="refresh-weather" class="text-button" type="button" disabled>Refresh</button>
         </div>
-        <form id="meal-form">
-          <label class="visually-hidden" for="meal-request">Describe a meal</label>
-          <textarea id="meal-request" name="meal-request" maxlength="500" required rows="2" placeholder="Try: beef stew with carrots and potatoes"></textarea>
-          <div id="verification-widget" class="verification-widget" aria-label="Security verification"></div>
-          <div class="form-bottom">
-            <p class="form-hint">Meal requests aren't saved or used to train AI.</p>
-            <button class="primary-button" id="submit-button" type="submit" disabled>
-              <span>Build my basket</span><span aria-hidden="true">→</span>
-            </button>
+        <p id="weather-status" class="status-message status-loading" role="status" aria-live="polite">Loading Hayward's forecast…</p>
+        <div id="weather-result" hidden>
+          <div class="forecast-place"><h3 id="forecast-location"></h3><span id="location-type" class="area-pill"></span></div>
+          <p id="forecast-date" class="forecast-date"></p>
+          <p id="forecast-warning" class="status-message status-warning" hidden></p>
+          <div id="forecast-periods" class="forecast-periods"></div>
+          <p id="forecast-updated" class="forecast-meta"></p>
+          <a id="forecast-source" class="source-link" href="https://www.weather.gov/" target="_blank" rel="noopener noreferrer">National Weather Service forecast data ↗</a>
+          <p class="forecast-meta">Forecast temperatures describe each period, rather than a live observation. Only the remaining periods that overlap today are shown, using the forecast location's time zone.</p>
+        </div>
+      </section>
+
+      <section class="request-card recipe-request" aria-labelledby="meal-heading">
+        <p class="eyebrow">03 / Make it yours</p>
+        <h2 id="meal-heading">What sounds good today?</h2>
+        <p class="control-intro">Choose a style, exclude ingredients, and set portions. We'll suggest one meal for today's weather.</p>
+        <form id="recipe-form">
+          <div class="preference-row">
+          <label for="dietary-pattern">Eating style</label>
+          <select id="dietary-pattern" name="dietaryPattern">
+            <option value="none">No preference</option>
+            <option value="balanced">Balanced</option>
+            <option value="meat_eater">Meat Eater</option>
+            <option value="vegetarian">Vegetarian</option>
+            <option value="vegan">Vegan</option>
+            <option value="pescatarian">Pescatarian</option>
+          </select>
           </div>
+          <div class="preference-row">
+          <label for="preferred-cuisine">Preferred cuisine</label>
+          <select id="preferred-cuisine" name="cuisine">
+            <option value="none">No preference</option>
+            <option value="american">American</option>
+            <option value="chinese">Chinese</option>
+            <option value="filipino">Filipino</option>
+            <option value="french">French</option>
+            <option value="greek">Greek</option>
+            <option value="indian">Indian</option>
+            <option value="italian">Italian</option>
+            <option value="japanese">Japanese</option>
+            <option value="korean">Korean</option>
+            <option value="mexican">Mexican</option>
+            <option value="middle_eastern">Middle Eastern</option>
+            <option value="spanish">Spanish</option>
+            <option value="thai">Thai</option>
+            <option value="vietnamese">Vietnamese</option>
+          </select>
+          </div>
+          <div class="preference-row">
+            <label for="recipe-servings">Servings</label>
+            <select id="recipe-servings" name="servings">
+              <option value="1" selected>1 serving</option>
+              <option value="2">2 servings</option>
+              <option value="3">3 servings</option>
+              <option value="4">4 servings</option>
+            </select>
+          </div>
+          <details class="exclusions-panel">
+            <summary>Ingredients to exclude <span id="exclusion-summary">Optional · Select</span></summary>
+            <fieldset class="exclusions-fieldset">
+              <legend>Choose ingredients</legend>
+              <div id="exclusion-options" class="exclusion-grid"></div>
+            </fieldset>
+          </details>
+          <p id="verification-prompt" class="verification-status">Please <a href="#verification-area">verify you're human</a> to request a recipe.</p>
+          <button class="primary-button" id="generate-recipe" type="submit" disabled>Get one recipe <span aria-hidden="true">→</span></button>
+          <p class="allergy-note">Diet choices and ingredient exclusions are preferences, not allergy controls or medical advice. Check product labels and prepare food safely.</p>
         </form>
-        <div id="status-message" class="status-message" role="status" aria-live="polite" hidden></div>
+        <p id="recipe-status" class="status-message" role="status" aria-live="polite" hidden></p>
       </section>
 
-      <section id="results-section" class="results-section" aria-labelledby="results-heading" hidden>
-        <div class="results-heading-row">
-          <div>
-            <p class="eyebrow">Your basket</p>
-            <h2 id="results-heading">A good place to start</h2>
-          </div>
-          <button id="new-meal" class="secondary-button" type="button">↺ New meal</button>
+      <section id="recipe-result" class="recipe-result" aria-labelledby="recipe-title" hidden>
+        <div class="recipe-heading">
+          <p class="eyebrow">Your forecast meal</p>
+          <h2 id="recipe-title"></h2>
+          <p id="recipe-summary" class="recipe-summary"></p>
+          <p id="recipe-weather" class="forecast-meta"></p>
         </div>
-        <div class="meal-meta"><span id="meal-title" class="meal-title"></span><span id="result-area" class="area-pill"></span></div>
-        <p class="results-note">Matches come from recorded prices in the saved 50-mile catalog, not live stock. Recent prices are preferred; older records stay visible.</p>
-        <div id="product-results" class="product-results"></div>
-        <section class="total-card" aria-live="polite">
-          <div>
-            <p class="eyebrow">Estimated total</p>
-            <div id="estimated-total" class="estimated-total"></div>
-            <p id="total-note" class="total-note">Based on one returned price per available item.</p>
-          </div>
-          <span class="total-sparkle" aria-hidden="true">✳</span>
+        <div class="serving-adjuster">
+          <label for="result-servings">Adjust servings</label>
+          <select id="result-servings" aria-label="Adjust recipe servings">
+            <option value="1">1 serving</option>
+            <option value="2">2 servings</option>
+            <option value="3">3 servings</option>
+            <option value="4">4 servings</option>
+          </select>
+        </div>
+        <section aria-labelledby="ingredients-heading">
+          <h3 id="ingredients-heading">Ingredients</h3>
+          <ul id="recipe-ingredients" class="recipe-ingredients"></ul>
         </section>
-        <details class="json-details">
-          <summary>View the data used</summary>
-          <pre id="api-json" class="json-view"></pre>
-        </details>
+        <section class="steps-section" aria-labelledby="steps-heading">
+          <h3 id="steps-heading">Simple steps</h3>
+          <ol id="recipe-steps" class="recipe-steps"></ol>
+        </section>
+        <p class="recipe-disclaimer">This recipe is AI-generated. Dietary labels and exclusions do not guarantee that a recipe is allergy-safe. Nutrition estimates and icons are the next project step.</p>
+        <button id="new-recipe" class="secondary-button" type="button">Make another recipe</button>
       </section>
-
       <footer class="page-footer">
-        <p class="data-credit">Contains information from <a href="https://prices.openfoodfacts.org/" target="_blank" rel="noreferrer">Open Prices (Open Food Facts)</a>, made available under the <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noreferrer">ODbL v1.0</a>; prices are community-reported and may be incomplete or outdated.</p>
-        <div class="footer-meta">
-          <span id="updated-at">No data request yet</span>
-          <span id="token-usage">AI token use: —</span>
+        <div class="verification-area" id="verification-area">
+          <p class="verification-title">Verify you're human</p>
+          <div id="verification-widget" class="verification-widget" aria-label="Human verification"></div>
+          <p id="verification-status" class="verification-status" role="status" aria-live="polite">Loading verification…</p>
         </div>
-        <p class="local-setup" id="local-setup" hidden>Set the Worker URL in <code>config.js</code> to connect the meal and price search.</p>
+        <p>Ken Pao · MM-621 · Forecast Meal</p>
+        <a href="https://www.weather.gov/privacy" target="_blank" rel="noopener noreferrer">Weather service privacy</a>
+        <span aria-hidden="true"> · </span><a href="https://kpao2020.github.io/MM-621/projects/p3/PROPOSAL.html" target="_blank" rel="noopener noreferrer">Project proposal</a>
       </footer>
+      <noscript><p class="status-message status-error">Enable JavaScript to choose a location and retrieve its forecast.</p></noscript>
     </main>
   </body>
 </html>
