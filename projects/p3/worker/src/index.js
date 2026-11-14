@@ -1,4 +1,4 @@
-// Forecast Meal Worker: validates fixed controls, verifies Turnstile, and makes
+// Forecast Meal Worker: validates fixed controls and makes
 // one bounded Workers AI request. It never receives a location or free-text prompt.
 const AI_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const MAX_BODY_BYTES = 8_192;
@@ -83,14 +83,14 @@ export default {
     }
 
     const visitorIp = request.headers.get("CF-Connecting-IP");
-    if (!env.MEAL_LIMITER || !visitorIp || !env.TURNSTILE_SECRET_KEY || !env.TURNSTILE_HOSTNAME || !env.AI) {
+    if (!env.MEAL_LIMITER || !visitorIp || !env.AI) {
       return jsonResponse({ error: "Recipe generation is not configured yet." }, 503, headers);
     }
     try {
       const { success } = await env.MEAL_LIMITER.limit({ key: visitorIp });
       if (!success) return jsonResponse({ error: "Too many requests. Please wait a minute and try again." }, 429, { ...headers, "Retry-After": "60" });
     } catch {
-      return jsonResponse({ error: "Recipe verification is temporarily unavailable." }, 503, headers);
+      return jsonResponse({ error: "Recipe requests are temporarily unavailable." }, 503, headers);
     }
 
     let body;
@@ -103,10 +103,6 @@ export default {
     }
     const requestError = validateRequest(body);
     if (requestError) return jsonResponse({ error: requestError }, 400, headers);
-
-    const verification = await verifyTurnstile(body.turnstileToken, env, visitorIp);
-    if (verification === "unavailable") return jsonResponse({ error: "Security verification is temporarily unavailable. Please try again." }, 503, headers);
-    if (!verification) return jsonResponse({ error: "Verification expired or failed. Please verify again." }, 403, headers);
 
     try {
       const normalized = normalizeModelInput(body);
@@ -149,7 +145,7 @@ async function readBodyWithinLimit(request, maxBytes) {
 }
 
 function validateRequest(body) {
-  if (!isRecord(body) || !hasExactKeys(body, ["dietaryPattern", "cuisine", "excludedIngredients", "servings", "forecast", "turnstileToken"])) {
+  if (!isRecord(body) || !hasExactKeys(body, ["dietaryPattern", "cuisine", "excludedIngredients", "servings", "forecast"])) {
     return "Choose the supported meal options and try again.";
   }
   if (!ALLOWED_DIETS.has(body.dietaryPattern)) return "Choose one of the listed eating styles.";
@@ -159,9 +155,6 @@ function validateRequest(body) {
       body.excludedIngredients.some((item) => typeof item !== "string" || !ALLOWED_EXCLUSIONS.has(item)) ||
       new Set(body.excludedIngredients).size !== body.excludedIngredients.length) {
     return "Choose exclusions from the provided list.";
-  }
-  if (typeof body.turnstileToken !== "string" || !body.turnstileToken || body.turnstileToken.length > 2_048) {
-    return "Complete the security check and try again.";
   }
   return validateForecast(body.forecast);
 }
@@ -235,25 +228,6 @@ function normalizeWind(speed, direction) {
     ? direction.toUpperCase()
     : "unknown";
   return { mph, direction: compass };
-}
-
-async function verifyTurnstile(token, env, visitorIp) {
-  try {
-    const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        secret: env.TURNSTILE_SECRET_KEY,
-        response: token,
-        remoteip: visitorIp,
-        idempotency_key: crypto.randomUUID(),
-      }),
-      signal: AbortSignal.timeout(8_000),
-    });
-    if (!response.ok) return "unavailable";
-    const checked = await response.json();
-    return checked.success === true && checked.hostname === env.TURNSTILE_HOSTNAME && checked.action === "forecast_recipe";
-  } catch { return "unavailable"; }
 }
 
 function parseModelResponse(response) {

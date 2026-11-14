@@ -9,7 +9,6 @@
     <title>Forecast Meal — today's local forecast</title>
     <link rel="stylesheet" href="style.css">
     <script src="../../lib/p5.min.js" defer></script>
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
     <script src="config.js" defer></script>
     <script src="weather-api.js" defer></script>
     <script src="recipe-api.js" defer></script>
@@ -115,7 +114,6 @@
               <div id="exclusion-options" class="exclusion-grid"></div>
             </fieldset>
           </details>
-          <p id="verification-prompt" class="verification-status">Please <a href="#verification-area">verify you're human</a> to request a recipe.</p>
           <button class="primary-button" id="generate-recipe" type="submit" disabled>Get one recipe <span aria-hidden="true">→</span></button>
           <p class="allergy-note">Diet choices and ingredient exclusions are preferences, not allergy controls or medical advice. Check product labels and prepare food safely.</p>
         </form>
@@ -150,11 +148,6 @@
         <button id="new-recipe" class="secondary-button" type="button">Make another recipe</button>
       </section>
       <footer class="page-footer">
-        <div class="verification-area" id="verification-area">
-          <p class="verification-title">Verify you're human</p>
-          <div id="verification-widget" class="verification-widget" aria-label="Human verification"></div>
-          <p id="verification-status" class="verification-status" role="status" aria-live="polite">Loading verification…</p>
-        </div>
         <p>Ken Pao · MM-621 · Forecast Meal</p>
         <a href="https://www.weather.gov/privacy" target="_blank" rel="noopener noreferrer">Weather service privacy</a>
         <span aria-hidden="true"> · </span><a href="https://kpao2020.github.io/MM-621/projects/p3/PROPOSAL.html" target="_blank" rel="noopener noreferrer">Project proposal</a>

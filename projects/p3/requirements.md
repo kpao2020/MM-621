@@ -1,6 +1,6 @@
 # Forecast Meal — Implementation Requirements
 
-Status: the forecast/location and first recipe phase are implemented in local source as of November 13, 2026. The Worker is deployed; publishing the frontend and checking a full recipe request remain pending. Ingredient substitutions and nutrition are future work. PROPOSAL.md remains the source of truth; its headings and body have not been edited.
+Status: the forecast/location and first recipe phase are implemented in local source as of November 13, 2026. A temporary Turnstile-free Worker is deployed; publication of the new frontend, final Worker deployment, and a browser check remain pending. Ingredient substitutions and nutrition are future work. The proposal remains unchanged; the user has requested the Turnstile removal experiment.
 
 ## Forecast and location — implemented
 
@@ -29,7 +29,7 @@ Status: the forecast/location and first recipe phase are implemented in local so
 
 - Offer fixed dietary choices (no preference, balanced, meat eater, vegetarian, vegan, pescatarian), a fixed preferred-cuisine list, allowlisted ingredient exclusions, and one to four servings. There is no open-ended meal prompt.
 - Send a fresh, normalized weather summary and supported controls only; never send coordinates, location labels, or arbitrary text to the Worker. Reject unexpected request fields and malformed or preference-conflicting model output.
-- Require server-side Turnstile validation for the expected action and hostname, with visible verified/expired/error UI states, and the existing per-IP limiter, with no database or shared daily recipe limit.
+- Keep the per-IP limiter, with no database, shared daily recipe limit, or Turnstile during the requested removal experiment. The per-IP limiter does not prevent distributed automated requests.
 - Generate one generally balanced recipe with numeric ingredient amounts and simple preparation steps. Do not reconnect grocery-price search.
 - Future: offer one-at-a-time ingredient swaps that update affected quantities, instructions, and per-serving nutrition estimates.
 - Future: show estimated calories, protein, carbohydrates, total fat, fiber, and sodium per serving, each with a reusable p5.js category icon. Explain that estimates may be inaccurate and are not medical or allergy advice.

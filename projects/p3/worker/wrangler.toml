@@ -7,9 +7,8 @@ compatibility_date = "2026-11-08"
 binding = "AI"
 
 [vars]
-# CORS is a browser boundary, not authentication. Turnstile and rate limits also apply.
+# CORS is a browser boundary, not authentication. The rate limiter also applies.
 ALLOWED_ORIGINS = "https://kpao2020.github.io"
-TURNSTILE_HOSTNAME = "kpao2020.github.io"
 
 [[ratelimits]]
 name = "MEAL_LIMITER"

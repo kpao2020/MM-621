@@ -32,11 +32,11 @@ The [Project 3 proposal](PROPOSAL.md), dated November 11, 2026, is the source of
 
 ## Current status
 
-The Worker rename is in progress: `forecast-meal-api` has been deployed separately and `config.js` is prepared to use its new URL. The new Worker needs the matching Turnstile secret before the frontend change is published and tested. The previously deployed Worker remains available during the transition.
+At the user’s request, the local frontend and Worker no longer use Turnstile. A temporary deployed Worker accepts requests from both the old page and the new page without verifying a token; the published page still loads the widget until the frontend change is merged. After publication, deploy the final Worker and delete the old widget. The proposal describes an earlier Turnstile plan; the user requested this removal experiment and may choose a new setup later.
 
-The local app now includes both the NWS forecast/location flow and the first forecast-to-recipe flow. It offers six Bay Area cities or an explicit one-time device location. Once a forecast loads, choose no preference, balanced, meat eater, vegetarian, vegan, or pescatarian; select a preferred cuisine and exclusions from fixed lists; choose one to four servings; and request a single recipe after Turnstile verification. Ingredient amounts scale when servings change. The page contains no free-text meal prompt.
+The local app now includes both the NWS forecast/location flow and the first forecast-to-recipe flow. It offers six Bay Area cities or an explicit one-time device location. Once a forecast loads, choose no preference, balanced, meat eater, vegetarian, vegan, or pescatarian; select a preferred cuisine and exclusions from fixed lists; choose one to four servings; and request a single recipe. Ingredient amounts scale when servings change. The page contains no free-text meal prompt.
 
-The Worker validates the request fields and forecast freshness, sends only normalized forecast categories and the selected controls to Workers AI, checks the structured recipe against the controls, and returns it without saving the request or recipe. It applies the existing per-IP burst limit and does not use a database or shared daily recipe counter. The local code uses a Workers AI model documented for JSON Mode. The updated Worker has been deployed; the updated frontend has not yet been published. End-to-end recipe generation still needs a successful browser check.
+The Worker validates the request fields and forecast freshness, sends only normalized forecast categories and the selected controls to Workers AI, checks the structured recipe against the controls, and returns it without saving the request or recipe. It applies the existing per-IP burst limit and does not use a database or shared daily recipe counter. The temporary deployed Worker returned a recipe for a token-free synthetic request; the new frontend still needs publication and a browser check.
 
 Ingredient substitutions and the estimated nutrition table with p5.js icons remain the next project steps. The nutrition estimates are not part of this recipe response.
 
@@ -48,7 +48,7 @@ The two Open Prices analysis documents preserve research from the earlier Basket
 1. Choose Hayward, Oakland, San Francisco, San Jose, San Mateo, or Dublin, California, or explicitly select “Use my location.” Only the device-location choice triggers a browser permission request. City selection remains available if permission is denied or the forecast fails.
 2. View today's local National Weather Service forecast.
 3. Choose a dietary pattern: no preference, balanced, meat eater, vegetarian, vegan, or pescatarian. Select a preferred cuisine, ingredients to exclude, and one to four servings. There is no open-ended meal prompt.
-4. Complete Turnstile verification and request one recipe. With no dietary selection or exclusions, the default is a generally balanced meal containing vegetables, a protein, and a grain or starch.
+4. Request one recipe. With no dietary selection or exclusions, the default is a generally balanced meal containing vegetables, a protein, and a grain or starch.
 5. View ingredient quantities and simple preparation steps. Request one AI-suggested ingredient substitute at a time; applying it updates the relevant quantities, instructions, and nutrition estimates.
 6. View estimated calories, protein, carbohydrates, total fat, fiber, and sodium per serving, with a reusable p5.js icon for each category.
 
@@ -83,11 +83,10 @@ See the [50-mile analysis](open-prices-hayward-50mi-analysis.md), [radius compar
 - National Weather Service API for today's forecast at supported U.S. coordinates.
 - Browser Geolocation API for optional, user-authorized location, with manual city selection as an alternative.
 - Cloudflare Workers and Workers AI for the meal-only service, structured generation, and server-side validation.
-- Cloudflare Turnstile for bot checks, with server-side token validation.
 - GitHub Pages for the public class prototype.
 - USDA FoodData Central as the reference source for AI-estimated nutrient values.
 
-The Worker accepts only the fixed dietary pattern, preferred cuisine, allowlisted exclusions, serving count, normalized forecast, and Turnstile token. It verifies the token server-side for the expected hostname and action, makes one bounded structured-generation request, and rejects malformed or preference-conflicting output. A valid token collapses the widget and leaves a visible “Verified” status; expired or failed verification restores the check. This is a prototype validation layer, not a guarantee that model output is medically or allergen safe.
+The Worker accepts only the fixed dietary pattern, preferred cuisine, allowlisted exclusions, serving count, and normalized forecast. It makes one bounded structured-generation request and rejects malformed or preference-conflicting output. These checks do not guarantee that model output is medically or allergen safe.
 
 
 ## Privacy and service limits
@@ -96,7 +95,7 @@ Device location is optional and requires an explicit user action and browser per
 
 Coordinates must stay out of AI prompts, meal history, and application logs. The proposed app does not persist location or save meal history. Provider handling and Worker logs must be checked before publishing the location notice.
 
-The Worker retains a per-IP burst limit; it does not impose a shared daily recipe limit. Workers AI can still reject a request if the account allocation or billing configuration is unavailable; verify Cloudflare account limits before presenting generation as free. The Turnstile secret stays in the Worker secret store; the site key and Worker URL are public browser configuration.
+The Worker retains a per-IP burst limit; it does not impose a shared daily recipe limit. Workers AI can still reject a request if the account allocation or billing configuration is unavailable; verify Cloudflare account limits before presenting generation as free. The Worker URL is public browser configuration. Without a bot challenge, the per-IP limit does not prevent distributed automated requests.
 
 
 ## Proposed three-week plan
@@ -105,26 +104,26 @@ The Worker retains a per-IP burst limit; it does not impose a shared daily recip
 |---|---|
 | 1 | Retrieve today's forecast for the six cities; add optional device location, city fallback, and visible location and forecast information. |
 | 2 | Add dietary, ingredient-exclusion, and serving controls; generate and validate one recipe; implement substitutions that update quantities and affected instructions. |
-| 3 | Display per-serving nutrition estimates and p5.js category icons; complete verification states, the location notice, error handling, review, and class demonstration. |
+| 3 | Display per-serving nutrition estimates and p5.js category icons; complete loading states, the location notice, error handling, review, and class demonstration. |
 
 The proposal's Success Criteria section defines the complete acceptance criteria.
 
 
 ## Run the forecast prototype locally
 
-The weather section works independently. Recipe generation requires the Worker, a Turnstile widget/secret pair for the current hostname.
+The weather section works independently. Recipe generation requires the recipe Worker.
 
 1. Serve the repository root with VS Code Live Server or `python3 -m http.server 5500`.
 2. Open `http://localhost:5500/projects/p3/`. The app loads Hayward's forecast automatically. Choose another city or explicitly tap “Use my location.”
 3. Device location needs HTTPS or localhost and browser permission. Browser and operating-system location settings both affect availability. A phone opening a plain HTTP LAN address may use the city selector, but device location requires HTTPS.
 
-The local page uses the deployed Worker URL in `config.js`. The deployed Worker accepts browser requests from `https://kpao2020.github.io` only and verifies that hostname in Turnstile. Review the local page and weather flow locally; test recipe generation after publishing the updated frontend to GitHub Pages. A verified badge alone does not establish that the Worker accepted the token or generated a recipe.
+The local page uses the deployed Worker URL in `config.js`. The production Worker accepts browser requests from `https://kpao2020.github.io` only. Review the local page and weather flow locally; test recipe generation after publishing both the updated Worker and frontend to GitHub Pages.
 
 The app reads location once per explicit device-button click. Refresh uses the already resolved NWS grid without reading device location again. Forecasts refresh after 20 minutes, when the first displayed period ends, or after local midnight while the page is visible. Returning to a backgrounded page also checks whether a refresh is due. NWS outages, missing data, unsupported locations, permission denial, and timeouts leave city selection available. A future forecast is never silently substituted for today's missing data.
 
 The location notice describes this app's behavior; NWS receives the request and applies its own provider policies. This app does not persist coordinates or log them, and requests use no-store, omit credentials, and suppress the referring page. The browser, operating system, network, and NWS still handle the location request.
 
-Before recipe generation can work on GitHub Pages, publish the updated frontend and confirm its Turnstile configuration. The next feature phase is one-at-a-time ingredient substitutions followed by per-serving nutrition estimates and p5.js nutrient icons.
+Before recipe generation can work without Turnstile on GitHub Pages, deploy the updated Worker and publish the updated frontend together. The next feature phase is one-at-a-time ingredient substitutions followed by per-serving nutrition estimates and p5.js nutrient icons.
 
 For production activation, from `projects/p3/worker`, deploy the Worker:
 
@@ -132,14 +131,14 @@ For production activation, from `projects/p3/worker`, deploy the Worker:
 npx wrangler deploy
 ```
 
-Check the Worker URL, `forecast_recipe` Turnstile action, allowed production origin, hostname, and secret before publishing the updated frontend. The deployed recipe route does not use the earlier price catalog.
+Check the Worker URL and allowed production origin before publishing the updated frontend. The deployed recipe route does not use the earlier price catalog.
 
 
 ## Project files
 
 - [PROPOSAL.md](PROPOSAL.md): source of truth for Forecast Meal's rationale, research, scope, flow, privacy requirements, and plan.
 - `index.html`, `style.css`, `sketch.js`, `weather-api.js`, `recipe-api.js`, and `config.js`: active forecast/recipe interface, p5.js illustration, NWS client, supported meal controls, and public service configuration.
-- `worker/src/index.js`: recipe-only Worker route, Turnstile verification, structured response validation, and request limits.
+- `worker/src/index.js`: recipe-only Worker route, structured response validation, and request limits.
 - [open-prices-hayward-50mi-analysis.md](open-prices-hayward-50mi-analysis.md) and [open-prices-radius-expansion-analysis-2026-11-10.md](open-prices-radius-expansion-analysis-2026-11-10.md): historical research cited in the proposal.
 - [requirements.md](requirements.md): current forecast requirements and remaining meal-service work.
 - [tracking.md](tracking.md) and [memory.md](memory.md): work status and confirmed decisions, including historical implementation notes.

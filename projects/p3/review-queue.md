@@ -4,7 +4,7 @@ Work one item at a time. Stop after each item and get the user's confirmation be
 
 1. **Reviewed** — Remove D1 from Forecast Meal. User reported no Worker D1 binding, disabled the GitHub workflow, deleted the D1 database, and committed and pushed the workflow-file removal; PR deferred until remaining items are complete.
 2. **Reviewed** — The shared five-per-day limit and D1 counter are absent. The separate existing per-IP burst limit of five requests per minute remains.
-3. **Reviewed** — Changed the wording to “Verify you're human” and moved verification to the footer. The verified widget collapses to a “✓ Verified: human” badge and returns when verification expires or resets.
+3. **Superseded** — User requested complete removal of Turnstile, including the Cloudflare widget, for a fresh setup later.
 4. **Reviewed** — Added Balanced (vegetable, protein, grain or starch) and Meat eater (meat or poultry) choices, with corresponding Worker validation.
 5. **Reviewed** — Added preferred cuisines: American, Chinese, Filipino, French, Greek, Indian, Italian, Japanese, Korean, Mexican, Middle Eastern, Spanish, Thai, and Vietnamese, plus no preference. Eating style and preferred cuisine each have an inline label and dropdown, with spacing between rows.
 6. **Reviewed** — Changed “Leave out” to “Ingredients to exclude.”
@@ -19,6 +19,10 @@ Work one item at a time. Stop after each item and get the user's confirmation be
 15. **Reviewed** — Ingredient exclusions start as a compact expandable row; selected checkboxes remain selected when closed.
 16. **Reviewed** — Moved the diet and ingredient note below the recipe button.
 
-17. **Awaiting publication and end-to-end review** — Deployed the recipe Worker with GitHub Pages as its only allowed browser origin and Turnstile hostname. User requested removal of local-address support. Publish the updated frontend through the user’s PR, then confirm a recipe request on GitHub Pages.
-18. **Done locally; awaiting review** — Rename the recipe instructions heading to “Simple Cooking Steps.”
-19. **Done locally; awaiting review** — After a recipe request, stop the Turnstile widget and defer a new verification until the user requests another recipe or chooses to verify for a retry.
+17. **Reviewed** — The renamed Worker is deployed and the user reported multiple successful recipe requests on GitHub Pages. Cloudflare-frame console messages and an intermittent challenge retry were observed.
+18. **Published** — Renamed the recipe instructions heading to “Simple Cooking Steps.”
+19. **Superseded** — The verification flow is being removed at the user's request.
+20. **Pending review** — Automatic weather refresh clears a displayed recipe and can invalidate an in-flight recipe request. Decide how to preserve a recipe during refresh.
+21. **Pending review** — Recipe requests have no timeout; a stalled connection can leave the page waiting indefinitely.
+22. **Superseded** — The widget is being removed at the user's request.
+23. **In progress** — Local frontend and final Worker no longer use Turnstile. A temporary Worker accepts old and new page requests without token verification; a live synthetic request returned a recipe. Publish the new frontend, deploy the final Worker, then delete the existing Cloudflare widget. The old Worker secret is no longer listed. Keep the existing per-IP limiter. User may choose a fresh Turnstile setup later.
