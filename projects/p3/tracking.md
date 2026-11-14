@@ -1,4 +1,76 @@
-# Basket Buddy — Project Tracker
+# Forecast Meal — Project Tracker
+
+
+## Current status — November 14, 2026
+
+- User reviewed the local app and reports that it works. This confirms the recipe, batch swap, nutrition display, and in-app forecast Refresh behavior in their local review.
+- Group 1 (keep recipe during forecast refresh): user confirmed working. Group 2 (45-second recipe/swap timeout): implemented; a deliberately stalled request was not separately reported as tested. Group 3 (browser/accessibility review): user reports the local review passed.
+- Group 4 (production): user disabled the production and preview Worker domains in Cloudflare. The configured public API address is paused; recipe/swap calls there will be unavailable. The user will push `ken`, open and merge a PR to `main`; those GitHub actions are pending. Local Wrangler is separate.
+- Local Worker source model: `@cf/meta/llama-3.1-8b-instruct-fp8-fast`, selected explicitly by the user; not deployed. Model changes require the user's prior review and explicit approval for the exact replacement. The prior 70B selection was unapproved and is superseded.
+- No agent push, PR, merge, Worker disable, or production code deployment has occurred. Future Wrangler deploys may re-enable `workers.dev` unless production config explicitly keeps it disabled.
+
+
+## 2026-11-14 — Initial one-at-a-time ingredient swap implementation (superseded)
+
+- The user asked to build ingredient swaps and confirmed Turnstile remains removed for now.
+- Added a “Suggest swap” action to each displayed ingredient. Only one suggestion can be pending at a time; the user can apply it or skip it before requesting another.
+- Added a bounded `/api/swap` Worker route that revalidates the current recipe and preferences, asks Workers AI for one replacement and revised steps, then validates the result. The server merges only the selected replacement; other ingredients remain unchanged. Location coordinates and application logs are not sent to AI or saved.
+- Applying a suggestion updates the ingredient amount and revised cooking steps; serving scaling remains in effect. Nutrition is not implemented yet.
+- Updated README and implementation requirements. This feature is local only; deploy the Worker and publish the frontend together, then review the swap flow in a browser. No tests, commit, push, or deployment were run.
+
+## 2026-11-14 — Batch ingredient swaps
+
+- The user rejected the per-ingredient button flow and requested selecting any number of ingredients followed by one update action.
+- Replaced individual swap buttons with selectable ingredient checkboxes and one batch action. One follow-up AI request returns all selected replacements and revised steps; the Worker merges only selected items and validates the full recipe. The updated recipe applies automatically after validation.
+- Fixed the button state issue: it remains actionable with a clear prompt when no ingredients are selected, re-enables after recipe generation, and shows an updating label only during the batch request.
+- Added one successful batch per recipe; after success, ingredient checkboxes and the batch button disappear, and the status suggests starting a new recipe for another change. Failed batches remain retryable. Ingredient amounts stay beside core names, while trailing parenthetical examples display on a second line.
+- Local only; no tests, commit, push, deployment, or browser verification.
+
+## 2026-11-14 — Per-serving nutrition table and p5.js icons
+
+- Added calories, protein, carbohydrates, total fat, fiber, and sodium estimates to recipe and swap responses. The Worker validates bounded numeric values; swap responses refresh the estimates for the revised recipe.
+- Added a semantic nutrition table, six distinct p5.js category icons, and a plain-language accuracy note. Values are rough AI estimates informed by USDA FoodData Central reference data, not ingredient-by-ingredient API calculations.
+- User reviewed the local nutrition table and confirmed recipe and swapped nutrition are working. Local only; no tests, commit, push, or deployment.
+
+## 2026-11-14 — Forecast details affordance
+
+- Replaced the low-visibility “Details” cue with bold dark-green “More details”/“Less details” text and a directional chevron. Applied the same cue style to the bold dark-green “Optional · Select” label on the ingredient-exclusion disclosure. Both retain full-row touch areas and keyboard focus; reduced-motion preferences are respected.
+- Follow-up polish: moved the weather details cue directly below the temperature and attached the ingredient-exclusion chevron directly beside “Optional · Select.”
+- User reviewed and approved the local disclosure design. No tests, commit, push, or deployment.
+
+## 2026-11-14 — Preserve recipe during forecast refresh
+
+- Manual, automatic, and return-to-page forecast refreshes now preserve a displayed recipe. A recipe or swap request in progress is invalidated so its stale response cannot replace the current state; request cleanup is guarded against stale completions.
+- Changing the selected city still clears the previous recipe. User confirmed the in-app Refresh behavior works locally; a full page reload clears the unsaved recipe as expected. No deployment or publication.
+
+## 2026-11-14 — Recipe request timeout
+
+- Added a 45-second timeout to recipe and batch-swap requests, including response-body reading, with a clear retry message. The timer is cleared after success, HTTP error, parse failure, or timeout.
+- User reports the local app works. The timeout is implemented; a deliberately stalled request was not separately reported as tested. No deployment or publication.
+
+## 2026-11-14 — Remaining groups reviewed
+
+- Group 1: user confirmed the recipe stays visible during in-app forecast refresh. A full browser reload clears the recipe because it is not persisted.
+- Group 2: the 45-second timeout and retry message are implemented. The user did not separately report testing a deliberately stalled request.
+- Group 3: user reports the local app works after their review. The source-level accessibility review found semantic labels, keyboard-operable native disclosures, visible focus, live statuses, an accessible nutrition table, decorative icons, and reduced-motion handling.
+- Local setup docs match `config.js`: localhost/127.0.0.1 use Wrangler on port 8787; deployed pages use the production Worker. Local AI calls may use the user's Cloudflare allocation.
+- Group 4: user disabled the production and preview Worker domains in Cloudflare. The configured public API address is paused; recipe/swap requests there are unavailable. User will push `ken` and open/merge a PR to `main`; those actions are pending. Local Wrangler remains available.
+
+## 2026-11-14 — User review passed; release plan updated
+
+- User reports the local app works after review and confirmed that “Refresh” means the in-app forecast button; a full browser reload clears the recipe because recipes are not persisted.
+- User disabled both the production and preview domains for `forecast-meal-api` in Cloudflare. The configured public Worker address is paused; recipe and swap calls through it will fail. Local Wrangler development is separate.
+- User plans to push the local `ken` changes and open/merge a PR to `main`; the assistant did not perform any GitHub action or deployment.
+- Before a future Wrangler deployment, keep the public route disabled in production config if that is still the user's intent; otherwise Wrangler may re-enable the `workers.dev` route.
+
+## 2026-11-14 — Review queue archived
+
+- The user marked the separate review queue complete and asked to preserve its full contents in p3.log, then delete review-queue.md. The full queue is archived in p3.log; active troubleshooting items are tracked there.
+
+## 2026-11-14 — Local recipe Worker connection
+
+- Local pages were calling the deployed Worker, whose CORS allowlist only permits the GitHub Pages origin. Added a separate local Wrangler config and routed local preview pages to port 8787; production origin settings remain unchanged.
+- The local AI binding connects remotely and may use the user's Cloudflare allocation. User later started the local Worker, confirmed recipe generation and the rest of the app work, and plans to push/merge the local changes.
 
 
 ## 2026-11-13 — User review queue
@@ -33,9 +105,9 @@
 - Item 3 follow-up: user saw the verified badge and requested it in the footer. Moved the verification area there; awaiting review before item 4.
 - Item 3 implemented locally: human verification wording and compact verified badge. Verification widget returns on expiry, error, or reset. Await user review before item 4.
 - User reported the Worker has no D1 binding, disabled the workflow, deleted the D1 database, and committed and pushed the workflow-file deletion on ken. The PR will wait until all review items are complete. Item 2: local Worker source has no shared daily limit; the separate five-per-minute per-IP limiter remains. Await user confirmation before item 3.
-- Item 1 complete locally, awaiting user review: removed Forecast Meal D1 binding, migration 0003, and shared daily counter. Item 2 is confirmation of that removal. See review-queue.md; stop for user confirmation before the next item.
+- Item 1 complete locally, awaiting user review: removed Forecast Meal D1 binding, migration 0003, and shared daily counter. Item 2 is confirmation of that removal. The historical queue is archived in p3.log; stop for user confirmation before the next item.
 
-Last updated: 2026-11-13
+Last updated: 2026-11-14
 
 ## Forecast and recipe phases implemented in local source — November 13
 

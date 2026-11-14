@@ -13,8 +13,8 @@ title: Project 3 Final Paper
 | Tracking Week | Deliverable | Status |
 |---|---|---|
 | Week 1 | Adapt the weather request flow to retrieve today's National Weather Service forecast for the six selected cities. Add the user-triggered location option with city fallback, and show the chosen city and forecast | Completed |
-| Week 2 | Replace open-ended meal requests with the confirmed dietary, ingredient-exclusion, and serving controls. Generate and validate one recipe, then add one-at-a-time substitutions that update quantities and affected steps. | In Progress |
-| Week 3 | Display the AI-estimated per-serving nutrition table with p5.js category icons; complete the Turnstile verified state, location notice, error handling, review, and class demonstration. | Backlog |
+| Week 2 | Replace open-ended meal requests with the confirmed dietary, ingredient-exclusion, and serving controls. Generate and validate one recipe, then let users select multiple ingredients for one batch of substitutions that updates quantities and affected steps. | Completed locally |
+| Week 3 | Display the AI-estimated per-serving nutrition table with p5.js category icons; complete the location notice, error handling, and local review. The user disabled the production and preview Worker domains; Turnstile and protected public recipe access are deferred until the next security phase. | Completed locally; public recipe access paused |
 
 
 ## Success Criteria
@@ -25,7 +25,7 @@ title: Project 3 Final Paper
 | - | The meal flow has no open-ended text box; it accepts only its supported meal controls and rejects unsupported request fields. |
 | - | With no preference selections, the app suggests one balanced meal with vegetables, a protein, and a grain or starch. |
 | - | The selected dietary pattern and ingredient exclusions are reflected in the recipe; choosing one to four servings updates the quantities. |
-| - |  A user can request and apply one ingredient substitution at a time. The result respects the chosen preferences and updates the relevant quantities, instructions, and nutrition estimates. |
+| - | A user can select multiple ingredients and request one batch of substitutions per recipe. The result respects the chosen preferences and updates the relevant quantities, instructions, and nutrition estimates. |
 | - |  The nutrition table shows calories, protein, carbohydrates, total fat, fiber, and sodium per serving, with an icon for each category and the accuracy disclaimer. |
 | - |  The server validates the structured response and rejects malformed or unsupported model output. |
 | - |  Turnstile's challenge remains visible when required, disappears after successful verification, and leaves a visible “Verified” status. The challenge reappears if verification expires or fails. |

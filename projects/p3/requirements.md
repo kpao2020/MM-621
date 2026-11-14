@@ -1,13 +1,19 @@
 # Forecast Meal — Implementation Requirements
 
-Status: the forecast/location and first recipe phase are implemented in local source as of November 13, 2026. A temporary Turnstile-free Worker is deployed; publication of the new frontend, final Worker deployment, and a browser check remain pending. Ingredient substitutions and nutrition are future work. The proposal remains unchanged; the user has requested the Turnstile removal experiment.
+Status: forecast, recipe, batch ingredient swaps, per-serving nutrition estimates, and p5.js nutrient icons are implemented locally as of November 14, 2026. The local Worker source uses the model `@cf/meta/llama-3.1-8b-instruct-fp8-fast`, explicitly selected by the user; it has not been deployed. The user reviewed the local app and reports that it works, including recipe preservation during the in-app Refresh. The 45-second timeout is implemented; a deliberately stalled-request check was not separately reported. The user has disabled the production and preview Worker domains in Cloudflare and will push/PR/merge the source. No production code release has happened. The proposal remains unchanged; Turnstile stays removed at the user's request.
+
+## Strict AI model approval rule
+
+- Use only `@cf/meta/llama-3.1-8b-instruct-fp8-fast` for Forecast Meal.
+- Do not change, replace, test, or deploy another model unless the user first reviews and explicitly approves that exact model change. Never choose a model on the user's behalf.
+- The earlier 70B model choice was not approved and is superseded. Do not use `@cf/meta/llama-3.3-70b-instruct-fp8-fast` again.
 
 ## Forecast and location — implemented
 
 - Offer Hayward, Oakland, San Francisco, San Jose, San Mateo, and Dublin, California. Start with Hayward without requesting device location.
 - Retrieve NWS /points metadata and follow properties.forecast. Do not substitute current station observations for a forecast.
-- Show the selected city or approximate NWS place near the device, location source, local date/time zone, forecast-period name and validity times, temperature in Fahrenheit, summary, details, wind, precipitation probability, source link, NWS update time, and retrieval time.
-- Show only unexpired forecast periods overlapping today in the NWS time zone. Handle overnight periods, tonight, midnight, and devices in another time zone. Reject missing/incomplete periods and forecasts more than a day old; disclose updates older than six hours or an absent update timestamp.
+- Show the selected city or approximate NWS place near the device, location source, local date/time zone, forecast-period name and validity times, temperature in Fahrenheit, summary, details, wind, precipitation probability, source link, and the latest NWS publication time when provided.
+- Show only unexpired forecast periods overlapping today in the NWS time zone. Handle overnight periods, tonight, midnight, and devices in another time zone. Reject missing/incomplete periods and forecasts more than a day old; show when the NWS publication time is unavailable.
 - Treat missing precipitation values as unavailable, not zero. Convert Celsius when returned by NWS.
 - Request browser/device location only after the explicit button click. Use getCurrentPosition once, without high-accuracy tracking or a cached device reading. Browser and OS permission/service availability determine whether a location can be returned.
 - Keep manual city selection available during all operations. Explain permission denial, unsupported/insecure browsers, unsupported NWS locations, missing data, network errors, rate limits, and timeouts; allow another city or retry.
@@ -31,12 +37,12 @@ Status: the forecast/location and first recipe phase are implemented in local so
 - Send a fresh, normalized weather summary and supported controls only; never send coordinates, location labels, or arbitrary text to the Worker. Reject unexpected request fields and malformed or preference-conflicting model output.
 - Keep the per-IP limiter, with no database, shared daily recipe limit, or Turnstile during the requested removal experiment. The per-IP limiter does not prevent distributed automated requests.
 - Generate one generally balanced recipe with numeric ingredient amounts and simple preparation steps. Do not reconnect grocery-price search.
-- Future: offer one-at-a-time ingredient swaps that update affected quantities, instructions, and per-serving nutrition estimates.
-- Future: show estimated calories, protein, carbohydrates, total fat, fiber, and sodium per serving, each with a reusable p5.js category icon. Explain that estimates may be inaccurate and are not medical or allergy advice.
+- Let users select any number of listed ingredients and request replacements together with one button. Allow one successful replacement batch per recipe; after success, remove the selection controls and direct users to start a new recipe for another change. A failed request may be retried. One follow-up AI call returns all replacements and revised steps; apply the complete validated update to the recipe. Preserve unselected ingredients, servings, dietary choices, exclusions, and balanced meal roles. Show ingredient quantities and names together, with trailing parenthetical examples on a separate second line. Refresh the nutrition estimates after a successful batch.
+- Show estimated calories, protein, carbohydrates, total fat, fiber, and sodium per serving, each with a reusable p5.js category icon. The Worker validates bounded numeric values and refreshes them after the ingredient batch. Explain that estimates may be inaccurate and are not medical or allergy advice.
 
-## Deploy and review before publication
+## Release plan
 
-- Manually review each city and device-location success, denial, unavailable, and timeout states on a phone and desktop. Include switching to a city during an outstanding permission/weather request, NWS errors, overnight/midnight behavior, and a device configured to a different time zone.
-- Review mobile width, keyboard operation, status announcements, reduced motion, source links, and loading/error recovery.
-- Confirm that only NWS receives weather coordinates and the recipe request sends no coordinates or legacy Open Prices requests.
-- The recipe Worker is deployed without D1. Confirm the published frontend and Worker together with a real recipe request.
+- User reports that local app review passed. The assistant did not run tests or independently inspect the user's browser.
+- User disabled the production and preview Worker domains in Cloudflare. The configured public Worker URL is paused; recipe and swap requests on GitHub Pages are unavailable there. The local Wrangler Worker remains available for local development.
+- User plans to push `ken` and open and merge a PR to `main`; those GitHub actions are pending. A future Wrangler deployment can re-enable the `workers.dev` route unless production config keeps it disabled.
+- Before the public Worker is re-enabled later, deploy the matching Worker/frontend versions together, restore the chosen request protection, verify Cloudflare AI allocation, and review location, error, mobile, keyboard, and screen-reader behavior.

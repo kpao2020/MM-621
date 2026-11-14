@@ -1,6 +1,25 @@
 # Forecast Meal — Project Memory
 
 
+## 2026-11-14 — Finish remaining groups while user is away
+
+- **Strict AI model lock:** use `@cf/meta/llama-3.1-8b-instruct-fp8-fast` only. Never change, test, substitute, or deploy another model unless the user first reviews and explicitly approves that exact change. The earlier 70B choice was not approved; never use it again.
+- User confirmed group 1 and authorized completing the remaining groups while away; they will test and review when they return. Continue without pausing between local tasks.
+- Do not add Turnstile yet. Current local code contains the refresh-preservation change and a 45-second recipe/swap timeout. User reports the local app works after their review; a deliberately stalled-request test was not separately reported.
+- User disabled the production and preview domains for `forecast-meal-api` in Cloudflare. The configured public address is paused; local Wrangler remains separate. User will push `ken` and open/merge a PR to `main`; those GitHub actions are still pending. Keep Turnstile off until requested. The Worker source remains token-free and has only a five-per-IP-per-minute burst limit.
+- A future Wrangler deploy may re-enable the `workers.dev` route unless `workers_dev = false` is included in production config; confirm the user's intent before any later deploy.
+- Do not run tests unless the user asks; the user completed their own local review.
+
+
+## 2026-11-14 — Ingredient swap interaction
+
+- The user replaced the one-at-a-time swap UI with batch selection: select any ingredients, click one button, then apply all valid replacements and revised steps together in one follow-up AI call.
+- Allow one successful batch per recipe. Hide selection controls after success; users can start a new recipe for another change. Keep retry controls available after a failed request. Ingredient quantity and core name share a line where space allows; parenthetical examples go on a second line.
+- Turnstile stays removed while finishing the project. Do not deploy, publish, commit, or push without authorization; no tests were requested.
+- Weather UI preference: show only the NWS-published forecast timestamp; remove the page retrieval timestamp and confusing stale-warning box. Keep forecast explanations simple enough for a fifth grader, with a little playfulness.
+- For local app previews, use VS Code Live Server on port 5500 and a separate local Wrangler Worker on port 8787. Keep production CORS restricted to GitHub Pages; the local Worker may connect to remote Workers AI and use account allocation.
+
+
 ## 2026-11-13 — User review queue
 
 - During Turnstile removal, the deployment tool displayed the previous secret in its output; treat that key as exposed. The transitional Worker has no listed Turnstile secret and does not verify tokens. Delete the old widget after the new frontend is published, then deploy the final Worker without compatibility handling.
@@ -21,17 +40,17 @@
 
 - User prefers the human verification badge in the footer to preserve space for meal controls. Verification area moved there; await review.
 - Item 3: use “Verify you're human” and collapse successful verification to a compact badge; await user review before proceeding to item 4.
-- User requires one item at a time and confirmation before proceeding. Removed the Forecast Meal D1 binding and shared daily counter; retained the per-IP burst limit. Review queue: review-queue.md. Obsolete Basket Buddy implementation files were later removed.
+- User requires one item at a time and confirmation before proceeding. Removed the Forecast Meal D1 binding and shared daily counter; retained the per-IP burst limit. The closed review queue is archived in p3.log. Obsolete Basket Buddy implementation files were later removed.
 
-Last updated: 2026-11-13
+Last updated: 2026-11-14
 
 ## Forecast-to-recipe implementation — November 13
 
 - The user acknowledged that location works and asked to continue. Implemented fixed eating-style choices (none, vegetarian, vegan, pescatarian), an allowlist of ingredient exclusions, servings 1–4, and one recipe generated from normalized today's forecast. The result has scaled ingredient amounts, short steps, and a control for changing servings.
 - Added one Worker route (`POST /api/recipe`) with exact request-field validation, current-date/time-zone and 20-minute forecast checks, an allowlisted forecast classification, fixed server prompt, structured output, ingredient/exclusion/diet checks, and an explicit balanced default check. No location, arbitrary text, user identifier, saved recipe, or meal history enters the AI request or storage.
 - Turnstile uses the separate `forecast_recipe` action and must match the configured hostname. The existing per-IP burst limit remains. The previously added D1 daily cap and migration 0003 were removed at the user's request.
-- Selected `@cf/meta/llama-3.3-70b-instruct-fp8-fast` because current Cloudflare JSON Mode docs list it among supported models; the previous Granite model is not on that supported list. No model call or deployment was run. Cloudflare documents its structured response mode, Turnstile's five-minute single-use server-verified tokens, and a 10,000-neuron/day free allocation; account billing/allocation still needs checking before claiming generation is guaranteed free.
-- The updated Worker and frontend are not deployed. Recipe generation remains unavailable at the current legacy production Worker until the new Worker route is deployed. Follow the user review queue one item at a time before further feature work. Proposal and presentation remain unchanged.
+- Historical model note, superseded: the assistant selected `@cf/meta/llama-3.3-70b-instruct-fp8-fast` without the user's approval. The user later explicitly selected `@cf/meta/llama-3.1-8b-instruct-fp8-fast`; the strict model approval rule at the top of this file now governs. Do not use or restore the 70B model.
+- The updated Worker and frontend are not deployed. Recipe generation remains unavailable at the current legacy production Worker until the new Worker route is deployed. Follow the user's active one-item-at-a-time review/troubleshooting instruction; the closed review queue is archived in p3.log. Proposal and presentation remain unchanged.
 
 ## Forecast and location implementation — November 13
 

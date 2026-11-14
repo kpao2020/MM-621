@@ -32,13 +32,17 @@ The [Project 3 proposal](PROPOSAL.md), dated November 11, 2026, is the source of
 
 ## Current status
 
-At the user’s request, the local frontend and Worker no longer use Turnstile. A temporary deployed Worker accepts requests from both the old page and the new page without verifying a token; the published page still loads the widget until the frontend change is merged. After publication, deploy the final Worker and delete the old widget. The proposal describes an earlier Turnstile plan; the user requested this removal experiment and may choose a new setup later.
+Turnstile remains off by the user's choice. The current Worker has no token check and allows up to five requests per IP per minute; this limits bursts but does not stop distributed or scripted use. The Cloudflare dashboard was not inspected, so the old widget's account status is unknown.
 
-The local app now includes both the NWS forecast/location flow and the first forecast-to-recipe flow. It offers six Bay Area cities or an explicit one-time device location. Once a forecast loads, choose no preference, balanced, meat eater, vegetarian, vegan, or pescatarian; select a preferred cuisine and exclusions from fixed lists; choose one to four servings; and request a single recipe. Ingredient amounts scale when servings change. The page contains no free-text meal prompt.
+The local Worker source uses the user-approved Workers AI model `@cf/meta/llama-3.1-8b-instruct-fp8-fast`. This model is locked by the user's strict rule: do not change or test another model unless the user reviews and explicitly approves that exact change. It has not been deployed.
 
-The Worker validates the request fields and forecast freshness, sends only normalized forecast categories and the selected controls to Workers AI, checks the structured recipe against the controls, and returns it without saving the request or recipe. It applies the existing per-IP burst limit and does not use a database or shared daily recipe counter. The temporary deployed Worker returned a recipe for a token-free synthetic request; the new frontend still needs publication and a browser check.
+The local app now includes the NWS forecast/location flow, recipe generation, batch ingredient swaps, and a per-serving nutrition table with six p5.js icons. It offers six Bay Area cities or an explicit one-time device location. Once a forecast loads, choose no preference, balanced, meat eater, vegetarian, vegan, or pescatarian; select a preferred cuisine and exclusions from fixed lists; choose one to four servings; and request a single recipe. Select any ingredients you want to change, then request replacements together. One successful batch is allowed per recipe; a new recipe starts another. The page contains no free-text meal prompt.
 
-Ingredient substitutions and the estimated nutrition table with p5.js icons remain the next project steps. The nutrition estimates are not part of this recipe response.
+The local Worker validates recipe and batch-swap requests, including the six per-serving nutrition estimates, and checks structured results against the controls. It does not save requests or recipes. A swap request includes the existing recipe and selected ingredient indexes; the Worker merges only validated replacements and revised steps and returns updated nutrition estimates. It applies the existing per-IP burst limit and does not use a database or shared daily recipe counter. The deployed Worker has not been updated with the current swap and nutrition response formats, so the local frontend and Worker must be released together before the public recipe flow will work.
+
+The user reviewed the local app and reports that it works. Nutrition values are rough AI estimates informed by USDA FoodData Central reference data; the app does not calculate nutrients ingredient by ingredient through the USDA API. The table and icons are implemented locally.
+
+The user disabled the `forecast-meal-api` production and preview domains in the Cloudflare dashboard on November 14, 2026. The published page's configured Worker address is therefore paused; recipe and ingredient-swap requests there are unavailable. The local Wrangler Worker is separate and remains available for development. The user will push the local `ken` changes, open and merge a PR to `main`. No push, PR, merge, or production code deployment has happened yet. A future Wrangler deployment can re-enable the `workers.dev` route unless the production config explicitly keeps it disabled.
 
 The two Open Prices analysis documents preserve research from the earlier Basket Buddy experiment. The Forecast Meal app does not use the old price catalog or D1.
 
@@ -49,7 +53,7 @@ The two Open Prices analysis documents preserve research from the earlier Basket
 2. View today's local National Weather Service forecast.
 3. Choose a dietary pattern: no preference, balanced, meat eater, vegetarian, vegan, or pescatarian. Select a preferred cuisine, ingredients to exclude, and one to four servings. There is no open-ended meal prompt.
 4. Request one recipe. With no dietary selection or exclusions, the default is a generally balanced meal containing vegetables, a protein, and a grain or starch.
-5. View ingredient quantities and simple preparation steps. Request one AI-suggested ingredient substitute at a time; applying it updates the relevant quantities, instructions, and nutrition estimates.
+5. View ingredient quantities and simple preparation steps. Select any ingredients you want to change, then request replacements together. One follow-up AI call updates those ingredients and relevant steps.
 6. View estimated calories, protein, carbohydrates, total fat, fiber, and sodium per serving, with a reusable p5.js icon for each category.
 
 Nutrition values are AI-generated estimates informed by USDA FoodData Central reference data and may be inaccurate; use for reference only. The prototype does not calculate nutrients ingredient by ingredient from the USDA API. Its “healthy” default is a class-project guideline, not an assessment of a person's medical or nutritional needs. Dietary labels and exclusions do not verify allergies or provide medical nutrition advice.
@@ -57,7 +61,7 @@ Nutrition values are AI-generated estimates informed by USDA FoodData Central re
 
 ## Scope
 
-The project tests one contextual meal suggestion, dietary and ingredient-exclusion controls, one-at-a-time substitutions, serving adjustments, and a visual nutrition summary. The result visual is a nutrition table with category icons.
+The project tests one contextual meal suggestion, dietary and ingredient-exclusion controls, batch substitutions, serving adjustments, and a visual nutrition summary. The result visual is a nutrition table with category icons.
 
 Nutrition tracking, weekly meal planning, grocery prices, store inventory, ordering, accounts, and saved meal history are outside the proposed scope.
 
@@ -113,17 +117,19 @@ The proposal's Success Criteria section defines the complete acceptance criteria
 
 The weather section works independently. Recipe generation requires the recipe Worker.
 
-1. Serve the repository root with VS Code Live Server or `python3 -m http.server 5500`.
-2. Open `http://localhost:5500/projects/p3/`. The app loads Hayward's forecast automatically. Choose another city or explicitly tap “Use my location.”
-3. Device location needs HTTPS or localhost and browser permission. Browser and operating-system location settings both affect availability. A phone opening a plain HTTP LAN address may use the city selector, but device location requires HTTPS.
+1. In one terminal, go to `projects/p3/worker` and run `npx wrangler dev --config wrangler.local.toml --port 8787`.
+2. In a second terminal, serve the repository root with VS Code Live Server or `python3 -m http.server 5500`.
+3. Open `http://127.0.0.1:5500/projects/p3/` or `http://localhost:5500/projects/p3/`. Local pages use the local Worker on port 8787; the local Worker calls Cloudflare Workers AI, which can use your Cloudflare allocation.
+4. The local Worker configuration allows only the two local preview origins and does not change production CORS. The production page continues to use the deployed Worker, which accepts `https://kpao2020.github.io` only.
+5. Device location needs HTTPS or localhost and browser permission. Browser and operating-system location settings both affect availability. A phone opening a plain HTTP LAN address may use the city selector, but device location requires HTTPS.
 
-The local page uses the deployed Worker URL in `config.js`. The production Worker accepts browser requests from `https://kpao2020.github.io` only. Review the local page and weather flow locally; test recipe generation after publishing both the updated Worker and frontend to GitHub Pages.
+`config.js` routes localhost and 127.0.0.1 previews to the local Worker on port 8787. Other hosts use the deployed Worker. The local Wrangler config allows the two local preview origins; the production config allows `https://kpao2020.github.io`. These origin checks are browser access controls, not authentication. Review the local page first; publish the matching Worker and frontend together before testing the recipe flow on GitHub Pages.
 
 The app reads location once per explicit device-button click. Refresh uses the already resolved NWS grid without reading device location again. Forecasts refresh after 20 minutes, when the first displayed period ends, or after local midnight while the page is visible. Returning to a backgrounded page also checks whether a refresh is due. NWS outages, missing data, unsupported locations, permission denial, and timeouts leave city selection available. A future forecast is never silently substituted for today's missing data.
 
 The location notice describes this app's behavior; NWS receives the request and applies its own provider policies. This app does not persist coordinates or log them, and requests use no-store, omit credentials, and suppress the referring page. The browser, operating system, network, and NWS still handle the location request.
 
-Before recipe generation can work without Turnstile on GitHub Pages, deploy the updated Worker and publish the updated frontend together. The next feature phase is one-at-a-time ingredient substitutions followed by per-serving nutrition estimates and p5.js nutrient icons.
+For the swap and nutrition flows to work on GitHub Pages, deploy the Worker and publish the matching frontend together. The user disabled the production and preview domains and plans to keep the Worker paused until Turnstile work resumes. The Worker currently has no Turnstile check; its five-per-IP-per-minute limit only slows bursts and is not bot protection.
 
 For production activation, from `projects/p3/worker`, deploy the Worker:
 
@@ -149,4 +155,4 @@ Check the Worker URL and allowed production origin before publishing the updated
 
 The [proposal's reference list](PROPOSAL.md#resources-references) contains the technology documentation and competitive research.
 
-Product and price observations for the original Basket Buddy prototype came from [Open Prices (Open Food Facts)](https://prices.openfoodfacts.org/) under the [Open Database License (ODbL) v1.0](https://opendatacommons.org/licenses/odbl/1-0/). Its original basket illustration was created in p5.js without an external image. The current weather-and-bowl illustration is original p5.js work with AI-assisted revisions. Forecast Meal's nutrition table and category icons remain planned p5.js and HTML/CSS work.
+Product and price observations for the original Basket Buddy prototype came from [Open Prices (Open Food Facts)](https://prices.openfoodfacts.org/) under the [Open Database License (ODbL) v1.0](https://opendatacommons.org/licenses/odbl/1-0/). Its original basket illustration was created in p5.js without an external image. The current weather-and-bowl illustration and reusable nutrition icons are original p5.js work with AI-assisted revisions; HTML and CSS present the nutrition table.

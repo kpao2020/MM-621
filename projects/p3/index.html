@@ -14,6 +14,7 @@
     <title>Forecast Meal — today's local forecast</title>
     <link rel="stylesheet" href="style.css">
     <script src="../../lib/p5.min.js" defer></script>
+    <script src="nutrient-icons.js" defer></script>
     <script src="config.js" defer></script>
     <script src="weather-api.js" defer></script>
     <script src="recipe-api.js" defer></script>
@@ -59,11 +60,9 @@
         <div id="weather-result" hidden>
           <div class="forecast-place"><h3 id="forecast-location"></h3><span id="location-type" class="area-pill"></span></div>
           <p id="forecast-date" class="forecast-date"></p>
-          <p id="forecast-warning" class="status-message status-warning" hidden></p>
           <div id="forecast-periods" class="forecast-periods"></div>
-          <p id="forecast-updated" class="forecast-meta"></p>
           <a id="forecast-source" class="source-link" href="https://www.weather.gov/" target="_blank" rel="noopener noreferrer">National Weather Service forecast data ↗</a>
-          <p class="forecast-meta">Forecast temperatures describe each period, rather than a live observation. Only the remaining periods that overlap today are shown, using the forecast location's time zone.</p>
+          <p class="forecast-meta">This is the latest forecast from the National Weather Service. Temperatures are weather’s best guess, not live readings. Here’s what the rest of today might bring.</p>
         </div>
       </section>
 
@@ -143,13 +142,32 @@
         </div>
         <section aria-labelledby="ingredients-heading">
           <h3 id="ingredients-heading">Ingredients</h3>
+          <p class="swap-intro" id="swap-intro">Choose the ingredients you’d like to change. We’ll update them all at once.</p>
           <ul id="recipe-ingredients" class="recipe-ingredients"></ul>
+          <button id="swap-selected" class="secondary-button swap-action" type="button" aria-describedby="swap-intro">Select ingredients above</button>
+          <p id="swap-status" class="status-message" role="status" aria-live="polite" hidden></p>
         </section>
         <section class="steps-section" aria-labelledby="steps-heading">
           <h3 id="steps-heading">Simple Cooking Steps</h3>
           <ol id="recipe-steps" class="recipe-steps"></ol>
         </section>
-        <p class="recipe-disclaimer">This recipe is AI-generated. Dietary labels and exclusions do not guarantee that a recipe is allergy-safe. Nutrition estimates and icons are the next project step.</p>
+        <section class="nutrition-section" aria-labelledby="nutrition-heading">
+          <h3 id="nutrition-heading">Nutrition per serving</h3>
+          <table class="nutrition-table">
+            <caption class="sr-only">Estimated nutrition values for one serving</caption>
+            <thead><tr><th scope="col">Nutrient</th><th scope="col">Estimate</th></tr></thead>
+            <tbody>
+              <tr><th scope="row"><span class="nutrient-label"><span class="nutrient-icon" data-nutrient-icon="calories" aria-hidden="true"></span><span>Calories</span></span></th><td id="nutrition-calories"></td></tr>
+              <tr><th scope="row"><span class="nutrient-label"><span class="nutrient-icon" data-nutrient-icon="protein" aria-hidden="true"></span><span>Protein <small>(g)</small></span></span></th><td id="nutrition-protein"></td></tr>
+              <tr><th scope="row"><span class="nutrient-label"><span class="nutrient-icon" data-nutrient-icon="carbohydrates" aria-hidden="true"></span><span>Carbohydrates <small>(g)</small></span></span></th><td id="nutrition-carbohydrates"></td></tr>
+              <tr><th scope="row"><span class="nutrient-label"><span class="nutrient-icon" data-nutrient-icon="fat" aria-hidden="true"></span><span>Total fat <small>(g)</small></span></span></th><td id="nutrition-fat"></td></tr>
+              <tr><th scope="row"><span class="nutrient-label"><span class="nutrient-icon" data-nutrient-icon="fiber" aria-hidden="true"></span><span>Fiber <small>(g)</small></span></span></th><td id="nutrition-fiber"></td></tr>
+              <tr><th scope="row"><span class="nutrient-label"><span class="nutrient-icon" data-nutrient-icon="sodium" aria-hidden="true"></span><span>Sodium <small>(mg)</small></span></span></th><td id="nutrition-sodium"></td></tr>
+            </tbody>
+          </table>
+          <p class="nutrition-note">These are rough AI estimates guided by USDA FoodData Central reference data. Brands and portions can change the numbers, so use them as a guide—not medical advice.</p>
+        </section>
+        <p class="recipe-disclaimer">This recipe is AI-generated. Dietary labels and exclusions are preferences, not allergy controls or medical advice.</p>
         <button id="new-recipe" class="secondary-button" type="button">Make another recipe</button>
       </section>
       <footer class="page-footer">

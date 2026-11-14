@@ -83,6 +83,7 @@ if (document.readyState === "loading") {
 }
 
 function initializeForecastApp() {
+  window.ForecastMealNutrientIcons?.mount();
   const service = window.ForecastWeather;
   const citySelect = document.getElementById("city-select");
   const locationButton = document.getElementById("use-location");
@@ -94,6 +95,9 @@ function initializeForecastApp() {
   const recipeForm = document.getElementById("recipe-form");
   const recipeStatus = document.getElementById("recipe-status");
   const recipeResult = document.getElementById("recipe-result");
+  const swapIntro = document.getElementById("swap-intro");
+  const swapButton = document.getElementById("swap-selected");
+  const swapStatus = document.getElementById("swap-status");
   const generateButton = document.getElementById("generate-recipe");
   let recipeControls = [...recipeForm.querySelectorAll("select, input")];
   const servingsSelect = document.getElementById("recipe-servings");
@@ -108,21 +112,32 @@ function initializeForecastApp() {
   let recipeBusy = false;
   let renderedRecipe = null;
   let recipeRequestId = 0;
+  let swapBusy = false;
+  let swapUsed = false;
+  let swapRequestId = 0;
+  const selectedSwapIndexes = new Set();
 
   function updateGenerateButton() {
     let hasFreshForecast = false;
     try { hasFreshForecast = Boolean(activeForecast && service.mealContext(activeForecast)); }
     catch { hasFreshForecast = false; }
-    generateButton.disabled = recipeBusy || !hasFreshForecast;
+    generateButton.disabled = busy || recipeBusy || !hasFreshForecast;
     generateButton.textContent = recipeBusy ? "Making your recipe…" : "Get one recipe →";
-    for (const control of recipeControls) control.disabled = recipeBusy;
+    for (const control of recipeControls) control.disabled = busy || recipeBusy;
   }
 
   function clearRecipe() {
     ++recipeRequestId;
+    ++swapRequestId;
+    recipeBusy = false;
+    swapBusy = false;
+    swapUsed = false;
+    selectedSwapIndexes.clear();
     renderedRecipe = null;
+    recipeForm.removeAttribute("aria-busy");
     recipeResult.hidden = true;
     recipeStatus.hidden = true;
+    swapStatus.hidden = true;
   }
 
   function showStatus(element, text, kind) {
@@ -149,7 +164,7 @@ function initializeForecastApp() {
     return "🌡️";
   }
 
-  function begin(message) {
+  function begin(message, { preserveRecipe = false } = {}) {
     const id = ++operation;
     clearTimeout(locationDeadline);
     controller?.abort();
@@ -162,11 +177,27 @@ function initializeForecastApp() {
     section.setAttribute("aria-busy", "true");
     result.hidden = true; // Never leave the last city's forecast under the new selection.
     activeForecast = null;
-    clearRecipe();
+    if (preserveRecipe) {
+      ++recipeRequestId;
+      if (recipeBusy) {
+        recipeBusy = false;
+        recipeForm.removeAttribute("aria-busy");
+        if (renderedRecipe) recipeResult.hidden = false;
+        showStatus(recipeStatus, "Recipe request stopped while the forecast refreshes. Try again when it’s ready.", "hint");
+      }
+      if (swapBusy) {
+        ++swapRequestId;
+        swapBusy = false;
+        showStatus(swapStatus, "Ingredient update stopped while the forecast refreshes. Try again when it’s ready.", "hint");
+      }
+    } else {
+      clearRecipe();
+    }
     updateGenerateButton();
+    updateSwapControls();
     updateIllustration(null);
     showStatus(weatherStatus, message, "loading");
-    return { id, signal: controller.signal, controller };
+    return { id, signal: controller.signal, controller, preserveRecipe };
   }
 
   function finish(id) {
@@ -177,6 +208,8 @@ function initializeForecastApp() {
     locationButton.textContent = "◎ Use my location";
     refreshButton.disabled = false;
     section.setAttribute("aria-busy", "false");
+    updateGenerateButton();
+    updateSwapControls();
   }
 
   function render({ area, forecast }) {
@@ -184,8 +217,12 @@ function initializeForecastApp() {
     activeForecast = forecast;
     document.getElementById("forecast-location").textContent = area.label;
     document.getElementById("location-type").textContent = area.source === "device" ? "Your location" : "Selected city";
-    const dateFormat = new Intl.DateTimeFormat("en-US", { timeZone: area.timeZone, weekday: "long", month: "long", day: "numeric", year: "numeric" });
-    document.getElementById("forecast-date").textContent = `${dateFormat.format(new Date(forecast.fetchedAt))} · ${area.timeZone}`;
+    const publishedFormat = new Intl.DateTimeFormat("en-US", {
+      timeZone: area.timeZone, weekday: "short", month: "short", day: "numeric", year: "numeric",
+      hour: "numeric", minute: "2-digit", timeZoneName: "short",
+    });
+    const publishedLabel = forecast.updatedAt ? publishedFormat.format(new Date(forecast.updatedAt)) : "time unavailable";
+    document.getElementById("forecast-date").textContent = `Latest NWS forecast published: ${publishedLabel}`;
     const periods = document.getElementById("forecast-periods");
     periods.replaceChildren();
     const timeFormat = new Intl.DateTimeFormat("en-US", { timeZone: area.timeZone, weekday: "short", hour: "numeric", minute: "2-digit" });
@@ -211,7 +248,13 @@ function initializeForecastApp() {
       heading.append(title, short);
       const hint = document.createElement("span");
       hint.className = "forecast-expand-hint";
-      hint.textContent = "Details";
+      const showDetails = document.createElement("span");
+      showDetails.className = "show-details-label";
+      showDetails.textContent = "More details";
+      const hideDetails = document.createElement("span");
+      hideDetails.className = "hide-details-label";
+      hideDetails.textContent = "Less details";
+      hint.append(showDetails, hideDetails);
       summary.append(icon, heading, temperature, hint);
       const valid = document.createElement("p");
       valid.className = "forecast-meta";
@@ -237,15 +280,10 @@ function initializeForecastApp() {
       card.append(summary, expanded);
       periods.append(card);
     }
-    const timestamp = (value) => new Intl.DateTimeFormat("en-US", {
-      timeZone: area.timeZone, month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short",
-    }).format(new Date(value));
-    document.getElementById("forecast-updated").textContent = `NWS updated: ${forecast.updatedAt ? timestamp(forecast.updatedAt) : "unavailable"} · Retrieved: ${timestamp(forecast.fetchedAt)}`;
     document.getElementById("forecast-source").href = area.forecastUrl;
-    const warning = document.getElementById("forecast-warning");
-    warning.hidden = forecast.updatedAt !== null && Date.now() - Date.parse(forecast.updatedAt) < 6 * 60 * 60_000;
-    warning.textContent = forecast.updatedAt ? "NWS last updated this forecast over six hours ago. Forecast details may change; use Refresh to check again." : "NWS did not provide an update time for this forecast.";
-    showStatus(weatherStatus, `Forecast loaded for ${area.label}.`, "success");
+    weatherStatus.textContent = "Forecast loaded.";
+    weatherStatus.className = "sr-only";
+    weatherStatus.hidden = false;
     result.hidden = false;
     updateIllustration(forecast.periods[0]);
     updateGenerateButton();
@@ -345,6 +383,7 @@ function initializeForecastApp() {
     updateGenerateButton();
   });
   resultServings.addEventListener("change", renderRecipeIngredients);
+  swapButton.addEventListener("click", requestSwaps);
   document.getElementById("new-recipe").addEventListener("click", () => {
     clearRecipe();
     document.getElementById("meal-heading").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -353,7 +392,7 @@ function initializeForecastApp() {
   refreshButton.addEventListener("click", () => {
     if (activeArea) {
       const area = activeArea;
-      fetchForecast(begin(`Refreshing ${area.label}'s forecast…`), null, area);
+      fetchForecast(begin(`Refreshing ${area.label}'s forecast…`, { preserveRecipe: true }), null, area);
     } else if (citySelect.value === "device") {
       showStatus(locationStatus, "Tap “Use my location” for a new device reading, or choose a city.", "error");
     } else selectCity();
@@ -366,7 +405,7 @@ function initializeForecastApp() {
         now - Date.parse(activeForecast.fetchedAt) >= 20 * 60_000 ||
         Date.parse(activeForecast.periods[0].endTime) <= now) {
       const area = activeArea;
-      fetchForecast(begin(`Refreshing ${area.label}'s forecast…`), null, area);
+      fetchForecast(begin(`Refreshing ${area.label}'s forecast…`, { preserveRecipe: true }), null, area);
     }
   }
 
@@ -406,8 +445,24 @@ function initializeForecastApp() {
     const targetServings = Number(resultServings.value);
     const list = document.getElementById("recipe-ingredients");
     list.replaceChildren();
-    for (const ingredient of renderedRecipe.ingredients) {
+    for (const [index, ingredient] of renderedRecipe.ingredients.entries()) {
       const item = document.createElement("li");
+      item.className = swapUsed ? "recipe-ingredient-row" : "recipe-ingredient-row swap-available";
+      if (!swapUsed) {
+        const select = document.createElement("input");
+        select.type = "checkbox";
+        select.className = "swap-checkbox";
+        select.checked = selectedSwapIndexes.has(index);
+        select.disabled = recipeBusy || swapBusy;
+        select.setAttribute("aria-label", `Select ${ingredient.name} to replace`);
+        select.addEventListener("change", () => {
+          if (select.checked) selectedSwapIndexes.add(index);
+          else selectedSwapIndexes.delete(index);
+          swapStatus.hidden = true;
+          updateSwapControls();
+        });
+        item.append(select);
+      }
       const amount = ingredient.unit === "to taste"
         ? ingredient.amount
         : ingredient.amount * targetServings / renderedRecipe.servings;
@@ -415,9 +470,104 @@ function initializeForecastApp() {
       quantity.className = "ingredient-quantity";
       quantity.textContent = `${formatAmount(amount)} ${displayUnit(ingredient.unit, amount)}`;
       const name = document.createElement("span");
-      name.textContent = ingredient.name;
-      item.append(quantity, name);
+      name.className = "ingredient-name";
+      const noteMatch = ingredient.name.match(/^(.*?)\s*(\([^()]*\))\s*$/);
+      name.textContent = noteMatch ? noteMatch[1] : ingredient.name;
+      const details = document.createElement("div");
+      details.className = "ingredient-details";
+      details.append(quantity, name);
+      if (noteMatch) {
+        const note = document.createElement("span");
+        note.className = "ingredient-note";
+        note.textContent = noteMatch[2];
+        details.append(note);
+      }
+      item.append(details);
       list.append(item);
+    }
+    updateSwapControls();
+  }
+
+  function updateSwapControls() {
+    swapIntro.hidden = swapUsed;
+    swapButton.hidden = swapUsed;
+    if (swapUsed) return;
+    const selectedCount = selectedSwapIndexes.size;
+    swapButton.disabled = busy || recipeBusy || swapBusy || !activeForecast;
+    swapButton.textContent = swapBusy
+      ? "Updating selected ingredients…"
+      : selectedCount > 0
+        ? `Replace ${selectedCount} selected ingredient${selectedCount === 1 ? "" : "s"}`
+        : "Choose ingredients above";
+    for (const checkbox of recipeResult.querySelectorAll(".swap-checkbox")) {
+      checkbox.disabled = busy || recipeBusy || swapBusy || !activeForecast;
+    }
+  }
+
+  function renderRecipeSteps() {
+    if (!renderedRecipe) return;
+    const stepList = document.getElementById("recipe-steps");
+    stepList.replaceChildren();
+    for (const step of renderedRecipe.steps) {
+      const item = document.createElement("li");
+      item.textContent = step;
+      stepList.append(item);
+    }
+  }
+
+  function renderNutrition(nutrition) {
+    const whole = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+    const decimal = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
+    document.getElementById("nutrition-calories").textContent = whole.format(nutrition.calories);
+    document.getElementById("nutrition-protein").textContent = decimal.format(nutrition.proteinG);
+    document.getElementById("nutrition-carbohydrates").textContent = decimal.format(nutrition.carbohydratesG);
+    document.getElementById("nutrition-fat").textContent = decimal.format(nutrition.fatG);
+    document.getElementById("nutrition-fiber").textContent = decimal.format(nutrition.fiberG);
+    document.getElementById("nutrition-sodium").textContent = whole.format(nutrition.sodiumMg);
+  }
+
+  async function requestSwaps() {
+    if (!renderedRecipe || recipeBusy || swapBusy || busy || !activeForecast) return;
+    if (selectedSwapIndexes.size === 0) {
+      showStatus(swapStatus, "Choose one or more ingredients above first.", "hint");
+      recipeResult.querySelector(".swap-checkbox")?.focus();
+      return;
+    }
+    const recipeBeingUpdated = renderedRecipe;
+    const ingredientIndexes = [...selectedSwapIndexes].sort((a, b) => a - b);
+    const requestId = ++swapRequestId;
+    swapBusy = true;
+    showStatus(swapStatus, `Finding replacements for ${ingredientIndexes.length} ingredient${ingredientIndexes.length === 1 ? "" : "s"}…`, "loading");
+    updateSwapControls();
+    try {
+      const data = await window.ForecastMealAPI.suggestSwaps({
+        ...collectRecipeRequest(),
+        servings: renderedRecipe.servings,
+        recipe: {
+          name: renderedRecipe.name,
+          summary: renderedRecipe.summary,
+          servings: renderedRecipe.servings,
+          ingredients: renderedRecipe.ingredients.map((item) => ({ ...item })),
+          steps: [...renderedRecipe.steps],
+          nutrition: { ...renderedRecipe.nutrition },
+        },
+        ingredientIndexes,
+      });
+      if (requestId !== swapRequestId || renderedRecipe !== recipeBeingUpdated) return;
+      renderedRecipe = data.recipe;
+      swapUsed = true;
+      selectedSwapIndexes.clear();
+      renderRecipeIngredients();
+      renderRecipeSteps();
+      renderNutrition(renderedRecipe.nutrition);
+      showStatus(swapStatus, "Ingredient swap complete! Want another change? Start a new recipe below.", "success");
+    } catch (error) {
+      if (requestId === swapRequestId) showStatus(swapStatus, error.message || "Could not update those ingredients. Please try again.", "error");
+    } finally {
+      if (requestId === swapRequestId) {
+        swapBusy = false;
+        updateSwapControls();
+      }
     }
   }
 
@@ -427,15 +577,10 @@ function initializeForecastApp() {
     document.getElementById("recipe-summary").textContent = recipe.summary;
     const firstPeriod = forecast.periods.find((period) => Date.parse(period.endTime) > Date.now()) || forecast.periods[0];
     document.getElementById("recipe-weather").textContent = `Suggested for ${firstPeriod.shortForecast.toLowerCase()} · ${forecast.date}`;
-    const stepList = document.getElementById("recipe-steps");
-    stepList.replaceChildren();
-    for (const step of recipe.steps) {
-      const item = document.createElement("li");
-      item.textContent = step;
-      stepList.append(item);
-    }
     resultServings.value = String(recipe.servings);
     renderRecipeIngredients();
+    renderRecipeSteps();
+    renderNutrition(recipe.nutrition);
     recipeResult.hidden = false;
     showStatus(recipeStatus, "Your recipe is ready. Ingredient quantities scale with the serving choice below.", "success");
   }
@@ -453,6 +598,7 @@ function initializeForecastApp() {
 
   async function requestRecipe(event) {
     event.preventDefault();
+    if (busy || recipeBusy) return;
     let input;
     try { input = collectRecipeRequest(); }
     catch {
@@ -461,6 +607,11 @@ function initializeForecastApp() {
     }
 
     const requestId = ++recipeRequestId;
+    ++swapRequestId;
+    swapBusy = false;
+    swapUsed = false;
+    selectedSwapIndexes.clear();
+    swapStatus.hidden = true;
     const requestForecast = activeForecast;
     recipeBusy = true;
     generateButton.disabled = true;
@@ -476,9 +627,12 @@ function initializeForecastApp() {
     } catch (error) {
       if (requestId === recipeRequestId) showStatus(recipeStatus, error.message || "The recipe could not be generated. Please try again.", "error");
     } finally {
-      recipeBusy = false;
-      recipeForm.removeAttribute("aria-busy");
-      updateGenerateButton();
+      if (requestId === recipeRequestId) {
+        recipeBusy = false;
+        recipeForm.removeAttribute("aria-busy");
+        updateGenerateButton();
+        updateSwapControls();
+      }
     }
   }
   // Refresh a resolved grid, without making another device location request.
@@ -493,7 +647,7 @@ function initializeForecastApp() {
   window.addEventListener("pageshow", (event) => {
     if (!event.persisted) return;
     finish(operation);
-    if (activeArea) fetchForecast(begin("Refreshing your forecast…"), null, activeArea);
+    if (activeArea) fetchForecast(begin("Refreshing your forecast…", { preserveRecipe: true }), null, activeArea);
     else {
       if (citySelect.value === "device") citySelect.value = "hayward";
       selectCity();
