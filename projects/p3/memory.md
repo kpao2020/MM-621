@@ -3,6 +3,7 @@
 
 ## 2026-11-13 — User review queue
 
+- The user reported a stuck published page and supplied a p5 canvas-parent error. The forecast artwork container existed when inspected after load. Startup now waits for the document and tolerates a missing illustration; a real browser check is still required after publication.
 - User requested GitHub Pages deployment only. Removed local-address support and deployed Worker version d7c13fba-b9ea-4e47-8a68-86c841591ff4 with only https://kpao2020.github.io allowed and its hostname checked. Frontend publication and a real production recipe request remain pending. Do not commit, push, open or merge a PR without user confirmation.
 
 - Earlier deployment 81b517bb-36be-4448-8b57-f51cc097eff3 temporarily supported local origins; it was superseded and local support removed at the user’s request. User uses 127.0.0.1:5500. Awaiting a real browser recipe request; no browser was available to the agent. Production still requires the configured GitHub Pages hostname and Turnstile action.

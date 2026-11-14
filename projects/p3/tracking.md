@@ -3,6 +3,7 @@
 
 ## 2026-11-13 — User review queue
 
+- Published-page startup fix: wait for the document before initializing the forecast or attaching the p5 canvas; skip the illustration if its container is missing and show a forecast startup error instead of an indefinite spinner. Node syntax and simulated startup checks passed with and without the illustration. The fix still needs frontend publication and a real browser check.
 - User requested GitHub Pages deployment only. Removed local-address support and deployed Worker version d7c13fba-b9ea-4e47-8a68-86c841591ff4 with only https://kpao2020.github.io allowed and its hostname checked. Frontend publication and a real production recipe request remain pending. Do not commit, push, open or merge a PR without user confirmation.
 
 - Earlier deployment 81b517bb-36be-4448-8b57-f51cc097eff3 temporarily supported local origins; it was superseded and local support removed at the user’s request. User uses 127.0.0.1:5500. Awaiting a real browser recipe request; no browser was available to the agent. Production still requires the configured GitHub Pages hostname and Turnstile action.
