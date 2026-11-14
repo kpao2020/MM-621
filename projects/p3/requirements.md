@@ -1,6 +1,6 @@
 # Forecast Meal — Implementation Requirements
 
-Status: the forecast/location and first recipe phase are implemented in local source as of November 13, 2026. The Worker/frontend deployment remains pending. Ingredient substitutions and nutrition are future work. PROPOSAL.md remains the source of truth; its headings and body have not been edited.
+Status: the forecast/location and first recipe phase are implemented in local source as of November 13, 2026. The Worker is deployed; publishing the frontend and checking a full recipe request remain pending. Ingredient substitutions and nutrition are future work. PROPOSAL.md remains the source of truth; its headings and body have not been edited.
 
 ## Forecast and location — implemented
 
@@ -27,7 +27,7 @@ Status: the forecast/location and first recipe phase are implemented in local so
 
 ## Forecast to one recipe — implemented in local source
 
-- Offer fixed dietary choices (no preference, vegetarian, vegan, pescatarian), allowlisted ingredient exclusions, and one to four servings. There is no open-ended meal prompt.
+- Offer fixed dietary choices (no preference, balanced, meat eater, vegetarian, vegan, pescatarian), a fixed preferred-cuisine list, allowlisted ingredient exclusions, and one to four servings. There is no open-ended meal prompt.
 - Send a fresh, normalized weather summary and supported controls only; never send coordinates, location labels, or arbitrary text to the Worker. Reject unexpected request fields and malformed or preference-conflicting model output.
 - Require server-side Turnstile validation for the expected action and hostname, with visible verified/expired/error UI states, and the existing per-IP limiter, with no database or shared daily recipe limit.
 - Generate one generally balanced recipe with numeric ingredient amounts and simple preparation steps. Do not reconnect grocery-price search.
@@ -38,5 +38,5 @@ Status: the forecast/location and first recipe phase are implemented in local so
 
 - Manually review each city and device-location success, denial, unavailable, and timeout states on a phone and desktop. Include switching to a city during an outstanding permission/weather request, NWS errors, overnight/midnight behavior, and a device configured to a different time zone.
 - Review mobile width, keyboard operation, status announcements, reduced motion, source links, and loading/error recovery.
-- Confirm that only NWS receives weather coordinates and the active forecast page makes no legacy Worker, AI, Turnstile, or Open Prices requests.
+- Confirm that only NWS receives weather coordinates and the recipe request sends no coordinates or legacy Open Prices requests.
 - Changes are local; no Cloudflare migration/deployment or GitHub Pages publish has happened. Legacy catalog refresh files remain in the repository but the new recipe route does not call them.

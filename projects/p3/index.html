@@ -18,8 +18,7 @@
   <body>
     <main class="page-shell">
       <header class="topbar">
-        <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">fm</span>Forecast Meal</a>
-        <span class="prototype-tag">Class prototype</span>
+        <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40" focusable="false"><circle cx="20" cy="11" r="5" fill="#f2c766"/><path d="M20 3v2M10 11h2M28 11h2M13.5 4.5l1.5 1.5M25 6l1.5-1.5" fill="none" stroke="#f2c766" stroke-linecap="round" stroke-width="2"/><path d="M7 21h26c-.8 7-5.7 12-13 12S7.8 28 7 21Z" fill="#f2f5e8"/><path d="M11 21c1.5-3 4-4 6-2 2-4 5-4 7 0 2-2 4-1 5 2" fill="none" stroke="#a9cd93" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/><path d="M15 35h10" stroke="#f2f5e8" stroke-linecap="round" stroke-width="2"/></svg></span>Forecast Meal</a>
       </header>
 
       <section class="hero" id="top" aria-labelledby="page-title">
@@ -43,7 +42,7 @@
         </select>
         <p class="or-divider">or</p>
         <button class="secondary-button" id="use-location" type="button" aria-describedby="location-notice">◎ Use my location</button>
-        <p class="location-notice" id="location-notice">Your location is optional. Tapping “Use my location” asks your browser for a one-time device location reading. We send rounded coordinates directly to the National Weather Service to retrieve a forecast. This app does not save or log your coordinates or send them to AI. You can choose a city instead. NWS coverage is limited to supported U.S. locations.</p>
+        <p class="location-notice" id="location-notice">Your location is optional. When you tap “Use my location,” your browser asks permission to share your location once. Your location is sent to the National Weather Service to get your forecast. This app does not save or log your location or send it to AI. You can choose a city instead. Forecasts are available for supported U.S. locations.</p>
         <p id="location-status" class="status-message" role="status" aria-live="polite" hidden></p>
       </section>
 
@@ -67,34 +66,58 @@
       <section class="request-card recipe-request" aria-labelledby="meal-heading">
         <p class="eyebrow">03 / Make it yours</p>
         <h2 id="meal-heading">What sounds good today?</h2>
-        <p class="control-intro">Choose a style, leave out ingredients, and set portions. We'll suggest one meal for today's weather.</p>
+        <p class="control-intro">Choose a style, exclude ingredients, and set portions. We'll suggest one meal for today's weather.</p>
         <form id="recipe-form">
+          <div class="preference-row">
           <label for="dietary-pattern">Eating style</label>
           <select id="dietary-pattern" name="dietaryPattern">
             <option value="none">No preference</option>
+            <option value="balanced">Balanced</option>
+            <option value="meat_eater">Meat Eater</option>
             <option value="vegetarian">Vegetarian</option>
             <option value="vegan">Vegan</option>
             <option value="pescatarian">Pescatarian</option>
           </select>
-          <fieldset class="exclusions-fieldset">
-            <legend>Leave out (optional)</legend>
-            <p class="fieldset-hint">Choose from this list; there is no open-ended meal prompt.</p>
-            <div id="exclusion-options" class="exclusion-grid"></div>
-          </fieldset>
-          <label for="recipe-servings">Servings</label>
-          <select id="recipe-servings" name="servings">
-            <option value="1">1 serving</option>
-            <option value="2" selected>2 servings</option>
-            <option value="3">3 servings</option>
-            <option value="4">4 servings</option>
-          </select>
-          <p class="allergy-note">Diet choices and ingredient exclusions are preferences, not allergy controls or medical advice. Check product labels and prepare food safely.</p>
-          <div class="verification-area">
-            <p class="verification-title">Security check</p>
-            <div id="verification-widget" class="verification-widget" aria-label="Security verification"></div>
-            <p id="verification-status" class="verification-status" role="status" aria-live="polite">Loading the security check…</p>
           </div>
+          <div class="preference-row">
+          <label for="preferred-cuisine">Preferred cuisine</label>
+          <select id="preferred-cuisine" name="cuisine">
+            <option value="none">No preference</option>
+            <option value="american">American</option>
+            <option value="chinese">Chinese</option>
+            <option value="filipino">Filipino</option>
+            <option value="french">French</option>
+            <option value="greek">Greek</option>
+            <option value="indian">Indian</option>
+            <option value="italian">Italian</option>
+            <option value="japanese">Japanese</option>
+            <option value="korean">Korean</option>
+            <option value="mexican">Mexican</option>
+            <option value="middle_eastern">Middle Eastern</option>
+            <option value="spanish">Spanish</option>
+            <option value="thai">Thai</option>
+            <option value="vietnamese">Vietnamese</option>
+          </select>
+          </div>
+          <div class="preference-row">
+            <label for="recipe-servings">Servings</label>
+            <select id="recipe-servings" name="servings">
+              <option value="1" selected>1 serving</option>
+              <option value="2">2 servings</option>
+              <option value="3">3 servings</option>
+              <option value="4">4 servings</option>
+            </select>
+          </div>
+          <details class="exclusions-panel">
+            <summary>Ingredients to exclude <span id="exclusion-summary">Optional · Select</span></summary>
+            <fieldset class="exclusions-fieldset">
+              <legend>Choose ingredients</legend>
+              <div id="exclusion-options" class="exclusion-grid"></div>
+            </fieldset>
+          </details>
+          <p id="verification-prompt" class="verification-status">Please <a href="#verification-area">verify you're human</a> to request a recipe.</p>
           <button class="primary-button" id="generate-recipe" type="submit" disabled>Get one recipe <span aria-hidden="true">→</span></button>
+          <p class="allergy-note">Diet choices and ingredient exclusions are preferences, not allergy controls or medical advice. Check product labels and prepare food safely.</p>
         </form>
         <p id="recipe-status" class="status-message" role="status" aria-live="polite" hidden></p>
       </section>
@@ -127,6 +150,11 @@
         <button id="new-recipe" class="secondary-button" type="button">Make another recipe</button>
       </section>
       <footer class="page-footer">
+        <div class="verification-area" id="verification-area">
+          <p class="verification-title">Verify you're human</p>
+          <div id="verification-widget" class="verification-widget" aria-label="Human verification"></div>
+          <p id="verification-status" class="verification-status" role="status" aria-live="polite">Loading verification…</p>
+        </div>
         <p>Ken Pao · MM-621 · Forecast Meal</p>
         <a href="https://www.weather.gov/privacy" target="_blank" rel="noopener noreferrer">Weather service privacy</a>
         <span aria-hidden="true"> · </span><a href="https://kpao2020.github.io/MM-621/projects/p3/PROPOSAL.html" target="_blank" rel="noopener noreferrer">Project proposal</a>

@@ -70,7 +70,9 @@ function initializeForecastApp() {
   const recipeResult = document.getElementById("recipe-result");
   const generateButton = document.getElementById("generate-recipe");
   const verificationWidgetContainer = document.getElementById("verification-widget");
+  const verificationArea = document.getElementById("verification-area");
   const verificationStatus = document.getElementById("verification-status");
+  const verificationPrompt = document.getElementById("verification-prompt");
   let recipeControls = [...recipeForm.querySelectorAll("select, input")];
   const servingsSelect = document.getElementById("recipe-servings");
   const resultServings = document.getElementById("result-servings");
@@ -90,6 +92,8 @@ function initializeForecastApp() {
   function setVerificationStatus(message, kind) {
     verificationStatus.textContent = message;
     verificationStatus.className = `verification-status status-${kind}`;
+    verificationArea.classList.toggle("is-verified", kind === "success");
+    verificationPrompt.hidden = kind === "success";
   }
 
   function updateGenerateButton() {
@@ -105,14 +109,14 @@ function initializeForecastApp() {
     const siteKey = String(window.FORECAST_MEAL_CONFIG?.turnstileSiteKey || "").trim();
     if (!siteKey) {
       verificationWidgetContainer.hidden = true;
-      setVerificationStatus("Security verification is not configured yet.", "error");
+      setVerificationStatus("Human verification is not configured yet.", "error");
       updateGenerateButton();
       return;
     }
     if (!window.turnstile?.render) {
       if (attempt < 60) window.setTimeout(() => startVerification(attempt + 1), 250);
       else {
-        setVerificationStatus("Could not load the security check. Refresh the page and try again.", "error");
+        setVerificationStatus("Could not load verification. Refresh the page and try again.", "error");
         updateGenerateButton();
       }
       return;
@@ -126,7 +130,7 @@ function initializeForecastApp() {
         callback: (token) => {
           verificationToken = token;
           verificationWidgetContainer.hidden = true;
-          setVerificationStatus("Verified. The check will refresh after your recipe request.", "success");
+          setVerificationStatus("✓ Verified: human", "success");
           updateGenerateButton();
         },
         "expired-callback": () => {
@@ -138,7 +142,7 @@ function initializeForecastApp() {
         "error-callback": () => {
           verificationToken = "";
           verificationWidgetContainer.hidden = false;
-          setVerificationStatus("The security check could not complete. Please try again.", "error");
+          setVerificationStatus("Verification could not complete. Please try again.", "error");
           updateGenerateButton();
         },
       });
@@ -155,7 +159,7 @@ function initializeForecastApp() {
     if (verificationWidget !== null && window.turnstile?.reset) {
       try {
         window.turnstile.reset(verificationWidget);
-        setVerificationStatus("Complete the security check to request another recipe.", "loading");
+        setVerificationStatus("Verify again to request another recipe.", "loading");
       } catch {
         setVerificationStatus("Could not restart the check. Refresh the page and try again.", "error");
       }
@@ -178,6 +182,19 @@ function initializeForecastApp() {
   function updateIllustration(period) {
     illustrationWeather = period;
     if (illustrationReady) redraw();
+  }
+
+  function forecastIcon(period) {
+    const text = period.shortForecast.toLowerCase();
+    if (/thunder|lightning|storm/.test(text)) return "⛈️";
+    if (/snow|sleet|ice|freezing/.test(text)) return "🌨️";
+    if (/rain|shower|drizzle/.test(text)) return "🌧️";
+    if (/fog|mist|haze/.test(text)) return "🌫️";
+    if (/wind|breez/.test(text)) return "💨";
+    if (/partly|mostly (sunny|clear)/.test(text)) return period.isDaytime ? "🌤️" : "☁️";
+    if (/cloud|overcast/.test(text)) return "☁️";
+    if (/sun|clear|fair/.test(text)) return period.isDaytime ? "☀️" : "🌙";
+    return "🌡️";
   }
 
   function begin(message) {
@@ -214,15 +231,23 @@ function initializeForecastApp() {
     activeArea = area;
     activeForecast = forecast;
     document.getElementById("forecast-location").textContent = area.label;
-    document.getElementById("location-type").textContent = area.source === "device" ? "Device location" : "Selected city";
+    document.getElementById("location-type").textContent = area.source === "device" ? "Your location" : "Selected city";
     const dateFormat = new Intl.DateTimeFormat("en-US", { timeZone: area.timeZone, weekday: "long", month: "long", day: "numeric", year: "numeric" });
     document.getElementById("forecast-date").textContent = `${dateFormat.format(new Date(forecast.fetchedAt))} · ${area.timeZone}`;
     const periods = document.getElementById("forecast-periods");
     periods.replaceChildren();
     const timeFormat = new Intl.DateTimeFormat("en-US", { timeZone: area.timeZone, weekday: "short", hour: "numeric", minute: "2-digit" });
     for (const period of forecast.periods) {
-      const card = document.createElement("article");
+      const card = document.createElement("details");
       card.className = "forecast-card";
+      const summary = document.createElement("summary");
+      summary.className = "forecast-quick-view";
+      const icon = document.createElement("span");
+      icon.className = "forecast-icon";
+      icon.setAttribute("aria-hidden", "true");
+      icon.textContent = forecastIcon(period);
+      const heading = document.createElement("span");
+      heading.className = "forecast-quick-heading";
       const title = document.createElement("h4");
       title.textContent = period.name;
       const temperature = document.createElement("p");
@@ -231,6 +256,11 @@ function initializeForecastApp() {
       const short = document.createElement("p");
       short.className = "forecast-summary";
       short.textContent = period.shortForecast;
+      heading.append(title, short);
+      const hint = document.createElement("span");
+      hint.className = "forecast-expand-hint";
+      hint.textContent = "Details";
+      summary.append(icon, heading, temperature, hint);
       const valid = document.createElement("p");
       valid.className = "forecast-meta";
       valid.textContent = `${period.isDaytime ? "Day" : "Night"} period · ${timeFormat.format(new Date(period.startTime))} – ${timeFormat.format(new Date(period.endTime))}`;
@@ -249,7 +279,10 @@ function initializeForecastApp() {
       const detail = document.createElement("p");
       detail.className = "forecast-detail";
       detail.textContent = period.detailedForecast;
-      card.append(title, temperature, short, valid, metrics, detail);
+      const expanded = document.createElement("div");
+      expanded.className = "forecast-expanded";
+      expanded.append(valid, metrics, detail);
+      card.append(summary, expanded);
       periods.append(card);
     }
     const timestamp = (value) => new Intl.DateTimeFormat("en-US", {
@@ -355,7 +388,11 @@ function initializeForecastApp() {
   recipeControls = [...recipeForm.querySelectorAll("select, input")];
   startVerification();
   recipeForm.addEventListener("submit", requestRecipe);
-  for (const control of recipeControls) control.addEventListener("change", updateGenerateButton);
+  for (const control of recipeControls) control.addEventListener("change", () => {
+    const count = recipeForm.querySelectorAll('input[name="excludedIngredients"]:checked').length;
+    document.getElementById("exclusion-summary").textContent = count ? `${count} selected` : "Optional · Select";
+    updateGenerateButton();
+  });
   resultServings.addEventListener("change", renderRecipeIngredients);
   document.getElementById("new-recipe").addEventListener("click", () => {
     clearRecipe();
@@ -456,6 +493,7 @@ function initializeForecastApp() {
     const forecast = service.mealContext(activeForecast);
     return {
       dietaryPattern: document.getElementById("dietary-pattern").value,
+      cuisine: document.getElementById("preferred-cuisine").value,
       excludedIngredients: [...recipeForm.querySelectorAll('input[name="excludedIngredients"]:checked')].map((input) => input.value),
       servings: Number(servingsSelect.value),
       forecast,
@@ -465,7 +503,7 @@ function initializeForecastApp() {
   async function requestRecipe(event) {
     event.preventDefault();
     if (!verificationToken) {
-      showStatus(recipeStatus, "Complete the security check first.", "error");
+      showStatus(recipeStatus, "Complete human verification first.", "error");
       verificationWidgetContainer.hidden = false;
       verificationWidgetContainer.scrollIntoView({ behavior: "smooth", block: "center" });
       return;

@@ -8,7 +8,7 @@ binding = "AI"
 
 [vars]
 # CORS is a browser boundary, not authentication. Turnstile and rate limits also apply.
-ALLOWED_ORIGINS = "https://kpao2020.github.io,http://localhost:5500,http://127.0.0.1:5500"
+ALLOWED_ORIGINS = "https://kpao2020.github.io"
 TURNSTILE_HOSTNAME = "kpao2020.github.io"
 
 [[ratelimits]]
