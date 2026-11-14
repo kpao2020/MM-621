@@ -1,6 +1,28 @@
-# Basket Buddy — Project Memory
+# Forecast Meal — Project Memory
 
-Last updated: 2026-11-12
+
+## 2026-11-13 — User review queue
+
+- User requires one item at a time and confirmation before proceeding. Removed the Forecast Meal D1 binding and shared daily counter; retained the per-IP burst limit. Review queue: review-queue.md. Historical Basket Buddy D1 files are retained.
+
+Last updated: 2026-11-13
+
+## Forecast-to-recipe implementation — November 13
+
+- The user acknowledged that location works and asked to continue. Implemented fixed eating-style choices (none, vegetarian, vegan, pescatarian), an allowlist of ingredient exclusions, servings 1–4, and one recipe generated from normalized today's forecast. The result has scaled ingredient amounts, short steps, and a control for changing servings.
+- Added one Worker route (`POST /api/recipe`) with exact request-field validation, current-date/time-zone and 20-minute forecast checks, an allowlisted forecast classification, fixed server prompt, structured output, ingredient/exclusion/diet checks, and an explicit balanced default check. No location, arbitrary text, user identifier, saved recipe, or meal history enters the AI request or storage.
+- Turnstile uses the separate `forecast_recipe` action and must match the configured hostname. The existing per-IP burst limit remains. The previously added D1 daily cap and migration 0003 were removed at the user's request.
+- Selected `@cf/meta/llama-3.3-70b-instruct-fp8-fast` because current Cloudflare JSON Mode docs list it among supported models; the previous Granite model is not on that supported list. No model call or deployment was run. Cloudflare documents its structured response mode, Turnstile's five-minute single-use server-verified tokens, and a 10,000-neuron/day free allocation; account billing/allocation still needs checking before claiming generation is guaranteed free.
+- The updated Worker and frontend are not deployed. Recipe generation remains unavailable at the current legacy production Worker until the new Worker route is deployed. Follow the user review queue one item at a time before further feature work. Proposal and presentation remain unchanged.
+
+## Forecast and location implementation — November 13
+
+- The user authorized resuming Project 3 and updating the copied weather-api.js to meet the forecast requirements, including all six cities and optional browser/device location. This authorizes the forecast implementation phase under PROPOSAL.md; no further plan approval is pending for this phase.
+- Replaced the copied observation/station/sunrise flow with NWS points -> forecast, supporting Hayward, Oakland, San Francisco, San Jose, San Mateo, and Dublin. The active index/sketch/style are now Forecast Meal's forecast-only interface; old API/results/config and backend remain in the repository but are not loaded or contacted by it.
+- Hayward loads by default. Explicit device-button click is the only location permission entry point; a one-time reading goes directly to NWS, rounded to four decimals. No coordinate persistence, application logging, meal Worker request, or AI request. Refresh retains the resolved grid in memory without obtaining device location again.
+- Filter unexpired periods by the NWS location's local day, including overnight and tonight. Display place/source, date/time zone, period validity, Fahrenheit, summary/details, wind, precipitation probability, NWS update/retrieval times, and source. Refresh after 20 minutes, period expiry, or midnight while visible, including on returning to the page.
+- Added abort/request guards and timeouts, permission/coverage/network/data errors, city fallback, semantic HTML, and a p5 weather/bowl illustration. ForecastWeather.mealContext prepares a weather-only allowlist for later Worker integration.
+- That forecast/location phase was completed locally. The user then asked to continue with the recipe phase, documented above. The legacy catalog refresh remains in the repository; neither phase changed the proposal or presentation.
 
 ## Presentation updated from latest proposal — November 12
 

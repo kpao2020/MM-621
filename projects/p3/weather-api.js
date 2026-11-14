@@ -1,228 +1,170 @@
 /*
-  Project 3: Forecast Meal
-  NOAA weather requests and observation conversion helpers.
+  Project 3: Forecast Meal — National Weather Service forecast client.
+  Adapted from Project 2's weather requests with AI-assisted revisions.
+  References: https://www.weather.gov/documentation/services-web-api
+              https://developer.mozilla.org/en-US/docs/Web/API/Geolocation
 
-  Description:
-    - Location selection and API request handling functions. 2 APIs are
-      used to get the current weather conditions and sunrise / sunset times 
-      The NOAA API provides the current weather conditions, while the 
-      sunrise-sunset API provides the sunrise and sunset times 
-      for the selected location.
-
-  References:
-    - P5.js: https://p5js.org/reference/
-    - NOAA API: https://www.weather.gov/documentation/services-web-api
-    - OpenAI ChatGPT(Codex) for code assistance and optimization suggestions.
-
-  Code Origin:
-    - [ORIGINAL API + AI-ASSISTED REVISIONS]  
+  Flow: coordinates -> NWS /points -> properties.forecast -> remaining today.
+  This module does not request device permission, log coordinates, save location,
+  contact the meal Worker, or use the old station-observation / sunrise APIs.
 */
+(() => {
+  "use strict";
 
-// ============================================================
-// WEATHER DATA STATE
-// - Keep values from the NOAA and sunrise/sunset requests together.
-// ============================================================
-let weatherData;
-let weatherError = '';
-let weatherLoading = true;
-let sunriseTime = null;
-let sunsetTime = null;
-let weatherRequestId = 0;     // Weather API request ID to keep track of latest weather data
-let weatherUpdatedAt = null;
-const WEATHER_LOCATION_CACHE = new Map();
-const MIN_LOADING_DURATION = 1000;
+  const locations = Object.freeze([
+    { id: "hayward", city: "Hayward", latitude: 37.6688, longitude: -122.0808 },
+    { id: "oakland", city: "Oakland", latitude: 37.8044, longitude: -122.2712 },
+    { id: "san-francisco", city: "San Francisco", latitude: 37.7749, longitude: -122.4194 },
+    { id: "san-jose", city: "San Jose", latitude: 37.3382, longitude: -121.8863 },
+    { id: "san-mateo", city: "San Mateo", latitude: 37.5630, longitude: -122.3255 },
+    { id: "dublin", city: "Dublin", latitude: 37.7022, longitude: -121.9358 },
+  ].map(Object.freeze));
 
-// ============================================================
-// LOAD WEATHER DATA
-// - Use NOAA's point lookup before requesting the local observation station.
-// - https://api.weather.gov/points/37.6688,-122.0808
-// - https://api.weather.gov/stations/KHWD/observations/latest
-//
-// Note: When user selects different location quickly, it may 
-//       overwrite global variable weatherData with outdated data.
-//       To prevent that happening, I use a local variable
-//       REQUEST_ID to keep track of each async running function call
-//       and use it compare the current weatherRequestId to make sure
-//       only store the latest weather data align with the latest
-//       selected location.
-// ============================================================
-async function loadWeatherData(location = selectedLocation) {
-  const REQUEST_ID = ++weatherRequestId;
-  const LOADING_STARTED_AT = Date.now();
-  weatherLoading = true;
-  weatherError = '';
+  // Bounded cache for preset cities only. Device coordinates are never cached.
+  const cityAreas = new Map();
 
-  try {
-    const LOCATION_KEY = `${location.latitude},${location.longitude}`;
-    let LOCATION_DATA = WEATHER_LOCATION_CACHE.get(LOCATION_KEY);
+  function localDate(value, timeZone) {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone, year: "numeric", month: "2-digit", day: "2-digit",
+    }).formatToParts(new Date(value));
+    const part = (type) => parts.find((entry) => entry.type === type).value;
+    return `${part("year")}-${part("month")}-${part("day")}`;
+  }
 
-    // Resolve the nearby station once per location. Scheduled refreshes can
-    // then request only the latest observation.
-    if (!LOCATION_DATA) {
-      const POINTS_URL = `https://api.weather.gov/points/${location.latitude},${location.longitude}`;
-      const POINTS_RESPONSE = await fetch(POINTS_URL, {
-        headers: { Accept: 'application/geo+json' }
-      });
-      const POINTS_DATA = await POINTS_RESPONSE.json();
-
-      if (!POINTS_RESPONSE.ok) {
-        throw new Error(POINTS_DATA.title || 'NOAA point lookup failed.');
-      }
-
-      const STATIONS_URL = POINTS_DATA.properties?.observationStations;
-      if (!STATIONS_URL) {
-        throw new Error(`NOAA did not return an observation station URL for ${location.city}.`);
-      }
-
-      const STATIONS_RESPONSE = await fetch(STATIONS_URL, {
-        headers: { Accept: 'application/geo+json' }
-      });
-      const STATIONS_DATA = await STATIONS_RESPONSE.json();
-
-      if (!STATIONS_RESPONSE.ok) {
-        throw new Error(STATIONS_DATA.title || 'NOAA station lookup failed.');
-      }
-      if (!Array.isArray(STATIONS_DATA.features) || STATIONS_DATA.features.length === 0) {
-        throw new Error(`NOAA did not return an observation station near ${location.city}.`);
-      }
-
-      const STATION_URL = STATIONS_DATA.features[0]?.id;
-      if (!STATION_URL) {
-        throw new Error('NOAA returned a station without a usable URL.');
-      }
-
-      LOCATION_DATA = {
-        observationUrl: `${STATION_URL}/observations/latest`,
-        sunrise: POINTS_DATA.properties.astronomicalData?.sunrise,
-        sunset: POINTS_DATA.properties.astronomicalData?.sunset
-      };
-      WEATHER_LOCATION_CACHE.set(LOCATION_KEY, LOCATION_DATA);
+  function forecastUrl(value) {
+    let url;
+    try { url = new URL(value); } catch { throw new Error("NWS did not return a usable forecast link. Choose a city or try again."); }
+    if (url.origin !== "https://api.weather.gov" || url.username || url.password ||
+        !/^\/gridpoints\/[A-Z]{3}\/\d+,\d+\/forecast$/.test(url.pathname) || url.search || url.hash) {
+      throw new Error("NWS did not return a supported forecast link. Choose a city or try again.");
     }
+    return url.href;
+  }
 
-    const OBSERVATION_URL = LOCATION_DATA.observationUrl;
-    const OBSERVATION_RESPONSE = await fetch(OBSERVATION_URL, {
-      headers: { Accept: 'application/geo+json' }
+  async function requestJson(url, signal, stage) {
+    let response;
+    try {
+      response = await fetch(url, {
+        signal,
+        headers: { Accept: "application/geo+json" },
+        credentials: "omit",
+        referrerPolicy: "no-referrer",
+        // Avoid writing device point lookups to the browser's HTTP cache.
+        cache: "no-store",
+        redirect: "error",
+      });
+    } catch (error) {
+      if (signal?.aborted) throw error;
+      throw new Error("Could not reach the National Weather Service. Check your connection, choose a city, or try again.");
+    }
+    if (response.status === 404 && stage === "points") {
+      throw new Error("NWS has no supported land forecast for this location. Choose one of the six Bay Area cities.");
+    }
+    if (response.status === 429) throw new Error("NWS is receiving too many requests. Wait a moment and try again.");
+    if (!response.ok) throw new Error("The National Weather Service is temporarily unavailable. Choose a city or try again shortly.");
+    try { return await response.json(); }
+    catch { throw new Error("NWS returned unreadable forecast data. Please try again."); }
+  }
+
+  async function resolveArea(location, signal) {
+    const preset = locations.find((item) => item.id === location.id);
+    if (preset && cityAreas.has(preset.id)) return cityAreas.get(preset.id);
+    const { latitude, longitude } = preset || location;
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude) ||
+        Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
+      throw new Error("The device did not return a valid location. Choose a city instead.");
+    }
+    // Four decimals (~11 metres) are sufficient for an NWS forecast grid.
+    const data = await requestJson(`https://api.weather.gov/points/${latitude.toFixed(4)},${longitude.toFixed(4)}`, signal, "points");
+    const props = data?.properties;
+    const url = forecastUrl(props?.forecast);
+    try { localDate(Date.now(), props?.timeZone || "invalid"); }
+    catch { throw new Error("NWS did not identify the forecast time zone. Choose a city or try again."); }
+    const place = props?.relativeLocation?.properties;
+    const city = typeof place?.city === "string" ? place.city.slice(0, 80) : "";
+    const state = typeof place?.state === "string" ? place.state.slice(0, 30) : "";
+    const area = Object.freeze({
+      forecastUrl: url,
+      timeZone: props.timeZone,
+      label: preset ? `${preset.city}, California` : (city ? `Near ${city}${state ? `, ${state}` : ""}` : "Your device location"),
+      source: preset ? "city" : "device",
     });
-    const OBSERVATION_DATA = await OBSERVATION_RESPONSE.json();
-
-    if (!OBSERVATION_RESPONSE.ok) {
-      throw new Error(OBSERVATION_DATA.title || 'NOAA observation lookup failed.');
-    }
-
-    if (!OBSERVATION_DATA.properties) {
-      throw new Error(`NOAA returned no current observation for ${location.city}.`);
-    }
-
-    if (REQUEST_ID !== weatherRequestId) return;
-    sunriseTime = LOCATION_DATA.sunrise ? new Date(LOCATION_DATA.sunrise) : null;
-    sunsetTime = LOCATION_DATA.sunset ? new Date(LOCATION_DATA.sunset) : null;
-    weatherData = normalizeWeatherData(OBSERVATION_DATA.properties);
-    weatherData.sourceUrl = OBSERVATION_URL;
-    weatherUpdatedAt = new Date();
-    updateParticleMotion();
-  } catch (error) {
-    if (REQUEST_ID !== weatherRequestId) return;
-    weatherError = error.message;
-    console.error('Failed to load NOAA weather data:', error);
-  } finally {
-    const REMAINING_LOADING_TIME = MIN_LOADING_DURATION - (Date.now() - LOADING_STARTED_AT);
-    if (REMAINING_LOADING_TIME > 0) {
-      await new Promise((resolve) => setTimeout(resolve, REMAINING_LOADING_TIME));
-    }
-    if (REQUEST_ID === weatherRequestId) {
-      weatherLoading = false;
-    }
-  }
-}
-
-// ============================================================
-// SCHEDULE WEATHER REFRESH
-// - Refresh on the next :00, :20, or :40 minute mark, then realign each time.
-// ============================================================
-function scheduleWeatherRefresh() {
-  const NOW = new Date();
-  const MINUTES_TO_NEXT_MARK = 20 - (NOW.getMinutes() % 20);
-  const DELAY = MINUTES_TO_NEXT_MARK * 60_000 - NOW.getSeconds() * 1_000 - NOW.getMilliseconds();
-
-  setTimeout(() => {
-    loadWeatherData(selectedLocation);
-    scheduleWeatherRefresh();
-  }, DELAY);
-}
-
-// ============================================================
-// NORMALIZE WEATHER DATA
-// - Convert NOAA's metric observation values into dashboard-friendly units.
-// ============================================================
-function normalizeWeatherData(observation) {
-  return {
-    temperature: convertCelsiusToFahrenheit(observation.temperature?.value),
-    humidity: observation.relativeHumidity?.value ?? null,
-    windSpeed: convertKilometersToMiles(observation.windSpeed?.value),
-    windDirection: observation.windDirection?.value,
-    windDirectionLabel: getCompassDirection(observation.windDirection?.value),
-    pressure: convertPascalsToInches(observation.barometricPressure?.value),
-    visibility: convertMetersToMiles(observation.visibility?.value),
-    precipitation: convertMillimetersToInches(observation.precipitationLastHour?.value),
-    description: observation.textDescription || 'Current conditions',
-    station: observation.station || 'NOAA weather station',
-    timestamp: observation.timestamp
-  };
-}
-
-// ============================================================
-// CONVERT CELSIUS TO FAHRENHEIT
-// - Change NOAA's temperature value into Fahrenheit for the dashboard.
-// ============================================================
-function convertCelsiusToFahrenheit(value) {
-  return value == null ? null : value * 9 / 5 + 32;
-}
-
-// ============================================================
-// CONVERT KILOMETERS TO MILES
-// - Change NOAA's wind speed value into miles per hour.
-// ============================================================
-function convertKilometersToMiles(value) {
-  return value == null ? null : value * 0.621371;
-}
-
-// ============================================================
-// CONVERT PASCALS TO INCHES OF MERCURY
-// - Change NOAA's pressure value into inHg for the dashboard.
-// ============================================================
-function convertPascalsToInches(value) {
-  return value == null ? null : value * 0.0002953;
-}
-
-// ============================================================
-// CONVERT METERS TO MILES
-// - Change NOAA's visibility value into miles.
-// ============================================================
-function convertMetersToMiles(value) {
-  return value == null ? null : value * 0.000621371;
-}
-
-// ============================================================
-// CONVERT MILLIMETERS TO INCHES
-// - Change NOAA's precipitation value into inches.
-// ============================================================
-function convertMillimetersToInches(value) {
-  return value == null ? null : value * 0.0393701;
-}
-
-// ============================================================
-// GET COMPASS DIRECTION
-// - Convert NOAA's wind-direction degrees into a readable compass label.
-// ============================================================
-function getCompassDirection(degrees) {
-  if (
-    degrees == null ||
-    Number.isNaN(degrees)
-  ) {
-    return 'direction unavailable';
+    if (preset) cityAreas.set(preset.id, area);
+    return area;
   }
 
-  const DIRECTIONS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-  const DIRECTION_INDEX = Math.round(degrees / 45) % DIRECTIONS.length;
-  return DIRECTIONS[DIRECTION_INDEX];
-}
+  function normalizeForecast(data, area, now = Date.now()) {
+    const props = data?.properties;
+    if (!Array.isArray(props?.periods)) throw new Error("NWS returned no forecast periods. Please try again.");
+    const date = localDate(now, area.timeZone);
+    const periods = props.periods.filter((period) => {
+      const start = Date.parse(period?.startTime);
+      const end = Date.parse(period?.endTime);
+      // Include the overnight period after midnight and tonight after sunset.
+      // Never present tomorrow's first period as today's forecast.
+      return Number.isFinite(start) && Number.isFinite(end) && end > start && end > now &&
+        localDate(start, area.timeZone) <= date && localDate(end - 1, area.timeZone) >= date;
+    }).map((period) => {
+      if (!Number.isFinite(period.temperature) || !["F", "C"].includes(period.temperatureUnit) ||
+          typeof period.shortForecast !== "string" || !period.shortForecast.trim() ||
+          typeof period.detailedForecast !== "string" || !period.detailedForecast.trim()) {
+        throw new Error("NWS returned an incomplete forecast for today. Please try again.");
+      }
+      const chance = period.probabilityOfPrecipitation?.value;
+      return Object.freeze({
+        name: typeof period.name === "string" ? period.name.slice(0, 80) : "Forecast period",
+        startTime: period.startTime,
+        endTime: period.endTime,
+        isDaytime: period.isDaytime === true,
+        temperatureF: Math.round(period.temperatureUnit === "C" ? period.temperature * 9 / 5 + 32 : period.temperature),
+        shortForecast: period.shortForecast.slice(0, 240),
+        detailedForecast: period.detailedForecast.slice(0, 2000),
+        windSpeed: typeof period.windSpeed === "string" ? period.windSpeed.slice(0, 60) : "Unavailable",
+        windDirection: typeof period.windDirection === "string" ? period.windDirection.slice(0, 20) : "",
+        precipitationChance: Number.isFinite(chance) && chance >= 0 && chance <= 100 ? chance : null,
+      });
+    }).sort((a, b) => Date.parse(a.startTime) - Date.parse(b.startTime));
+    if (!periods.length) throw new Error("NWS has no remaining forecast for today. Choose a city or try again later.");
+    const updated = Date.parse(props.updateTime || props.generatedAt);
+    // A valid future period alone does not establish that a forecast is current.
+    if (Number.isFinite(updated) && now - updated > 24 * 60 * 60_000) {
+      throw new Error("NWS's forecast is more than a day old. Please try again later.");
+    }
+    return Object.freeze({
+      date, timeZone: area.timeZone,
+      updatedAt: Number.isFinite(updated) ? new Date(updated).toISOString() : null,
+      fetchedAt: new Date(now).toISOString(),
+      periods: Object.freeze(periods),
+    });
+  }
+
+  async function loadForecast(location, { signal } = {}) {
+    const area = await resolveArea(location, signal);
+    return refreshForecast(area, { signal });
+  }
+
+  async function refreshForecast(area, { signal } = {}) {
+    const data = await requestJson(forecastUrl(area.forecastUrl), signal, "forecast");
+    return { area, forecast: normalizeForecast(data, area) };
+  }
+
+  // Explicit allowlist for the next meal-service step. No coordinates, grid URL,
+  // place name, raw API response, or arbitrary user text belongs in the AI input.
+  function mealContext(forecast) {
+    if (!forecast || localDate(Date.now(), forecast.timeZone) !== forecast.date ||
+        Date.now() - Date.parse(forecast.fetchedAt) >= 20 * 60_000) {
+      throw new Error("Refresh today's forecast before requesting a meal.");
+    }
+    const periods = forecast.periods.filter((period) => Date.parse(period.endTime) > Date.now());
+    if (!periods.length) throw new Error("Refresh today's forecast before requesting a meal.");
+    return {
+      date: forecast.date,
+      timeZone: forecast.timeZone,
+      fetchedAt: forecast.fetchedAt,
+      periods: periods.map(({ isDaytime, temperatureF, shortForecast, windSpeed, windDirection, precipitationChance }) =>
+        ({ isDaytime, temperatureF, shortForecast, windSpeed, windDirection, precipitationChance })),
+    };
+  }
+
+  window.ForecastWeather = Object.freeze({ locations, loadForecast, refreshForecast, localDate, mealContext });
+})();

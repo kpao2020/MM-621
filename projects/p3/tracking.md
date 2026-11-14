@@ -1,6 +1,27 @@
 # Basket Buddy — Project Tracker
 
-Last updated: 2026-11-12
+
+## 2026-11-13 — User review queue
+
+- Item 1 complete locally, awaiting user review: removed Forecast Meal D1 binding, migration 0003, and shared daily counter. Item 2 is confirmation of that removal. See review-queue.md; stop for user confirmation before the next item.
+
+Last updated: 2026-11-13
+
+## Forecast and recipe phases implemented in local source — November 13
+
+- Completed the active Forecast Meal weather/location interface, replacing Basket Buddy's public form for this phase. Added six preset cities plus explicitly requested one-time browser/device location, default Hayward, manual fallback, and clear permission/loading/error states.
+- Adapted the copied weather-api.js from current observations to NWS forecasts. Added forecast-local today/tonight filtering, values and attribution, freshness handling, safe refresh, obsolete-request cancellation, and privacy boundaries. p5.js draws weather/bowl artwork; HTML handles accessible controls and weather data.
+- Updated requirements/README/agent guidance and continuity notes to distinguish completed local forecast work from planned recipe/Worker work. Preserved proposal text, legacy backend/client files, and scheduled catalog tooling.
+- JavaScript syntax and whitespace checks passed. Read live NWS point metadata for all six cities and confirmed usable forecast links and America/Los_Angeles; also read Hayward's live forecast response. Full browser/device permission and six-city interface review remain pending; no automated test suite was run, following the project instruction.
+- No commit, push, Cloudflare deployment, or GitHub Pages publish for the forecast phase. The user then asked to continue with the recipe phase, documented above; next are substitutions and nutrition summary.
+
+## Recipe phase continued — November 13 (historical; D1 cap subsequently removed)
+
+- Added fixed dietary choices, allowlisted exclusion checkboxes, one to four servings, an always-visible managed Turnstile widget with verified/expired/error states, and one-recipe result controls. The result shows ingredient quantities and steps; servings scale quantities in the browser.
+- Replaced the legacy Worker meal/price path with `POST /api/recipe`. The Worker rejects extra or malformed input, stale forecast, unsupported diets/exclusions, and conflicting/incomplete model results; only controlled weather categories and the selected controls enter its fixed prompt. Coordinates and free text are excluded.
+- Reused the existing per-IP limiter and D1 binding, adding migration `0003_recipe_daily_usage.sql` for five shared recipe attempts per UTC day. The Worker fails closed until the migration, AI binding, rate-limit binding, and Turnstile secret/hostname are set.
+- Switched the model to Cloudflare's currently documented JSON Mode supported Llama 3.3 model. No inference was called. The model cap is one request per recipe and 1,100 output tokens; the D1 cap allows at most five attempts daily.
+- Updated requirements, README, and continuity notes. Neither the migration nor Worker/frontend has been deployed; production generation remains unavailable on the currently deployed legacy Worker. Recipe substitutions and nutrition estimates/icons remain next.
 
 ## Presentation PDF updated — November 12
 
