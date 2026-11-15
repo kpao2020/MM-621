@@ -159,7 +159,7 @@ export default {
           response_format: { type: "json_schema", json_schema: SWAP_SCHEMA },
           max_tokens: 1_300,
           temperature: 0.2,
-        });
+        }, { gateway: { id: "forecast-meal", collectLog: false } });
         failureStage = "response-parse";
         const rawSwap = parseModelResponse(result?.choices?.[0]?.message?.content ?? result?.response);
         failureStage = "response-validation";
@@ -176,7 +176,7 @@ export default {
         response_format: { type: "json_schema", json_schema: RECIPE_SCHEMA },
         max_tokens: 1_300,
         temperature: 0.25,
-      });
+      }, { gateway: { id: "forecast-meal", collectLog: false } });
       const rawRecipe = parseModelResponse(result?.choices?.[0]?.message?.content ?? result?.response);
       const recipe = validateRecipe(rawRecipe, body);
       return jsonResponse({ recipe }, 200, headers);

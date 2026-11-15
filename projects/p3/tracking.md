@@ -1,6 +1,14 @@
 # Forecast Meal — Project Tracker
 
 
+## Current status — November 15, 2026
+
+- User confirms Turnstile and all widgets were removed. The local app works and has no browser-console bug. Do not reintroduce Turnstile until the user approves that step.
+- AI Gateway's core rate-limiting feature is currently documented as free. Rate limiting is not enabled for Forecast Meal yet: no Cloudflare dashboard session or account connector was available to configure it. No AI Gateway code path was added.
+- Production Wrangler config now sets `workers_dev = false` and `preview_urls = false` so a future Wrangler deploy preserves the paused public and preview routes. No deploy was performed.
+- Item 1 (fresh Turnstile) and item 4 (release preparation) remain for later, with user approval before each next item.
+
+
 ## Current status — November 14, 2026
 
 - User reviewed the local app and reports that it works. This confirms the recipe, batch swap, nutrition display, and in-app forecast Refresh behavior in their local review.

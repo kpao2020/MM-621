@@ -2,6 +2,8 @@
 name = "forecast-meal-api"
 main = "src/index.js"
 compatibility_date = "2026-11-08"
+workers_dev = false
+preview_urls = false
 
 [ai]
 binding = "AI"
