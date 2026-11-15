@@ -5,6 +5,16 @@
 - User permanently rejected Turnstile for this project; do not propose or reintroduce it. User also decided against CAPTCHA. Preserve the per-IP limiter and `forecast-meal` AI Gateway routing. Deleted the widget and Worker secret in Cloudflare; no Turnstile widgets or Worker secrets remain according to Wrangler.
 - The user does not want real secrets saved locally. Historical entries below describe earlier states and do not override this decision.
 
+## 2026-11-15 — No-preference recipe behavior
+
+- User approved removing the vegetable/protein/grain-or-starch hard validation for no-preference recipes. Keep that requirement only for an explicit Balanced selection. Align the generation prompt with this rule; retain output-schema, diet, exclusion, and nutrition validation.
+- A prompt can reduce model mismatches but cannot guarantee every generated response passes. Do not add automatic AI retries without approval because they can increase inference usage and latency.
+
+## 2026-11-15 — Display recipe responses with review warnings
+
+- User directs the app to display a parseable recipe even when a selected-choice check flags it. Keep the user-selected values explicit in the AI prompt, show affected ingredients or estimates with a soft light-orange highlight and a short explanation, and leave the decision to the user. Do not turn semantic preference mismatches into a failed request.
+- Keep clear explanations for cases where the AI service returns no renderable response. The user chose a warm light-orange review tone instead of red.
+
 
 ## 2026-11-14 — Finish remaining groups while user is away
 

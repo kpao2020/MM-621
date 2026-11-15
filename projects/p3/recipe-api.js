@@ -48,7 +48,7 @@ async function request(path, input) {
       const nutrition = data?.recipe?.nutrition;
       const nutrientKeys = ["calories", "proteinG", "carbohydratesG", "fatG", "fiberG", "sodiumMg"];
       if (!data || typeof data !== "object" || !data.recipe || !Array.isArray(data.recipe.ingredients) || !Array.isArray(data.recipe.steps) ||
-          !nutrition || typeof nutrition !== "object" || nutrientKeys.some((key) => !Number.isFinite(nutrition[key]))) {
+          !nutrition || typeof nutrition !== "object" || nutrientKeys.some((key) => !Number.isFinite(nutrition[key]) && nutrition[key] !== null)) {
         throw new Error("The recipe service returned an incomplete recipe. Please try again.");
       }
       return data;

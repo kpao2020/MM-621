@@ -535,3 +535,15 @@ Work one item at a time. Stop after each item and get the user's confirmation be
 - User permanently rejected Turnstile and requested complete removal. Removed browser and Worker integration and related configuration locally, preserving the approved AI model, per-IP limiter, and `forecast-meal` AI Gateway.
 - Deployed the token-free production Worker as version `a3946317-ae41-4332-887d-f1abcf161506`. The published frontend still contains the old widget until the user publishes the local frontend changes; no end-to-end test was performed.
 - User subsequently rejected CAPTCHA and authorized account cleanup. Deleted the Forecast Meal widget and `TURNSTILE_SECRET_KEY`; Wrangler lists no Turnstile widgets and no Worker secrets. No secret was saved locally. JavaScript syntax and whitespace checks passed and the deployed Worker health endpoint returned 200; a real recipe and swap check remains pending after frontend publication.
+
+## 2026-11-15 — No-preference recipe validation
+
+- User reported that the second published recipe attempt returned HTTP 502. With user approval, opened a read-only Wrangler tail and matched the request: the deployed Worker rejected the AI result at `response-validation` because its ingredient names did not match the vegetable, protein, and grain/starch term lists.
+- User approved removing this requirement for no-preference recipes. Updated the local Worker prompt and validator so ingredient roles are required only for an explicit Balanced choice. Retained schema, dietary, exclusion, and nutrition validation. Updated requirements, readme, memory, and tracker.
+- Prompt wording can reduce mismatches but cannot guarantee every model response. No automatic retry was added; it could increase inference usage and latency and needs user approval. No tests, deploy, or frontend publish were run.
+
+## 2026-11-15 — Show generated recipes with review warnings
+
+- User directed that recipe output should be displayed even when a selected-choice check detects a mismatch. Pass labeled dietary pattern, cuisine, exclusions, and servings to the model; highlight affected ingredients and nutrition estimates in light orange and explain the warning so the user decides.
+- Updated Worker semantic checks to produce review warnings instead of rejecting recipe content. Non-JSON or structurally invalid model replies are shown as text when available. The Worker no longer returns 502; true AI service failures return an explanatory 503 message. Updated frontend review UI, README, requirements, tracker, and memory.
+- Local source only. No tests, deployment, or GitHub publication were performed.

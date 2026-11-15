@@ -38,7 +38,7 @@ The Worker uses the user-approved Workers AI model `@cf/meta/llama-3.1-8b-instru
 
 The local app now includes the NWS forecast/location flow, recipe generation, batch ingredient swaps, and a per-serving nutrition table with six p5.js icons. It offers six Bay Area cities or an explicit one-time device location. Once a forecast loads, choose no preference, balanced, meat eater, vegetarian, vegan, or pescatarian; select a preferred cuisine and exclusions from fixed lists; choose one to four servings; and request a single recipe. Select any ingredients you want to change, then request replacements together. One successful batch is allowed per recipe; a new recipe starts another. The page contains no free-text meal prompt.
 
-The Worker validates recipe and batch-swap requests, including the six per-serving nutrition estimates, and checks structured results against the controls. It does not save requests or recipes. A swap request includes the existing recipe and selected ingredient indexes; the Worker merges only validated replacements and revised steps and returns updated nutrition estimates. It applies the existing per-IP burst limit and does not use a database or shared daily recipe counter.
+The Worker sends the selected dietary pattern, cuisine, exclusions, and serving count to AI. It displays a renderable recipe even when a preference check flags a possible mismatch, using a soft orange highlight and an explanation so the user can decide. It does not save requests or recipes. A swap request includes the existing recipe and selected ingredient indexes; the Worker merges returned replacements and revised steps and returns updated nutrition estimates. It applies the existing per-IP burst limit and does not use a database or shared daily recipe counter.
 
 The user reviewed the local app and reports that it works. Nutrition values are rough AI estimates informed by USDA FoodData Central reference data; the app does not calculate nutrients ingredient by ingredient through the USDA API. The table and icons are implemented locally.
 
@@ -52,7 +52,7 @@ The two Open Prices analysis documents preserve research from the earlier Basket
 1. Choose Hayward, Oakland, San Francisco, San Jose, San Mateo, or Dublin, California, or explicitly select “Use my location.” Only the device-location choice triggers a browser permission request. City selection remains available if permission is denied or the forecast fails.
 2. View today's local National Weather Service forecast.
 3. Choose a dietary pattern: no preference, balanced, meat eater, vegetarian, vegan, or pescatarian. Select a preferred cuisine, ingredients to exclude, and one to four servings. There is no open-ended meal prompt.
-4. Request one recipe. With no dietary selection or exclusions, the default is a generally balanced meal containing vegetables, a protein, and a grain or starch.
+4. Request one recipe. The app requires a vegetable, protein, and grain or starch only when Balanced is selected; no preference leaves the meal composition open.
 5. View ingredient quantities and simple preparation steps. Select any ingredients you want to change, then request replacements together. One follow-up AI call updates those ingredients and relevant steps.
 6. View estimated calories, protein, carbohydrates, total fat, fiber, and sodium per serving, with a reusable p5.js icon for each category.
 
@@ -90,7 +90,7 @@ See the [50-mile analysis](open-prices-hayward-50mi-analysis.md), [radius compar
 - GitHub Pages for the public class prototype.
 - USDA FoodData Central as the reference source for AI-estimated nutrient values.
 
-The Worker accepts only the fixed dietary pattern, preferred cuisine, allowlisted exclusions, serving count, and normalized forecast. It makes one bounded structured-generation request and rejects malformed or preference-conflicting output. These checks do not guarantee that model output is medically or allergen safe.
+The Worker accepts only the fixed dietary pattern, preferred cuisine, allowlisted exclusions, serving count, and normalized forecast. It makes one bounded structured-generation request. Preference mismatches are shown as review warnings; the app does not guarantee that model output is medically or allergen safe.
 
 
 ## Privacy and service limits
