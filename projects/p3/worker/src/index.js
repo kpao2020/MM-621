@@ -1,5 +1,3 @@
-import { verifyTurnstile } from "./turnstile.js";
-
 // Forecast Meal Worker: validates fixed controls and makes
 // one bounded Workers AI request. It never receives a location or free-text prompt.
 const AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8-fast";
@@ -144,10 +142,6 @@ export default {
     }
     const requestError = isSwap ? validateSwapRequest(body) : validateRequest(body);
     if (requestError) return jsonResponse({ error: requestError }, 400, headers);
-
-    if (!await verifyTurnstile(request, env)) {
-      return jsonResponse({ error: "Verification failed. Please try again." }, 403, headers);
-    }
 
     let failureStage = "ai-call";
     try {
@@ -483,7 +477,7 @@ function validateOrigin(request, env) {
 function corsHeaders(request, env) {
   const headers = {
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, X-Turnstile-Token",
+    "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Max-Age": "86400",
     "Cache-Control": "no-store",
     "Vary": "Origin",

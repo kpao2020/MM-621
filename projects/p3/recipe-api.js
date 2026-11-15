@@ -16,8 +16,6 @@ async function request(path, input) {
       .replace(/\/+$/, "");
     if (!workerUrl) throw new Error("The recipe service is not configured yet.");
 
-    const token = await window.ForecastMealTurnstile.getToken();
-
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), RECIPE_REQUEST_TIMEOUT_MS);
     try {
@@ -25,7 +23,7 @@ async function request(path, input) {
       try {
         response = await fetch(`${workerUrl}${path}`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", ...(token ? { "X-Turnstile-Token": token } : {}) },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(input),
           cache: "no-store",
           credentials: "omit",

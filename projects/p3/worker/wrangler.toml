@@ -11,11 +11,6 @@ binding = "AI"
 [vars]
 # CORS is a browser boundary, not authentication. The rate limiter also applies.
 ALLOWED_ORIGINS = "https://kpao2020.github.io"
-TURNSTILE_ENABLED = "true"
-TURNSTILE_HOSTNAME = "kpao2020.github.io"
-
-[secrets]
-required = ["TURNSTILE_SECRET_KEY"]
 
 [[ratelimits]]
 name = "MEAL_LIMITER"

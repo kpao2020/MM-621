@@ -1,5 +1,10 @@
 # Forecast Meal — Project Memory
 
+## 2026-11-15 — Security decision
+
+- User permanently rejected Turnstile for this project; do not propose or reintroduce it. User also decided against CAPTCHA. Preserve the per-IP limiter and `forecast-meal` AI Gateway routing. Deleted the widget and Worker secret in Cloudflare; no Turnstile widgets or Worker secrets remain according to Wrangler.
+- The user does not want real secrets saved locally. Historical entries below describe earlier states and do not override this decision.
+
 
 ## 2026-11-14 — Finish remaining groups while user is away
 

@@ -6,5 +6,4 @@ window.FORECAST_MEAL_CONFIG = Object.freeze({
   workerUrl: isLocalPreview
     ? "http://localhost:8787"
     : "https://forecast-meal-api.xoakuma.workers.dev",
-  turnstile: Object.freeze({ enabled: !isLocalPreview, siteKey: "0x4AAAAAAGCZSE64rXIVc6nm" }),
 });
