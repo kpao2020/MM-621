@@ -1,3 +1,5 @@
+import { verifyTurnstile } from "./turnstile.js";
+
 // Forecast Meal Worker: validates fixed controls and makes
 // one bounded Workers AI request. It never receives a location or free-text prompt.
 const AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8-fast";
@@ -38,9 +40,9 @@ const MEAT_TERMS = ["beef", "veal", "pork", "bacon", "ham", "sausage", "chicken"
 const MEAT_INGREDIENTS = ["beef", "veal", "pork", "chicken", "turkey", "duck", "lamb", "venison"];
 const FISH_TERMS = [...EXCLUDED_TERMS.fish, ...EXCLUDED_TERMS.shellfish];
 const ANIMAL_TERMS = [...MEAT_TERMS, ...FISH_TERMS, "egg", "milk", "cheese", "butter", "yogurt", "cream", "honey", "whey", "casein", "ghee"];
-const VEGETABLE_TERMS = ["spinach", "kale", "broccoli", "carrot", "tomato", "onion", "pepper", "zucchini", "squash", "cabbage", "cauliflower", "lettuce", "cucumber", "eggplant", "mushroom", "green bean", "corn", "asparagus", "vegetable", "sweet potato"];
-const PROTEIN_TERMS = ["bean", "lentil", "chickpea", "tofu", "tempeh", "egg", "yogurt", "cheese", "chicken", "turkey", "beef", "pork", "fish", "salmon", "tuna", "shrimp", "peanut", "almond", "seitan"];
-const STARCH_TERMS = ["rice", "quinoa", "potato", "pasta", "bread", "tortilla", "noodle", "oat", "barley", "couscous", "polenta", "corn", "farro", "bulgur", "couscous"];
+const VEGETABLE_TERMS = ["spinach", "kale", "broccoli", "carrot", "tomato", "onion", "pepper", "zucchini", "squash", "cabbage", "cauliflower", "lettuce", "cucumber", "eggplant", "mushroom", "green bean", "corn", "asparagus", "vegetable", "sweet potato", "peas", "celery", "bok choy", "chard", "arugula", "broccolini", "brussels sprouts", "beet", "radish"];
+const PROTEIN_TERMS = ["bean", "lentil", "chickpea", "tofu", "tempeh", "egg", "yogurt", "cheese", "chicken", "turkey", "beef", "pork", "fish", "salmon", "tuna", "shrimp", "peanut", "almond", "seitan", "edamame", "chickpeas", "chicken breast", "cod", "tilapia", "sardine", "trout", "lamb"];
+const STARCH_TERMS = ["rice", "quinoa", "potato", "pasta", "bread", "tortilla", "noodle", "oat", "barley", "couscous", "polenta", "corn", "farro", "bulgur", "orzo", "pita", "bread roll", "millet", "sweet potato", "yam"];
 
 const NUTRITION_SCHEMA = {
   type: "object",
@@ -143,6 +145,10 @@ export default {
     const requestError = isSwap ? validateSwapRequest(body) : validateRequest(body);
     if (requestError) return jsonResponse({ error: requestError }, 400, headers);
 
+    if (!await verifyTurnstile(request, env)) {
+      return jsonResponse({ error: "Verification failed. Please try again." }, 403, headers);
+    }
+
     let failureStage = "ai-call";
     try {
       if (isSwap) {
@@ -159,7 +165,7 @@ export default {
           response_format: { type: "json_schema", json_schema: SWAP_SCHEMA },
           max_tokens: 1_300,
           temperature: 0.2,
-        });
+        }, { gateway: { id: "forecast-meal", collectLog: false } });
         failureStage = "response-parse";
         const rawSwap = parseModelResponse(result?.choices?.[0]?.message?.content ?? result?.response);
         failureStage = "response-validation";
@@ -176,13 +182,17 @@ export default {
         response_format: { type: "json_schema", json_schema: RECIPE_SCHEMA },
         max_tokens: 1_300,
         temperature: 0.25,
-      });
+      }, { gateway: { id: "forecast-meal", collectLog: false } });
+      failureStage = "response-parse";
       const rawRecipe = parseModelResponse(result?.choices?.[0]?.message?.content ?? result?.response);
+      failureStage = "response-validation";
       const recipe = validateRecipe(rawRecipe, body);
       return jsonResponse({ recipe }, 200, headers);
-    } catch {
+    } catch (error) {
       // Keep prompts, model output, provider URLs, and exception details out of logs.
-      if (isSwap) console.warn("Ingredient replacement failed at stage:", failureStage);
+      console.warn(isSwap ? "Ingredient replacement failed at stage:" : "Recipe generation failed at stage:", failureStage);
+      const validationReasons = new Set(["Invalid recipe shape.", "Recipe is incomplete.", "Invalid ingredient.", "Invalid ingredient value.", "Invalid cooking step.", "Recipe conflicts with the selected preferences.", "The recipe needs a vegetable, protein, and grain or starch.", "The recipe needs meat or poultry.", "Invalid nutrition estimate.", "Nutrition estimate is out of range."]);
+      if (failureStage === "response-validation" && validationReasons.has(error?.message)) console.warn("Recipe validation reason:", error.message);
       return jsonResponse({ error: isSwap ? "A substitute could not be suggested. Please try again." : "The recipe could not be generated. Please try again later." }, 502, headers);
     }
   },
@@ -473,7 +483,7 @@ function validateOrigin(request, env) {
 function corsHeaders(request, env) {
   const headers = {
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type, X-Turnstile-Token",
     "Access-Control-Max-Age": "86400",
     "Cache-Control": "no-store",
     "Vary": "Origin",
