@@ -1,7 +1,13 @@
 # Forecast Meal — Project Tracker
 
 
-## Current status — November 15, 2026
+## Current status — November 15, 2026: removal
+
+- User permanently rejected Turnstile. Removed its frontend and Worker code locally; the published frontend requires the user's publication of these changes. Preserve the per-IP rate limiter and `forecast-meal` AI Gateway.
+- Deployed token-free Worker version `a3946317-ae41-4332-887d-f1abcf161506` with the GitHub Pages origin and workers.dev enabled. No test or frontend publication was performed; the published frontend still contains the old widget until updated.
+- User requested cleanup: deleted the Forecast Meal widget and the Worker secret in Cloudflare. Wrangler lists no remaining Turnstile widgets and no Worker secrets. User decided against CAPTCHA. Local JavaScript syntax and whitespace checks passed, and the deployed Worker health endpoint returned 200; a real recipe and swap check remains pending after frontend publication.
+
+## Historical status — November 15, 2026 (superseded)
 
 - User authorized configuring the Worker for GitHub Pages. Deployed `d4a1c2cd-5a65-4af4-bf11-0aaf8bb4c2bd` with production origin and Turnstile hostname `kpao2020.github.io`; health returned 200, production CORS preflight 204, and secret list confirms `TURNSTILE_SECRET_KEY` exists. Frontend changes remain local; real end-to-end verification on GitHub Pages is pending.
 - User authorized a temporary cloud test using the existing production Worker. Deployed version `19ea162b-0959-4a35-806d-979d3252386c` with workers.dev enabled, previews disabled, Turnstile required, and only `http://127.0.0.1:5500` / hostname `127.0.0.1` allowed. Local frontend points to it. Cloud health and preflight succeeded; a valid-shaped request without a token returned 403. Real browser test remains pending. Restore production origin and hostname before publication.

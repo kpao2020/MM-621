@@ -32,17 +32,17 @@ The [Project 3 proposal](PROPOSAL.md), dated November 11, 2026, is the source of
 
 ## Current status
 
-Turnstile remains off by the user's choice. The current Worker has no token check and allows up to five requests per IP per minute; this limits bursts but does not stop distributed or scripted use. The Cloudflare dashboard was not inspected, so the old widget's account status is unknown.
+The user permanently rejected Turnstile for this project. The local frontend and Worker no longer use it. The Worker has an approximate five-requests-per-IP-per-minute limit and routes AI calls through the `forecast-meal` AI Gateway. These controls limit traffic but do not prevent distributed or scripted use.
 
-The local Worker source uses the user-approved Workers AI model `@cf/meta/llama-3.1-8b-instruct-fp8-fast`. This model is locked by the user's strict rule: do not change or test another model unless the user reviews and explicitly approves that exact change. It has not been deployed.
+The Worker uses the user-approved Workers AI model `@cf/meta/llama-3.1-8b-instruct-fp8-fast`. This model is locked by the user's strict rule: do not change or test another model unless the user reviews and explicitly approves that exact change.
 
 The local app now includes the NWS forecast/location flow, recipe generation, batch ingredient swaps, and a per-serving nutrition table with six p5.js icons. It offers six Bay Area cities or an explicit one-time device location. Once a forecast loads, choose no preference, balanced, meat eater, vegetarian, vegan, or pescatarian; select a preferred cuisine and exclusions from fixed lists; choose one to four servings; and request a single recipe. Select any ingredients you want to change, then request replacements together. One successful batch is allowed per recipe; a new recipe starts another. The page contains no free-text meal prompt.
 
-The local Worker validates recipe and batch-swap requests, including the six per-serving nutrition estimates, and checks structured results against the controls. It does not save requests or recipes. A swap request includes the existing recipe and selected ingredient indexes; the Worker merges only validated replacements and revised steps and returns updated nutrition estimates. It applies the existing per-IP burst limit and does not use a database or shared daily recipe counter. The deployed Worker has not been updated with the current swap and nutrition response formats, so the local frontend and Worker must be released together before the public recipe flow will work.
+The Worker validates recipe and batch-swap requests, including the six per-serving nutrition estimates, and checks structured results against the controls. It does not save requests or recipes. A swap request includes the existing recipe and selected ingredient indexes; the Worker merges only validated replacements and revised steps and returns updated nutrition estimates. It applies the existing per-IP burst limit and does not use a database or shared daily recipe counter.
 
 The user reviewed the local app and reports that it works. Nutrition values are rough AI estimates informed by USDA FoodData Central reference data; the app does not calculate nutrients ingredient by ingredient through the USDA API. The table and icons are implemented locally.
 
-The user disabled the `forecast-meal-api` production and preview domains in the Cloudflare dashboard on November 14, 2026. The published page's configured Worker address is therefore paused; recipe and ingredient-swap requests there are unavailable. The local Wrangler Worker is separate and remains available for development. The user will push the local `ken` changes, open and merge a PR to `main`. No push, PR, merge, or production code deployment has happened yet. A future Wrangler deployment can re-enable the `workers.dev` route unless the production config explicitly keeps it disabled.
+The published frontend still contains the former widget until the user publishes the local removal. The production Worker is configured for GitHub Pages; its route and latest deployed version are documented in the tracker.
 
 The two Open Prices analysis documents preserve research from the earlier Basket Buddy experiment. The Forecast Meal app does not use the old price catalog or D1.
 
@@ -129,7 +129,7 @@ The app reads location once per explicit device-button click. Refresh uses the a
 
 The location notice describes this app's behavior; NWS receives the request and applies its own provider policies. This app does not persist coordinates or log them, and requests use no-store, omit credentials, and suppress the referring page. The browser, operating system, network, and NWS still handle the location request.
 
-For the swap and nutrition flows to work on GitHub Pages, deploy the Worker and publish the matching frontend together. The user disabled the production and preview domains and plans to keep the Worker paused until Turnstile work resumes. The Worker currently has no Turnstile check; its five-per-IP-per-minute limit only slows bursts and is not bot protection.
+Publish the local frontend removal to GitHub Pages to remove the former widget from the public page. The per-IP limit and AI Gateway rate limit remain; they do not authenticate visitors or prevent distributed abuse.
 
 For production activation, from `projects/p3/worker`, deploy the Worker:
 

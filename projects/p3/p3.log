@@ -529,3 +529,9 @@ Work one item at a time. Stop after each item and get the user's confirmation be
 - User explicitly selected `@cf/meta/llama-3.1-8b-instruct-fp8-fast` for the local Worker source; updated `worker/src/index.js` to use that exact ID. It has not been deployed.
 - Strict rule: never change, replace, test, or deploy another model until the user has reviewed and explicitly approved that exact model change. Model choice is not an implementation detail. Never use `@cf/meta/llama-3.3-70b-instruct-fp8-fast` again.
 - The earlier 70B selection was made by the assistant without the user's knowledge or approval and is superseded. No inference, test, push, or deployment was run for this change.
+
+## 2026-11-15 — Remove Turnstile permanently
+
+- User permanently rejected Turnstile and requested complete removal. Removed browser and Worker integration and related configuration locally, preserving the approved AI model, per-IP limiter, and `forecast-meal` AI Gateway.
+- Deployed the token-free production Worker as version `a3946317-ae41-4332-887d-f1abcf161506`. The published frontend still contains the old widget until the user publishes the local frontend changes; no end-to-end test was performed.
+- User subsequently rejected CAPTCHA and authorized account cleanup. Deleted the Forecast Meal widget and `TURNSTILE_SECRET_KEY`; Wrangler lists no Turnstile widgets and no Worker secrets. No secret was saved locally. JavaScript syntax and whitespace checks passed and the deployed Worker health endpoint returned 200; a real recipe and swap check remains pending after frontend publication.

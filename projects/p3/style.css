@@ -165,10 +165,3 @@ dd { margin: 3px 0 0; font-size: 12px; font-weight: 650; }
 .page-footer { padding-top: 20px; color: var(--muted); font-size: 10px; text-align: center; }
 .page-footer p { margin-bottom: 5px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
-.turnstile-verification-status {
-  display: inline-block;
-  color: #276445;
-  font-size: 0.85rem;
-  font-weight: 600;
-  margin: 0.25rem 0;
-}

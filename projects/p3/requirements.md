@@ -1,6 +1,6 @@
 # Forecast Meal — Implementation Requirements
 
-Status: forecast, recipe, batch ingredient swaps, per-serving nutrition estimates, and p5.js nutrient icons are implemented locally as of November 14, 2026. The local Worker source uses the model `@cf/meta/llama-3.1-8b-instruct-fp8-fast`, explicitly selected by the user; it has not been deployed. The user reviewed the local app and reports that it works, including recipe preservation during the in-app Refresh. The 45-second timeout is implemented; a deliberately stalled-request check was not separately reported. The user has disabled the production and preview Worker domains in Cloudflare and will push/PR/merge the source. No production code release has happened. The proposal remains unchanged; Turnstile stays removed at the user's request.
+Status: forecast, recipe, batch ingredient swaps, per-serving nutrition estimates, and p5.js nutrient icons are implemented. The approved Workers AI model is deployed. The user permanently rejected Turnstile; its integration has been removed locally and the matching frontend must be published. The Worker retains its per-IP limiter and AI Gateway routing. See tracking.md for deployment status. The proposal remains unchanged.
 
 ## Strict AI model approval rule
 
@@ -35,7 +35,7 @@ Status: forecast, recipe, batch ingredient swaps, per-serving nutrition estimate
 
 - Offer fixed dietary choices (no preference, balanced, meat eater, vegetarian, vegan, pescatarian), a fixed preferred-cuisine list, allowlisted ingredient exclusions, and one to four servings. There is no open-ended meal prompt.
 - Send a fresh, normalized weather summary and supported controls only; never send coordinates, location labels, or arbitrary text to the Worker. Reject unexpected request fields and malformed or preference-conflicting model output.
-- Keep the per-IP limiter, with no database, shared daily recipe limit, or Turnstile during the requested removal experiment. The per-IP limiter does not prevent distributed automated requests.
+- Keep the per-IP limiter and AI Gateway routing, with no database or shared daily recipe limit. Do not reintroduce Turnstile. The per-IP limiter does not prevent distributed automated requests.
 - Generate one generally balanced recipe with numeric ingredient amounts and simple preparation steps. Do not reconnect grocery-price search.
 - Let users select any number of listed ingredients and request replacements together with one button. Allow one successful replacement batch per recipe; after success, remove the selection controls and direct users to start a new recipe for another change. A failed request may be retried. One follow-up AI call returns all replacements and revised steps; apply the complete validated update to the recipe. Preserve unselected ingredients, servings, dietary choices, exclusions, and balanced meal roles. Show ingredient quantities and names together, with trailing parenthetical examples on a separate second line. Refresh the nutrition estimates after a successful batch.
 - Show estimated calories, protein, carbohydrates, total fat, fiber, and sodium per serving, each with a reusable p5.js category icon. The Worker validates bounded numeric values and refreshes them after the ingredient batch. Explain that estimates may be inaccurate and are not medical or allergy advice.
@@ -43,6 +43,4 @@ Status: forecast, recipe, batch ingredient swaps, per-serving nutrition estimate
 ## Release plan
 
 - User reports that local app review passed. The assistant did not run tests or independently inspect the user's browser.
-- User disabled the production and preview Worker domains in Cloudflare. The configured public Worker URL is paused; recipe and swap requests on GitHub Pages are unavailable there. The local Wrangler Worker remains available for local development.
-- User plans to push `ken` and open and merge a PR to `main`; those GitHub actions are pending. A future Wrangler deployment can re-enable the `workers.dev` route unless production config keeps it disabled.
-- Before the public Worker is re-enabled later, deploy the matching Worker/frontend versions together, restore the chosen request protection, verify Cloudflare AI allocation, and review location, error, mobile, keyboard, and screen-reader behavior.
+- Publish the frontend removal to GitHub Pages and review the recipe and swap flow there. The Worker uses the GitHub Pages origin, the per-IP limiter, and the AI Gateway. Preview URLs are disabled in the production configuration.
