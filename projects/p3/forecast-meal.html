@@ -131,7 +131,12 @@
           <p id="recipe-summary" class="recipe-summary"></p>
           <p id="recipe-weather" class="forecast-meta"></p>
         </div>
-        <div class="serving-adjuster">
+        <aside id="recipe-review" class="recipe-review" role="note" hidden>
+          <p>Review the highlighted details against your choices before deciding whether to use this recipe.</p>
+          <ul id="recipe-review-list"></ul>
+        </aside>
+        <pre id="recipe-raw-output" class="recipe-raw-output" hidden></pre>
+        <div id="recipe-serving-adjuster" class="serving-adjuster">
           <label for="result-servings">Adjust servings</label>
           <select id="result-servings" aria-label="Adjust recipe servings">
             <option value="1">1 serving</option>
@@ -140,18 +145,18 @@
             <option value="4">4 servings</option>
           </select>
         </div>
-        <section aria-labelledby="ingredients-heading">
+        <section id="recipe-ingredients-section" aria-labelledby="ingredients-heading">
           <h3 id="ingredients-heading">Ingredients</h3>
           <p class="swap-intro" id="swap-intro">Choose the ingredients you’d like to change. We’ll update them all at once.</p>
           <ul id="recipe-ingredients" class="recipe-ingredients"></ul>
           <button id="swap-selected" class="secondary-button swap-action" type="button" aria-describedby="swap-intro">Select ingredients above</button>
           <p id="swap-status" class="status-message" role="status" aria-live="polite" hidden></p>
         </section>
-        <section class="steps-section" aria-labelledby="steps-heading">
+        <section id="recipe-steps-section" class="steps-section" aria-labelledby="steps-heading">
           <h3 id="steps-heading">Simple Cooking Steps</h3>
           <ol id="recipe-steps" class="recipe-steps"></ol>
         </section>
-        <section class="nutrition-section" aria-labelledby="nutrition-heading">
+        <section id="recipe-nutrition-section" class="nutrition-section" aria-labelledby="nutrition-heading">
           <h3 id="nutrition-heading">Nutrition per serving</h3>
           <table class="nutrition-table">
             <caption class="sr-only">Estimated nutrition values for one serving</caption>

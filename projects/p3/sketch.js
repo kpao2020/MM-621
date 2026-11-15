@@ -98,6 +98,8 @@ function initializeForecastApp() {
   const swapIntro = document.getElementById("swap-intro");
   const swapButton = document.getElementById("swap-selected");
   const swapStatus = document.getElementById("swap-status");
+  const recipeReview = document.getElementById("recipe-review");
+  const recipeReviewList = document.getElementById("recipe-review-list");
   const generateButton = document.getElementById("generate-recipe");
   let recipeControls = [...recipeForm.querySelectorAll("select, input")];
   const servingsSelect = document.getElementById("recipe-servings");
@@ -448,6 +450,7 @@ function initializeForecastApp() {
     for (const [index, ingredient] of renderedRecipe.ingredients.entries()) {
       const item = document.createElement("li");
       item.className = swapUsed ? "recipe-ingredient-row" : "recipe-ingredient-row swap-available";
+      if (ingredient.warnings?.length) item.classList.add("ingredient-needs-review");
       if (!swapUsed) {
         const select = document.createElement("input");
         select.type = "checkbox";
@@ -481,6 +484,12 @@ function initializeForecastApp() {
         note.className = "ingredient-note";
         note.textContent = noteMatch[2];
         details.append(note);
+      }
+      if (ingredient.warnings?.length) {
+        const warning = document.createElement("span");
+        warning.className = "ingredient-review-note";
+        warning.textContent = ingredient.warnings.join(" ");
+        details.append(warning);
       }
       item.append(details);
       list.append(item);
@@ -518,12 +527,27 @@ function initializeForecastApp() {
   function renderNutrition(nutrition) {
     const whole = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
     const decimal = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
-    document.getElementById("nutrition-calories").textContent = whole.format(nutrition.calories);
-    document.getElementById("nutrition-protein").textContent = decimal.format(nutrition.proteinG);
-    document.getElementById("nutrition-carbohydrates").textContent = decimal.format(nutrition.carbohydratesG);
-    document.getElementById("nutrition-fat").textContent = decimal.format(nutrition.fatG);
-    document.getElementById("nutrition-fiber").textContent = decimal.format(nutrition.fiberG);
-    document.getElementById("nutrition-sodium").textContent = whole.format(nutrition.sodiumMg);
+    const fields = [
+      ["calories", "calories", whole], ["proteinG", "protein", decimal],
+      ["carbohydratesG", "carbohydrates", decimal], ["fatG", "fat", decimal],
+      ["fiberG", "fiber", decimal], ["sodiumMg", "sodium", whole],
+    ];
+    for (const [key, id, formatter] of fields) {
+      const cell = document.getElementById(`nutrition-${id}`);
+      const value = nutrition[key];
+      cell.textContent = Number.isFinite(value) ? formatter.format(value) : "Unavailable";
+      cell.classList.toggle("nutrition-value-review", renderedRecipe?.nutritionWarnings?.includes(key) || !Number.isFinite(value));
+    }
+  }
+
+  function renderRecipeReview(recipe) {
+    recipeReviewList.replaceChildren();
+    for (const warning of recipe.validationWarnings || []) {
+      const item = document.createElement("li");
+      item.textContent = warning.message;
+      recipeReviewList.append(item);
+    }
+    recipeReview.hidden = recipeReviewList.childElementCount === 0;
   }
 
   async function requestSwaps() {
@@ -547,7 +571,7 @@ function initializeForecastApp() {
           name: renderedRecipe.name,
           summary: renderedRecipe.summary,
           servings: renderedRecipe.servings,
-          ingredients: renderedRecipe.ingredients.map((item) => ({ ...item })),
+          ingredients: renderedRecipe.ingredients.map(({ name, amount, unit }) => ({ name, amount, unit })),
           steps: [...renderedRecipe.steps],
           nutrition: { ...renderedRecipe.nutrition },
         },
@@ -560,7 +584,10 @@ function initializeForecastApp() {
       renderRecipeIngredients();
       renderRecipeSteps();
       renderNutrition(renderedRecipe.nutrition);
-      showStatus(swapStatus, "Ingredient swap complete! Want another change? Start a new recipe below.", "success");
+      renderRecipeReview(renderedRecipe);
+      showStatus(swapStatus, renderedRecipe.validationWarnings?.length
+        ? "Ingredient update generated. Review the highlighted details against your choices."
+        : "Ingredient swap complete! Want another change? Start a new recipe below.", renderedRecipe.validationWarnings?.length ? "review" : "success");
     } catch (error) {
       if (requestId === swapRequestId) showStatus(swapStatus, error.message || "Could not update those ingredients. Please try again.", "error");
     } finally {
@@ -573,6 +600,13 @@ function initializeForecastApp() {
 
   function renderRecipe(recipe, forecast) {
     renderedRecipe = recipe;
+    const rawOutput = document.getElementById("recipe-raw-output");
+    const hasRawOutput = typeof recipe.rawResponse === "string";
+    rawOutput.textContent = hasRawOutput ? recipe.rawResponse : "";
+    rawOutput.hidden = !hasRawOutput;
+    for (const id of ["recipe-serving-adjuster", "recipe-ingredients-section", "recipe-steps-section", "recipe-nutrition-section"]) {
+      document.getElementById(id).hidden = hasRawOutput;
+    }
     document.getElementById("recipe-title").textContent = recipe.name;
     document.getElementById("recipe-summary").textContent = recipe.summary;
     const firstPeriod = forecast.periods.find((period) => Date.parse(period.endTime) > Date.now()) || forecast.periods[0];
@@ -581,8 +615,11 @@ function initializeForecastApp() {
     renderRecipeIngredients();
     renderRecipeSteps();
     renderNutrition(recipe.nutrition);
+    renderRecipeReview(recipe);
     recipeResult.hidden = false;
-    showStatus(recipeStatus, "Your recipe is ready. Ingredient quantities scale with the serving choice below.", "success");
+    showStatus(recipeStatus, recipe.validationWarnings?.length
+      ? "Your recipe is ready. Review the highlighted details against your choices."
+      : "Your recipe is ready. Ingredient quantities scale with the serving choice below.", recipe.validationWarnings?.length ? "review" : "success");
   }
 
   function collectRecipeRequest() {
