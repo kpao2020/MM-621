@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="The design thinking behind Forecast Meal."
+    />
+    <title>About — Forecast Meal</title>
+    <link rel="stylesheet" href="landing.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="header">
+      <div class="wrap nav">
+        <a class="brand" href="index.html"
+          ><span class="brand-icon" aria-hidden="true">☼</span> Forecast Meal</a
+        >
+        <nav aria-label="Project navigation">
+          <a href="../../index.html">Portfolio</a
+          ><a href="../p1/index.html">Project 1</a
+          ><a href="../p2-landing/index.html">Project 2</a
+          ><a href="about.html" aria-current="page">About</a
+          ><a class="nav-cta" href="forecast-meal.html">Open project ↗</a>
+        </nav>
+      </div>
+    </header>
+    <main id="main">
+      <section class="about-hero wrap">
+        <p class="eyebrow">Behind the project · Ken Pao · November 2026</p>
+        <h1>Designing for a<br /><em>small daily decision.</em></h1>
+        <p class="lead">
+          Forecast Meal is an MM-621 experiment in making the path from “What
+          should I cook?” to a usable idea feel clear and inviting.
+        </p>
+      </section>
+      <section class="intro-section">
+        <div class="wrap split">
+          <div>
+            <p class="eyebrow">The project</p>
+            <h2>From data to dinner.</h2>
+          </div>
+          <div>
+            <p class="large-copy">
+              The experience pairs today’s forecast with a person’s food
+              preferences to suggest a single recipe.
+            </p>
+            <p>
+              My initial Basket Buddy concept explored local grocery prices, but
+              research showed that many reported prices were old and ingredient
+              matching could be impractical. Feedback about convenience,
+              cuisine, and substitutions helped me shift toward a more focused
+              cooking interaction. 
+            </p>
+            <p>
+              Forecast Meal is a single-purpose tool that helps people make a 
+              meal decision with minimal effort. Forecast Meal carries forward 
+            	the weather work from Project 2 - weather data visualization, 
+							the unexplored forecast data integrated into AI-genereated recipes,
+							and the design principles of clarity, discoverability, and feedback.
+            </p>
+            <p>
+              Its mechanics follow a sequence: choose a location, review the
+              forecast, set preferences, request a recipe, and adjust or
+              substitute ingredients. The visual language uses warm cream,
+              greens, rounded cards, weather imagery, and small nutrition icons
+              to make the experience feel calm and approachable.
+            </p>
+          </div>
+        </div>
+      </section>
+      <section class="wrap principles">
+        <p class="eyebrow">Design reflection</p>
+        <h2>Learning from everyday things.</h2>
+        <p class="section-intro">
+          Donald Norman’s <em>The Design of Everyday Things</em> and my journal
+          reflections shaped how I think about the relationship between the
+          interface and the person using it.
+        </p>
+        <div class="principle-grid">
+          <article>
+            <span>01</span>
+            <h3>Mapping & hierarchy</h3>
+            <p>
+              The numbered sections follow the task: location, forecast, then
+              meal preferences. Controls sit near the information they affect,
+              helping people understand the relationship between their choices
+              and the result.
+            </p>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>Signifiers & discoverability</h3>
+            <p>
+              Labels, familiar form controls, action buttons, and expandable
+              forecast details indicate where to act and what to expect. The
+              goal is to make the next step visible without relying on memory.
+            </p>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>Feedback</h3>
+            <p>
+              Loading and status messages, the displayed location, forecast
+              details, and recipe result help people see what the system is
+              doing and evaluate the outcome. Clear feedback also matters when a
+              request cannot be completed.
+            </p>
+          </article>
+          <article>
+            <span>04</span>
+            <h3>Constraints & choice</h3>
+            <p>
+              Defined options and a one-to-four serving range reduce unsupported
+              inputs, while an optional location choice and ingredient
+              substitutions leave room for personal needs. Preferences still
+              require the user’s judgment.
+            </p>
+          </article>
+        </div>
+        <div class="action-cycle">
+          <p class="eyebrow">Seven stages of action</p>
+          <h3>A journey from intention to evaluation</h3>
+          <p>
+            A person forms a <strong>goal</strong> to find a meal,
+            <strong>plans</strong> to use the forecast, and
+            <strong>specifies</strong> a location and preferences. They
+            <strong>perform</strong> the request, <strong>perceive</strong> the
+            returned recipe, <strong>interpret</strong> its ingredients and
+            nutrition, and <strong>compare</strong> it with what they wanted.
+            Adjustments and substitutions support another pass through that
+            cycle.
+          </p>
+          <p>
+            This is a design intention to evaluate with users: the presence of a
+            control alone does not prove that its meaning or feedback is clear.
+          </p>
+        </div>
+      </section>
+      <section id="credits" class="intro-section">
+        <div class="wrap split">
+          <div>
+            <p class="eyebrow">Credits & references</p>
+            <h2>Made with care.</h2>
+          </div>
+          <div>
+            <p>
+              Project concept and design by Ken Pao for MM-621, Interaction
+              Design Studio II, Fall 2026. AI assisted research, drafting, and
+              development. The mood board is AI-generated.
+            </p>
+            <p>
+              Forecasts use
+              <a href="https://www.weather.gov/">National Weather Service</a>
+              data. Nutrition estimates are informed by
+              <a href="https://fdc.nal.usda.gov/">USDA FoodData Central</a>
+              reference data. The prototype uses p5.js and Cloudflare Workers
+              AI.
+            </p>
+            <p>
+              Norman, D. A. (2013).
+              <em
+                >The Design of Everyday Things: Revised and Expanded
+                Edition.</em
+              >
+              Basic Books. See also my
+              <a href="../../journals/index.html">course journals</a> and
+              <a href="PROPOSAL.md">project proposal</a>.
+            </p>
+            <a class="text-link" href="index.html"
+              >← Back to project introduction</a
+            >
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer class="wrap footer">
+      <p>© 2026 Ken Pao · MM-621, Interaction Design Studio II</p>
+      <a href="forecast-meal.html">Try Forecast Meal →</a>
+    </footer>
+  </body>
+</html>
