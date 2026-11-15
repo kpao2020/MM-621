@@ -13,7 +13,10 @@ title: "Chapter 4 Self Reflection — Knowing What to Do: Constraints, Discovera
 
 In the second part of Chapter 4, Norman explains forcing functions. These are strong constraints that prevent a person from taking the next step until an earlier action has been completed. For example, an interlock can prevent a car from leaving Park until the brake is pressed. A lock-in can prompt a person to save work before closing a program, while a lockout can prevent someone from entering a dangerous area.
 
-Norman describes a forcing function as one that “prevents the next step from happening” (Norman, 2013, p. 142). I understand why these designs are important, especially in situations where one mistake could cause an accident. At the same time, a safety feature can become frustrating if it gets in the way during normal use. If people find it inconvenient, they may try to bypass it. Designers need to make the protection effective while keeping it practical for everyday use.
+Norman describes a forcing function as one that 
+> “prevents the next step from happening” (Norman, 2013, p. 142). 
+
+I understand why these designs are important, especially in situations where one mistake could cause an accident. At the same time, a safety feature can become frustrating if it gets in the way during normal use. If people find it inconvenient, they may try to bypass it. Designers need to make the protection effective while keeping it practical for everyday use.
 
 The examples also show that constraints can guide behavior without asking users to remember every rule. A microwave interlock, for example, stops the appliance when its door opens. This is a clear way to reduce risk because the user does not need to take an extra step to turn it off first.
 
@@ -25,7 +28,10 @@ The examples also show that constraints can guide behavior without asking users 
 
 Norman explains that conventions are cultural constraints. People learn how familiar objects and controls usually work, and they carry those expectations to new situations. His example of destination-control elevators shows that a more efficient system can still confuse people when it changes a convention they already know. Instead of choosing a floor inside the elevator, passengers enter the destination in the hallway and are directed to an elevator.
 
-This made me think about how users react to a design that is unfamiliar. People may judge it as bad because it does not work the way they expect, even when it offers real benefits. Norman writes, “Just because something is different does not mean it is bad” (2013, p. 149). I agree with this, but people still need enough guidance to learn the new system. A change can be useful, but designers should make the new steps clear and avoid mixing old and new methods in a confusing way.
+This made me think about how users react to a design that is unfamiliar. People may judge it as bad because it does not work the way they expect, even when it offers real benefits. Norman writes, 
+> “Just because something is different does not mean it is bad” (2013, p. 149).
+
+I agree with this, but people still need enough guidance to learn the new system. A change can be useful, but designers should make the new steps clear and avoid mixing old and new methods in a confusing way.
 
 #### Faucet Design and Standardization
 
@@ -35,7 +41,8 @@ This connects to the earlier discussion of mapping and feedback. Controls should
 
 #### Using Sound as a Signifier
 
-Norman also explains that sound can provide information when visual feedback is not available or when a person is looking elsewhere. A click can signal that a door has closed, and a whistle can show that water is boiling. Sounds are useful when they tell the user something meaningful about what is happening. Norman notes that “sound tells us about things we can’t see” (2013, p. 156).
+Norman also explains that sound can provide information when visual feedback is not available or when a person is looking elsewhere. A click can signal that a door has closed, and a whistle can show that water is boiling. Sounds are useful when they tell the user something meaningful about what is happening. Norman notes that 
+> “sound tells us about things we can’t see” (2013, p. 156).
 
 The example of quiet electric vehicles shows why this matters for safety. Pedestrians, including people who are blind or distracted, may rely on vehicle sounds to notice a car approaching. Adding sound can help, but the sound needs to communicate useful information without becoming annoying. This reminded me that feedback should be designed for different users and situations, not just for the person looking directly at the device.
 
