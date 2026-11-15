@@ -1,20 +1,29 @@
 # Forecast Meal — Project Tracker
 
 
-## Current status — November 15, 2026: recipe validation
+## Current status — November 15, 2026: user reports production working
+
+- User reports that they published the frontend to GitHub Pages, deployed the Worker, and the app seems to be working. This is the user's report; no independent live request or recipe-generation test was run during closeout. No Worker version ID was provided.
+- Today's local changes pass selected choices to AI explicitly, show preference-check mismatches with light-orange notes/highlights, and display malformed AI text when available. AI-service failures without a response receive an explanatory 503 instead of a Worker-generated 502.
+- Turnstile and CAPTCHA remain removed permanently. The approved model remains `@cf/meta/llama-3.1-8b-instruct-fp8-fast`; keep the existing per-IP limiter and `forecast-meal` AI Gateway.
+- No further work is queued for today. End-to-end status is user-reported as working; no tests were run by the assistant.
+- Updated `final_paper.md` so both tracking tables use Status as the first column and consistent status symbols. Removed the obsolete Turnstile criterion and aligned the remaining criteria with the current no-preference and review-warning behavior. Free-tier cost/usage confirmation remains in progress.
+
+
+## Progress note — November 15, 2026: recipe validation diagnosis (superseded)
 
 - After the user reported a second recipe failure, read-only live Worker logs confirmed `response-validation`: the recipe failed the vegetable/protein/grain-or-starch check. The request reached the deployed Worker; this was not a route or Turnstile failure.
 - User approved removing this hard check for no-preference recipes. Local Worker prompt and validation now require those roles only when Balanced is explicitly selected. Other structure, dietary, exclusion, and nutrition checks remain.
 - This source change is local and not deployed. The user asked whether prompt changes can ensure successful AI output: they can reduce mismatches but cannot guarantee model compliance. An automatic bounded retry would add possible latency and inference usage and requires approval.
 
-## Current status — November 15, 2026: show AI output with review notes
+## Progress note — November 15, 2026: show AI output with review notes (deployed per user report below)
 
 - User requested that renderable AI recipes be shown even when preference checks detect a mismatch, with the affected ingredient/estimate highlighted and explained so the user can decide. User chose a soft light-orange highlight.
 - Updated the Worker prompt to pass the selected dietary pattern, cuisine, exclusions, and serving count as explicit labeled values. Changed semantic dietary/exclusion/meal-role and nutrition-range checks to return review warnings instead of rejecting a recipe. Changed AI-service failures from 502 to a clear 503 explanation when no renderable response exists.
-- Added frontend review notes and light-orange ingredient/nutrition highlights. A non-JSON or structurally invalid AI reply is displayed as text when available; a true service failure gets a clear 503 message. Updated the project requirements and README. Changes are local only; no tests, deployment, or GitHub publication were performed.
+- Added frontend review notes and light-orange ingredient/nutrition highlights. A non-JSON or structurally invalid AI reply is displayed as text when available; a true service failure gets a clear 503 message. Updated the project requirements and README. At this point in the log the changes were local; the user later reports publishing/deploying them.
 
 
-## Current status — November 15, 2026: removal
+## Progress note — November 15, 2026: Turnstile removal and Cloudflare cleanup
 
 - User permanently rejected Turnstile. Removed its frontend and Worker code locally; the published frontend requires the user's publication of these changes. Preserve the per-IP rate limiter and `forecast-meal` AI Gateway.
 - Deployed token-free Worker version `a3946317-ae41-4332-887d-f1abcf161506` with the GitHub Pages origin and workers.dev enabled. No test or frontend publication was performed; the published frontend still contains the old widget until updated.

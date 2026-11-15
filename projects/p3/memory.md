@@ -15,6 +15,11 @@
 - User directs the app to display a parseable recipe even when a selected-choice check flags it. Keep the user-selected values explicit in the AI prompt, show affected ingredients or estimates with a soft light-orange highlight and a short explanation, and leave the decision to the user. Do not turn semantic preference mismatches into a failed request.
 - Keep clear explanations for cases where the AI service returns no renderable response. The user chose a warm light-orange review tone instead of red.
 
+## 2026-11-15 — User-reported production deploy and closeout
+
+- User reports publishing the updated frontend to GitHub Pages and deploying the Worker; they say the app seems to be working. No independent end-to-end test or Worker version ID was recorded for this deploy. Treat the live status as user-reported.
+- Do not run additional tests or make more changes for today's closeout. Turnstile and CAPTCHA remain removed; the approved model and existing rate limiting/Gateway setup remain in place.
+
 
 ## 2026-11-14 — Finish remaining groups while user is away
 

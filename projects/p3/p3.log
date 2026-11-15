@@ -547,3 +547,13 @@ Work one item at a time. Stop after each item and get the user's confirmation be
 - User directed that recipe output should be displayed even when a selected-choice check detects a mismatch. Pass labeled dietary pattern, cuisine, exclusions, and servings to the model; highlight affected ingredients and nutrition estimates in light orange and explain the warning so the user decides.
 - Updated Worker semantic checks to produce review warnings instead of rejecting recipe content. Non-JSON or structurally invalid model replies are shown as text when available. The Worker no longer returns 502; true AI service failures return an explanatory 503 message. Updated frontend review UI, README, requirements, tracker, and memory.
 - Local source only. No tests, deployment, or GitHub publication were performed.
+
+## 2026-11-15 — User-reported deploy and closeout
+
+- User published the updated frontend to GitHub Pages and deployed the Worker using the provided Wrangler command. User reports that the app seems to be working. No live test was run by the assistant and no deployment version ID was supplied.
+- Updated tracking.md, requirements.md, readme.md, and memory.md to reflect the user-reported status. Closed today's work without further tests or deployment actions.
+
+## 2026-11-15 — Final paper tracking tables
+
+- User asked to make the first tracking table match the second table's Status-first layout and update statuses in both. Reordered the first table, applied consistent ✓ / ◐ / ○ status symbols, and revised outdated criteria that referred to Turnstile, forced balanced no-preference meals, or rejecting semantic mismatches.
+- Week 3 is labeled complete based on the user's report that the deployed app seems to work. Free-tier cost and usage confirmation remains in progress. No tests were run.
