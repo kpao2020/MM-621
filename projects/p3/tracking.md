@@ -1,5 +1,37 @@
 # Forecast Meal — Project Tracker
 
+---
+
+**Forecast Meal — Proposed Three-Week Plan:**
+
+| Status | Tracking Week | Deliverable |
+|---|---|---|
+| ✓ Complete | Week 1 | Adapt the weather request flow to retrieve today's National Weather Service forecast for the six selected cities. Add the user-triggered location option with city fallback, and show the chosen city and forecast. |
+| ✓ Complete | Week 2 | Replace open-ended meal requests with the confirmed dietary, ingredient-exclusion, and serving controls. Generate a recipe, flag possible preference mismatches for user review, and let users select multiple ingredients for one batch of substitutions that updates quantities and affected steps. |
+| ✓ Complete | Week 3 | Display the AI-estimated per-serving nutrition table with p5.js category icons; complete the location notice and error handling; publish the frontend and deploy the Worker. Turnstile and CAPTCHA were removed from scope. |
+
+Week 3's live status reflects the user's report that the deployed app seems to be working on published live github page.
+
+
+## Success Criteria
+
+| Status | Criteria Description |
+|---|---|
+| ✓ Complete | The user can choose one of the six cities or explicitly enable device location, and the app identifies the location and today's forecast. |
+| ✓ Complete | The meal flow has no open-ended text box; it accepts only its supported meal controls and rejects unsupported request fields. |
+| ✓ Complete | With “No preference” selected, the app can suggest a recipe without requiring vegetable, protein, and grain-or-starch roles. |
+| ✓ Complete | The app sends the selected dietary pattern, cuisine, exclusions, and servings to AI. It highlights possible ingredient mismatches in light orange color, so the user can decide; serving choices update quantities. |
+| ✓ Complete | A user can select multiple ingredients and request one batch of substitutions per recipe. The result updates the relevant quantities, instructions, and nutrition estimates, and flags possible preference mismatches for review. |
+| ✓ Complete | The nutrition table shows calories, protein, carbohydrates, total fat, fiber, and sodium per serving, with an icon for each category and the accuracy disclaimer. |
+| ✓ Complete | The Worker uses structured recipe output. Preference and nutrition-range mismatches are shown as review notes; an unusable response is displayed as text when available, and an AI service failure has a clear message. |
+| ✓ Complete | p5.js displays a distinct, reusable icon for each nutrient category alongside the nutrition table. |
+| ✓ Complete | Keep the app free for its intended class users and avoid paid services; confirm usage limits and billing behavior before expanding access. |
+| ✓ Complete | The location notice accurately states how the location and forecast information are sent and used. |
+
+Status key: ✓ Complete · ◐ In progress · ○ Backlog
+
+---
+
 
 ## Current status — November 15, 2026: user reports production working
 
