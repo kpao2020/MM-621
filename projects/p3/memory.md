@@ -156,3 +156,6 @@ Basket Buddy's revised concept uses local weather forecasts to suggest one simpl
 - A live meal response returned catalogSnapshot.ready=true and selected product price evidence from the saved catalog.
 - The sample contained only prices older than 30 days; the Worker labeled those records older as designed.
 - The mobile shell and documentation are being updated locally for the next Pages publish.
+
+
+2026-11-17: User approved a guided screen flow, a single main-ingredient selector with specific vegetables, ingredient avoidance controls, and a flexible 30/60-minute AI preference with estimated total time.

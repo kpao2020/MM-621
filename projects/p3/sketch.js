@@ -124,7 +124,7 @@ function initializeForecastApp() {
     try { hasFreshForecast = Boolean(activeForecast && service.mealContext(activeForecast)); }
     catch { hasFreshForecast = false; }
     generateButton.disabled = busy || recipeBusy || !hasFreshForecast;
-    generateButton.textContent = recipeBusy ? "Making your recipe…" : "Get one recipe →";
+    generateButton.textContent = recipeBusy ? "Making your recipe…" : "Find my meal →";
     for (const control of recipeControls) control.disabled = busy || recipeBusy;
   }
 
@@ -378,17 +378,50 @@ function initializeForecastApp() {
   citySelect.addEventListener("change", selectCity);
   buildExclusionOptions();
   recipeControls = [...recipeForm.querySelectorAll("select, input")];
+  const mainIngredient = document.getElementById("main-ingredient");
+  const conflict = document.getElementById("choice-conflict");
+  function showScreen(index) {
+    document.querySelectorAll("[data-screen]").forEach((screen) => { screen.hidden = Number(screen.dataset.screen) !== index; });
+    document.querySelectorAll("[data-progress]").forEach((item) => { item.classList.toggle("active", Number(item.dataset.progress) === index); });
+    const heading = document.querySelector(`[data-screen="${index}"] h2, [data-screen="${index}"] h1`);
+    window.scrollTo({ top: 0, behavior: "auto" });
+    heading?.focus({ preventScroll: true });
+  }
+  function updateConflict() {
+    const diet = document.getElementById("dietary-pattern").value;
+    const ingredient = mainIngredient.value;
+    const animal = ["chicken", "beef", "pork", "fish", "eggs"];
+    const incompatible = (diet === "vegan" && animal.includes(ingredient)) || (diet === "vegetarian" && animal.slice(0, 4).includes(ingredient)) || (diet === "pescatarian" && animal.slice(0, 3).includes(ingredient));
+    const excluded = [...recipeForm.querySelectorAll('input[name="excludedIngredients"]:checked')].some((input) => input.value === ingredient);
+    conflict.hidden = !(incompatible || excluded);
+    conflict.textContent = incompatible ? "Your ingredient and eating style don't match. Change either choice to continue." : excluded ? "Your main ingredient is also in your ingredients to avoid. Change either choice to continue." : "";
+    return incompatible || excluded;
+  }
+  document.querySelectorAll("[data-go]").forEach((button) => button.addEventListener("click", () => showScreen(Number(button.dataset.go))));
+  mainIngredient.addEventListener("change", updateConflict);
+  showScreen(0);
   recipeForm.addEventListener("submit", requestRecipe);
   for (const control of recipeControls) control.addEventListener("change", () => {
     const count = recipeForm.querySelectorAll('input[name="excludedIngredients"]:checked').length;
     document.getElementById("exclusion-summary").textContent = count ? `${count} selected` : "Optional · Select";
+    const chips = document.getElementById("selected-exclusions");
+    chips.replaceChildren();
+    recipeForm.querySelectorAll('input[name="excludedIngredients"]:checked').forEach((input) => {
+      const chip = document.createElement("button");
+      chip.type = "button"; chip.className = "exclusion-chip";
+      chip.textContent = `${input.parentElement.textContent.trim()} ×`;
+      chip.setAttribute("aria-label", `Remove ${input.parentElement.textContent.trim()} from ingredients to avoid`);
+      chip.addEventListener("click", () => { input.checked = false; input.dispatchEvent(new Event("change", { bubbles: true })); });
+      chips.append(chip);
+    });
+    updateConflict();
     updateGenerateButton();
   });
   resultServings.addEventListener("change", renderRecipeIngredients);
   swapButton.addEventListener("click", requestSwaps);
   document.getElementById("new-recipe").addEventListener("click", () => {
     clearRecipe();
-    document.getElementById("meal-heading").scrollIntoView({ behavior: "smooth", block: "start" });
+    showScreen(2);
   });
   locationButton.addEventListener("click", useDeviceLocation);
   refreshButton.addEventListener("click", () => {
@@ -570,6 +603,7 @@ function initializeForecastApp() {
         recipe: {
           name: renderedRecipe.name,
           summary: renderedRecipe.summary,
+          ...(Number.isInteger(renderedRecipe.estimatedMinutes) ? { estimatedMinutes: renderedRecipe.estimatedMinutes } : {}),
           servings: renderedRecipe.servings,
           ingredients: renderedRecipe.ingredients.map(({ name, amount, unit }) => ({ name, amount, unit })),
           steps: [...renderedRecipe.steps],
@@ -585,6 +619,8 @@ function initializeForecastApp() {
       renderRecipeSteps();
       renderNutrition(renderedRecipe.nutrition);
       renderRecipeReview(renderedRecipe);
+      document.getElementById("recipe-time").hidden = true;
+      document.getElementById("recipe-on-hand").hidden = true;
       showStatus(swapStatus, renderedRecipe.validationWarnings?.length
         ? "Ingredient update generated. Review the highlighted details against your choices."
         : "Ingredient swap complete! Want another change? Start a new recipe below.", renderedRecipe.validationWarnings?.length ? "review" : "success");
@@ -609,6 +645,15 @@ function initializeForecastApp() {
     }
     document.getElementById("recipe-title").textContent = recipe.name;
     document.getElementById("recipe-summary").textContent = recipe.summary;
+    const time = document.getElementById("recipe-time");
+    time.hidden = !Number.isFinite(recipe.estimatedMinutes);
+    time.textContent = time.hidden ? "" : `About ${recipe.estimatedMinutes} min · total time`;
+    const onHand = document.getElementById("recipe-on-hand");
+    const selected = mainIngredient.value;
+    const label = mainIngredient.selectedOptions[0].textContent;
+    const matches = selected !== "none" && recipe.ingredients.some((item) => item.name.toLowerCase().includes(selected.replaceAll("_", " ").replace(/s$/, "")));
+    onHand.hidden = selected === "none";
+    onHand.textContent = matches ? `Selected to use up: ${label}` : `You selected ${label} to use up; check the ingredient list for a match.`;
     const firstPeriod = forecast.periods.find((period) => Date.parse(period.endTime) > Date.now()) || forecast.periods[0];
     document.getElementById("recipe-weather").textContent = `Suggested for ${firstPeriod.shortForecast.toLowerCase()} · ${forecast.date}`;
     resultServings.value = String(recipe.servings);
@@ -625,6 +670,8 @@ function initializeForecastApp() {
   function collectRecipeRequest() {
     const forecast = service.mealContext(activeForecast);
     return {
+      mainIngredient: mainIngredient.value,
+      cookingTime: Number(document.getElementById("cooking-time").value),
       dietaryPattern: document.getElementById("dietary-pattern").value,
       cuisine: document.getElementById("preferred-cuisine").value,
       excludedIngredients: [...recipeForm.querySelectorAll('input[name="excludedIngredients"]:checked')].map((input) => input.value),
@@ -636,6 +683,7 @@ function initializeForecastApp() {
   async function requestRecipe(event) {
     event.preventDefault();
     if (busy || recipeBusy) return;
+    if (updateConflict()) { conflict.focus(); return; }
     let input;
     try { input = collectRecipeRequest(); }
     catch {
@@ -660,7 +708,7 @@ function initializeForecastApp() {
       const data = await window.ForecastMealAPI.createRecipe(input);
       if (requestId !== recipeRequestId || requestForecast !== activeForecast) return;
       renderRecipe(data.recipe, requestForecast);
-      recipeResult.scrollIntoView({ behavior: "smooth", block: "start" });
+      showScreen(3);
     } catch (error) {
       if (requestId === recipeRequestId) showStatus(recipeStatus, error.message || "The recipe could not be generated. Please try again.", "error");
     } finally {

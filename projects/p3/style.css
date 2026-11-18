@@ -174,3 +174,25 @@ dd { margin: 3px 0 0; font-size: 12px; font-weight: 650; }
 .page-footer { padding-top: 20px; color: var(--muted); font-size: 10px; text-align: center; }
 .page-footer p { margin-bottom: 5px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+/* Guided Forecast Meal flow */
+body { background: radial-gradient(ellipse at 12% 7%, #f8df9a80, transparent 35%), radial-gradient(ellipse at 90% 45%, #c7dfb47a, transparent 42%), #fbf7ef; }
+.page-shell { min-height: 100vh; }
+.flow-progress { display: flex; justify-content: space-between; gap: 4px; margin: 22px 0 10px; padding-bottom: 12px; border-bottom: 3px solid #dfe8d5; font-size: 10px; font-weight: 750; color: #788675; }
+.flow-progress span { position: relative; white-space: nowrap; }
+.flow-progress .active { color: #305b3a; }
+.flow-progress .active::after { position: absolute; content: ""; bottom: -15px; left: 0; right: 0; height: 3px; border-radius: 4px; background: linear-gradient(90deg, #e8b954, #7fac79); }
+.flow-screen { animation: screen-arrive .35s ease both; }
+.flow-screen > .flow-next { margin-top: 22px; }
+.ingredient-card, .recipe-request { margin-top: 30px; padding: 28px 22px; }
+.ingredient-card h2, .recipe-request h2 { font-size: clamp(25px, 6vw, 32px); line-height: 1.1; }
+.ingredient-card .flow-next { margin-top: 24px; }
+.flow-back { display: block; margin: 20px auto 0; }
+.exclusions-panel { background: #f7faf2; border: 1px solid #b7cbaa; border-radius: 12px; }
+.selected-exclusions { display: flex; flex-wrap: wrap; gap: 7px; margin: 8px 0; }
+.exclusion-chip, .recipe-pill { display: inline-block; border: 0; border-radius: 999px; padding: 7px 12px; background: #e4efd9; color: #31583a; font-size: 12px; font-weight: 700; }
+.recipe-on-hand { padding: 12px 14px; border-radius: 12px; background: #fff4d7; color: #604b22; font-size: 13px; }
+.hero-art { animation: art-float 5s ease-in-out infinite; }
+@keyframes screen-arrive { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes art-float { 50% { transform: translateY(-5px); } }
+@media (prefers-reduced-motion: reduce) { .flow-screen, .hero-art { animation: none; } }

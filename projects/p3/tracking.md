@@ -274,3 +274,6 @@ The D1-backed flow is operational. The user reports that the implementation comm
 - Preserve the user's exact proposal section titles and wording, required section order, and intentional blank lines/separators. Modify body content only when requested. Do not rewrite, rename, or reorder headings. Leave the Developer note for the user to type manually.
 
 The former DATA-PIPELINE.md was removed during Forecast Meal cleanup; see open-prices-hayward-50mi-analysis.md for the historical snapshot analysis.
+
+
+2026-11-17: Guided flow, fixed ingredient and cooking-time choices, updated Worker prompt/schema, and visual styling implemented locally. Frontend and Worker need coordinated publishing; user review and end-to-end verification remain.
