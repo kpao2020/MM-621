@@ -1,6 +1,6 @@
 # Forecast Meal — Implementation Requirements
 
-Status: forecast, recipe, batch ingredient swaps, per-serving nutrition estimates, and p5.js nutrient icons are implemented. The approved Workers AI model is deployed. The user permanently rejected Turnstile; its integration has been removed locally and the matching frontend must be published. The Worker retains its per-IP limiter and AI Gateway routing. See tracking.md for deployment status. The proposal remains unchanged.
+Status: forecast, recipe, batch ingredient swaps, per-serving nutrition estimates, and p5.js nutrient icons are implemented. User reports that the updated frontend is published and the Worker is deployed; they say the app seems to be working. No independent end-to-end verification was run at closeout. Turnstile and CAPTCHA were permanently rejected and removed. The Worker retains its per-IP limiter and AI Gateway routing. See tracking.md for deployment status. The proposal remains unchanged.
 
 ## Strict AI model approval rule
 
@@ -42,5 +42,5 @@ Status: forecast, recipe, batch ingredient swaps, per-serving nutrition estimate
 
 ## Release plan
 
-- User reports that local app review passed. The assistant did not run tests or independently inspect the user's browser.
-- Publish the frontend removal to GitHub Pages and review the recipe and swap flow there. The Worker uses the GitHub Pages origin, the per-IP limiter, and the AI Gateway. Preview URLs are disabled in the production configuration.
+- User reports that local review passed, then published the updated frontend to GitHub Pages and deployed the Worker. They report that the app seems to be working. The assistant did not run tests or independently inspect the live app.
+- The Worker uses the GitHub Pages origin, the per-IP limiter, and the AI Gateway. Preview URLs are disabled in the production configuration. No Worker version ID was reported for today's deploy.

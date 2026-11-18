@@ -1,5 +1,6 @@
-// Game health damage system
-const SUN_DAMAGE = 20;          // Damage to spaceship's health when hitting the sun.
+// Sun rewards
+const SUN_HEALTH_REWARD = 5;    // Health restored when collecting the sun.
+const SUN_POINTS = PLANET_POINTS;
 
 // Game objects setting
 const SUN_RADIUS = 65;          // Constant sun collision radius.
@@ -51,11 +52,10 @@ function createSun() {
 function hitSun(body) {
   if (!canScore(body.gameId)) return;
 
-  // Prevent Health to go negative
-  healthLeft = max(0, healthLeft - SUN_DAMAGE);
-  //console.log("health = "+healthLeft);
+  awardPoints(SUN_POINTS);
+  healthLeft = min(SHIP_HEALTH, healthLeft + SUN_HEALTH_REWARD);
 
-  // Briefly stop the ship when hit.
+  // Keep the existing brief pause when collecting the sun.
   shipScaredUntil = millis() + 1000;
 
   // Remove Sun

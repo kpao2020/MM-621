@@ -124,7 +124,7 @@ function initializeForecastApp() {
     try { hasFreshForecast = Boolean(activeForecast && service.mealContext(activeForecast)); }
     catch { hasFreshForecast = false; }
     generateButton.disabled = busy || recipeBusy || !hasFreshForecast;
-    generateButton.textContent = recipeBusy ? "Making your recipe…" : "Get one recipe →";
+    generateButton.textContent = recipeBusy ? "Making your recipe…" : "Find my meal →";
     for (const control of recipeControls) control.disabled = busy || recipeBusy;
   }
 
@@ -300,6 +300,7 @@ function initializeForecastApp() {
         : await service.loadForecast(location, { signal: request.signal });
       if (request.id !== operation) return;
       render(response);
+      if (location && response.area.source === "device" && !document.querySelector('[data-screen="0"]').hidden) showScreen(1);
     } catch (error) {
       if (request.id !== operation) return;
       // Never log the exception: browser fetch errors can contain coordinate URLs.
@@ -378,17 +379,78 @@ function initializeForecastApp() {
   citySelect.addEventListener("change", selectCity);
   buildExclusionOptions();
   recipeControls = [...recipeForm.querySelectorAll("select, input")];
+  const mainIngredient = document.getElementById("main-ingredient");
+  const conflict = document.getElementById("choice-conflict");
+  function showScreen(index) {
+    document.querySelectorAll("[data-screen]").forEach((screen) => { screen.hidden = Number(screen.dataset.screen) !== index; });
+    document.querySelectorAll("[data-progress]").forEach((item) => {
+      const active = Number(item.dataset.progress) === index;
+      item.classList.toggle("active", active);
+      if (active) item.setAttribute("aria-current", "step");
+      else item.removeAttribute("aria-current");
+    });
+    document.querySelector(".flow-progress").style.setProperty("--progress", `${(index + 1) * 20}%`);
+    const heading = document.querySelector(`[data-screen="${index}"] h2, [data-screen="${index}"] h1`);
+    window.scrollTo({ top: 0, behavior: "auto" });
+    heading?.focus({ preventScroll: true });
+  }
+  function updateConflict() {
+    const diet = document.getElementById("dietary-pattern").value;
+    const ingredient = mainIngredient.value;
+    const animal = ["chicken", "beef", "pork", "fish", "eggs"];
+    const incompatible = (diet === "vegan" && animal.includes(ingredient)) || (diet === "vegetarian" && animal.slice(0, 4).includes(ingredient)) || (diet === "pescatarian" && animal.slice(0, 3).includes(ingredient));
+    const excluded = [...recipeForm.querySelectorAll('input[name="excludedIngredients"]:checked')].some((input) => input.value === ingredient);
+    conflict.hidden = !(incompatible || excluded);
+    conflict.textContent = incompatible ? "Your ingredient and eating style don't match. Change either choice to continue." : excluded ? "Your main ingredient is also in your ingredients to avoid. Change either choice to continue." : "";
+    return incompatible || excluded;
+  }
+  document.querySelectorAll("[data-go]").forEach((button) => button.addEventListener("click", () => showScreen(Number(button.dataset.go))));
+  mainIngredient.addEventListener("change", updateConflict);
+  showScreen(0);
+  const recipeTabs = [...document.querySelectorAll('[role="tab"]')];
+  function selectRecipeTab(tab, focus = false) {
+    recipeTabs.forEach((button) => {
+      const selected = button === tab;
+      button.setAttribute("aria-selected", String(selected));
+      button.tabIndex = selected ? 0 : -1;
+      document.getElementById(button.getAttribute("aria-controls")).hidden = !selected;
+    });
+    if (focus) tab.focus();
+  }
+  recipeTabs.forEach((tab, index) => {
+    tab.addEventListener("click", () => selectRecipeTab(tab));
+    tab.addEventListener("keydown", (event) => {
+      let next = index;
+      if (event.key === "ArrowRight") next = (index + 1) % recipeTabs.length;
+      else if (event.key === "ArrowLeft") next = (index + recipeTabs.length - 1) % recipeTabs.length;
+      else if (event.key === "Home") next = 0;
+      else if (event.key === "End") next = recipeTabs.length - 1;
+      else return;
+      event.preventDefault(); selectRecipeTab(recipeTabs[next], true);
+    });
+  });
   recipeForm.addEventListener("submit", requestRecipe);
   for (const control of recipeControls) control.addEventListener("change", () => {
     const count = recipeForm.querySelectorAll('input[name="excludedIngredients"]:checked').length;
     document.getElementById("exclusion-summary").textContent = count ? `${count} selected` : "Optional · Select";
+    const chips = document.getElementById("selected-exclusions");
+    chips.replaceChildren();
+    recipeForm.querySelectorAll('input[name="excludedIngredients"]:checked').forEach((input) => {
+      const chip = document.createElement("button");
+      chip.type = "button"; chip.className = "exclusion-chip";
+      chip.textContent = `${input.parentElement.textContent.trim()} ×`;
+      chip.setAttribute("aria-label", `Remove ${input.parentElement.textContent.trim()} from ingredients to avoid`);
+      chip.addEventListener("click", () => { input.checked = false; input.dispatchEvent(new Event("change", { bubbles: true })); });
+      chips.append(chip);
+    });
+    updateConflict();
     updateGenerateButton();
   });
   resultServings.addEventListener("change", renderRecipeIngredients);
   swapButton.addEventListener("click", requestSwaps);
   document.getElementById("new-recipe").addEventListener("click", () => {
     clearRecipe();
-    document.getElementById("meal-heading").scrollIntoView({ behavior: "smooth", block: "start" });
+    showScreen(3);
   });
   locationButton.addEventListener("click", useDeviceLocation);
   refreshButton.addEventListener("click", () => {
@@ -542,9 +604,17 @@ function initializeForecastApp() {
 
   function renderRecipeReview(recipe) {
     recipeReviewList.replaceChildren();
-    for (const warning of recipe.validationWarnings || []) {
+    const warnings = recipe.validationWarnings || [];
+    document.getElementById("recipe-review-intro").hidden = !warnings.some((warning) => warning.code !== "balanced-roles");
+    for (const warning of warnings) {
       const item = document.createElement("li");
-      item.textContent = warning.message;
+      if (warning.code === "balanced-roles") {
+        const missing = warning.message.split(": ").at(-1).replace(/\.$/, "");
+        item.append("A balanced meal includes a vegetable, a protein, and a grain or starch. ");
+        const highlight = document.createElement("strong");
+        highlight.textContent = `May be missing: ${missing}.`;
+        item.append(highlight);
+      } else item.textContent = warning.message;
       recipeReviewList.append(item);
     }
     recipeReview.hidden = recipeReviewList.childElementCount === 0;
@@ -570,6 +640,7 @@ function initializeForecastApp() {
         recipe: {
           name: renderedRecipe.name,
           summary: renderedRecipe.summary,
+          ...(Number.isInteger(renderedRecipe.estimatedMinutes) ? { estimatedMinutes: renderedRecipe.estimatedMinutes } : {}),
           servings: renderedRecipe.servings,
           ingredients: renderedRecipe.ingredients.map(({ name, amount, unit }) => ({ name, amount, unit })),
           steps: [...renderedRecipe.steps],
@@ -585,6 +656,10 @@ function initializeForecastApp() {
       renderRecipeSteps();
       renderNutrition(renderedRecipe.nutrition);
       renderRecipeReview(renderedRecipe);
+      const updatedTime = document.getElementById("recipe-time");
+      updatedTime.hidden = false;
+      updatedTime.textContent = Number.isInteger(renderedRecipe.estimatedMinutes) ? `◷ About ${renderedRecipe.estimatedMinutes} min total · prep + cooking` : "◷ Estimated total time unavailable";
+      document.getElementById("recipe-on-hand").hidden = true;
       showStatus(swapStatus, renderedRecipe.validationWarnings?.length
         ? "Ingredient update generated. Review the highlighted details against your choices."
         : "Ingredient swap complete! Want another change? Start a new recipe below.", renderedRecipe.validationWarnings?.length ? "review" : "success");
@@ -602,6 +677,8 @@ function initializeForecastApp() {
     renderedRecipe = recipe;
     const rawOutput = document.getElementById("recipe-raw-output");
     const hasRawOutput = typeof recipe.rawResponse === "string";
+    document.querySelector(".recipe-tabs").hidden = hasRawOutput;
+    selectRecipeTab(recipeTabs[0]);
     rawOutput.textContent = hasRawOutput ? recipe.rawResponse : "";
     rawOutput.hidden = !hasRawOutput;
     for (const id of ["recipe-serving-adjuster", "recipe-ingredients-section", "recipe-steps-section", "recipe-nutrition-section"]) {
@@ -609,6 +686,15 @@ function initializeForecastApp() {
     }
     document.getElementById("recipe-title").textContent = recipe.name;
     document.getElementById("recipe-summary").textContent = recipe.summary;
+    const time = document.getElementById("recipe-time");
+    time.hidden = false;
+    time.textContent = Number.isInteger(recipe.estimatedMinutes) ? `◷ About ${recipe.estimatedMinutes} min total · prep + cooking` : "◷ Estimated total time unavailable";
+    const onHand = document.getElementById("recipe-on-hand");
+    const selected = mainIngredient.value;
+    const label = mainIngredient.selectedOptions[0].textContent;
+    const matches = selected !== "none" && recipe.ingredients.some((item) => item.name.toLowerCase().includes(selected.replaceAll("_", " ").replace(/s$/, "")));
+    onHand.hidden = selected === "none";
+    onHand.textContent = matches ? `Selected to use up: ${label}` : `You selected ${label} to use up; check the ingredient list for a match.`;
     const firstPeriod = forecast.periods.find((period) => Date.parse(period.endTime) > Date.now()) || forecast.periods[0];
     document.getElementById("recipe-weather").textContent = `Suggested for ${firstPeriod.shortForecast.toLowerCase()} · ${forecast.date}`;
     resultServings.value = String(recipe.servings);
@@ -625,6 +711,8 @@ function initializeForecastApp() {
   function collectRecipeRequest() {
     const forecast = service.mealContext(activeForecast);
     return {
+      mainIngredient: mainIngredient.value,
+      cookingTime: 30,
       dietaryPattern: document.getElementById("dietary-pattern").value,
       cuisine: document.getElementById("preferred-cuisine").value,
       excludedIngredients: [...recipeForm.querySelectorAll('input[name="excludedIngredients"]:checked')].map((input) => input.value),
@@ -636,6 +724,7 @@ function initializeForecastApp() {
   async function requestRecipe(event) {
     event.preventDefault();
     if (busy || recipeBusy) return;
+    if (updateConflict()) { conflict.focus(); return; }
     let input;
     try { input = collectRecipeRequest(); }
     catch {
@@ -660,7 +749,7 @@ function initializeForecastApp() {
       const data = await window.ForecastMealAPI.createRecipe(input);
       if (requestId !== recipeRequestId || requestForecast !== activeForecast) return;
       renderRecipe(data.recipe, requestForecast);
-      recipeResult.scrollIntoView({ behavior: "smooth", block: "start" });
+      showScreen(4);
     } catch (error) {
       if (requestId === recipeRequestId) showStatus(recipeStatus, error.message || "The recipe could not be generated. Please try again.", "error");
     } finally {

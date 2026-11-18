@@ -21,18 +21,16 @@
     <script src="sketch.js" defer></script>
   </head>
   <body>
-    <main class="page-shell">
+    <main class="page-shell" id="top">
       <header class="topbar">
         <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40" focusable="false"><circle cx="20" cy="11" r="5" fill="#f2c766"/><path d="M20 3v2M10 11h2M28 11h2M13.5 4.5l1.5 1.5M25 6l1.5-1.5" fill="none" stroke="#f2c766" stroke-linecap="round" stroke-width="2"/><path d="M7 21h26c-.8 7-5.7 12-13 12S7.8 28 7 21Z" fill="#f2f5e8"/><path d="M11 21c1.5-3 4-4 6-2 2-4 5-4 7 0 2-2 4-1 5 2" fill="none" stroke="#a9cd93" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/><path d="M15 35h10" stroke="#f2f5e8" stroke-linecap="round" stroke-width="2"/></svg></span>Forecast Meal</a>
       </header>
 
-      <section class="hero" id="top" aria-labelledby="page-title">
-        <div class="hero-art" id="forecast-art" aria-hidden="true"></div>
-        <p class="eyebrow">A little weather. A little inspiration.</p>
-        <h1 id="page-title">Today's forecast.<br><span>Tonight's inspiration.</span></h1>
-        <p class="hero-intro">Start with the weather where you are.</p>
-      </section>
-
+      <nav class="flow-progress" aria-label="Meal progress"><span data-progress="0">Location</span><span data-progress="1">Forecast</span><span data-progress="2">Ingredients</span><span data-progress="3">Preferences</span><span data-progress="4">Meal</span></nav>
+      <div class="flow-screen" data-screen="0">
+      <div class="hero-art welcome-art" id="forecast-art" aria-hidden="true"></div>
+      <div class="welcome-copy"><p class="eyebrow welcome-line">A little weather. A little inspiration.</p>
+      <h1>Today’s forecast.<br><span>Tonight’s inspiration.</span></h1></div>
       <section class="request-card" aria-labelledby="location-heading">
         <p class="eyebrow">01 / Find your forecast</p>
         <h2 id="location-heading">Where are you cooking?</h2>
@@ -47,13 +45,17 @@
         </select>
         <p class="or-divider">or</p>
         <button class="secondary-button" id="use-location" type="button" aria-describedby="location-notice">◎ Use my location</button>
-        <p class="location-notice" id="location-notice">Your location is optional. When you tap “Use my location,” your browser asks permission to share your location once. Your location is sent to the National Weather Service to get your forecast. This app does not save or log your location or send it to AI. You can choose a city instead. Forecasts are available for supported U.S. locations.</p>
+        <details class="location-details"><summary>About your location</summary><p class="location-notice" id="location-notice">Your location is optional. When you tap “Use my location,” your browser asks permission to share your location once. Your location is sent to the National Weather Service to get your forecast. This app does not save or log your location or send it to AI. You can choose a city instead. Forecasts are available for supported U.S. locations.</p></details>
         <p id="location-status" class="status-message" role="status" aria-live="polite" hidden></p>
       </section>
 
-      <section class="weather-section" aria-labelledby="weather-heading" aria-busy="true" id="weather-section">
+      <button class="primary-button flow-next" type="button" data-go="1">See my forecast <span aria-hidden="true">→</span></button>
+      </div>
+      <div class="flow-screen" data-screen="1" hidden>
+        <button class="text-button flow-back" type="button" data-go="0" aria-label="Back to location">← Back</button>
+      <section class="weather-section" id="weather-section" aria-labelledby="weather-heading" aria-busy="true">
         <div class="section-heading">
-          <div><p class="eyebrow">02 / A look outside</p><h2 id="weather-heading">Today's local forecast</h2></div>
+          <div><p class="eyebrow">Today’s forecast</p><h2 id="weather-heading" tabindex="-1">A look outside</h2></div>
           <button id="refresh-weather" class="text-button" type="button" disabled>Refresh</button>
         </div>
         <p id="weather-status" class="status-message status-loading" role="status" aria-live="polite">Loading Hayward's forecast…</p>
@@ -66,9 +68,28 @@
         </div>
       </section>
 
+      <button class="primary-button flow-next" type="button" data-go="2">Choose my ingredients <span aria-hidden="true">→</span></button>
+      </div>
+      <div class="flow-screen" data-screen="2" hidden>
+        <button class="text-button flow-back" type="button" data-go="1" aria-label="Back to forecast">← Back</button>
+        <section class="request-card ingredient-card" aria-labelledby="ingredient-heading">
+          <p class="eyebrow">02 / A little less waste</p>
+          <h2 id="ingredient-heading" tabindex="-1">What would you like to use up?</h2>
+          <p class="control-intro">Start with one ingredient you already have. We'll build a meal around it.</p>
+          <label for="main-ingredient">Main ingredient</label>
+          <select id="main-ingredient">
+            <option value="none">No preference · surprise me</option>
+            <optgroup label="Protein"><option value="chicken">Chicken</option><option value="beef">Beef</option><option value="pork">Pork</option><option value="fish">Fish</option><option value="tofu">Tofu</option><option value="beans">Beans</option><option value="lentils">Lentils</option><option value="eggs">Eggs</option></optgroup>
+            <optgroup label="Vegetables"><option value="broccoli">Broccoli</option><option value="carrots">Carrots</option><option value="spinach">Spinach</option><option value="mushrooms">Mushrooms</option><option value="zucchini">Zucchini</option><option value="bell_pepper">Bell pepper</option><option value="tomatoes">Tomatoes</option><option value="cabbage">Cabbage</option><option value="potatoes">Potatoes</option><option value="cauliflower">Cauliflower</option></optgroup>
+          </select>
+          <button class="primary-button flow-next" type="button" data-go="3">Continue <span aria-hidden="true">→</span></button>
+        </section>
+      </div>
+      <div class="flow-screen" data-screen="3" hidden>
+        <button class="text-button flow-back" type="button" data-go="2" aria-label="Back to ingredients">← Back</button>
       <section class="request-card recipe-request" aria-labelledby="meal-heading">
         <p class="eyebrow">03 / Make it yours</p>
-        <h2 id="meal-heading">What sounds good today?</h2>
+        <h2 id="meal-heading" tabindex="-1">What sounds good today?</h2>
         <p class="control-intro">Choose a style, exclude ingredients, and set portions. We'll suggest one meal for today's weather.</p>
         <form id="recipe-form">
           <div class="preference-row">
@@ -112,30 +133,38 @@
             </select>
           </div>
           <details class="exclusions-panel">
-            <summary>Ingredients to exclude <span id="exclusion-summary">Optional · Select</span></summary>
+            <summary>Ingredients to avoid <span id="exclusion-summary">Optional · Select</span></summary>
             <fieldset class="exclusions-fieldset">
               <legend>Choose ingredients</legend>
               <div id="exclusion-options" class="exclusion-grid"></div>
             </fieldset>
           </details>
-          <button class="primary-button" id="generate-recipe" type="submit" disabled>Get one recipe <span aria-hidden="true">→</span></button>
+          <div id="selected-exclusions" class="selected-exclusions" aria-label="Selected ingredients to avoid"></div>
+          <p id="choice-conflict" tabindex="-1" class="status-message status-error" role="status" hidden></p>
+          <button class="primary-button" id="generate-recipe" type="submit" disabled>Find my meal <span aria-hidden="true">→</span></button>
           <p class="allergy-note">Diet choices and ingredient exclusions are preferences, not allergy controls or medical advice. Check product labels and prepare food safely.</p>
         </form>
         <p id="recipe-status" class="status-message" role="status" aria-live="polite" hidden></p>
       </section>
 
+      </div>
+      <div class="flow-screen" data-screen="4" hidden>
+        <button class="text-button flow-back" type="button" data-go="3" aria-label="Back to preferences">← Back</button>
       <section id="recipe-result" class="recipe-result" aria-labelledby="recipe-title" hidden>
         <div class="recipe-heading">
           <p class="eyebrow">Your forecast meal</p>
-          <h2 id="recipe-title"></h2>
+          <h2 id="recipe-title" tabindex="-1"></h2>
+          <p id="recipe-on-hand" class="recipe-on-hand" hidden></p>
           <p id="recipe-summary" class="recipe-summary"></p>
           <p id="recipe-weather" class="forecast-meta"></p>
         </div>
         <aside id="recipe-review" class="recipe-review" role="note" hidden>
-          <p>Review the highlighted details against your choices before deciding whether to use this recipe.</p>
+          <p id="recipe-review-intro">Review the highlighted details against your choices before deciding whether to use this recipe.</p>
           <ul id="recipe-review-list"></ul>
         </aside>
         <pre id="recipe-raw-output" class="recipe-raw-output" hidden></pre>
+        <div class="recipe-tabs" role="tablist" aria-label="Recipe sections"><button type="button" role="tab" id="tab-ingredients" aria-controls="panel-ingredients" aria-selected="true">Ingredients</button><button type="button" role="tab" id="tab-steps" aria-controls="panel-steps" aria-selected="false" tabindex="-1">Steps</button><button type="button" role="tab" id="tab-nutrition" aria-controls="panel-nutrition" aria-selected="false" tabindex="-1">Nutrition</button></div>
+        <div id="panel-ingredients" role="tabpanel" aria-labelledby="tab-ingredients" tabindex="0">
         <div id="recipe-serving-adjuster" class="serving-adjuster">
           <label for="result-servings">Adjust servings</label>
           <select id="result-servings" aria-label="Adjust recipe servings">
@@ -152,10 +181,15 @@
           <button id="swap-selected" class="secondary-button swap-action" type="button" aria-describedby="swap-intro">Select ingredients above</button>
           <p id="swap-status" class="status-message" role="status" aria-live="polite" hidden></p>
         </section>
+        </div>
+        <div id="panel-steps" role="tabpanel" aria-labelledby="tab-steps" tabindex="0" hidden>
         <section id="recipe-steps-section" class="steps-section" aria-labelledby="steps-heading">
           <h3 id="steps-heading">Simple Cooking Steps</h3>
+          <p id="recipe-time" class="recipe-pill cooking-time" hidden></p>
           <ol id="recipe-steps" class="recipe-steps"></ol>
         </section>
+        </div>
+        <div id="panel-nutrition" role="tabpanel" aria-labelledby="tab-nutrition" tabindex="0" hidden>
         <section id="recipe-nutrition-section" class="nutrition-section" aria-labelledby="nutrition-heading">
           <h3 id="nutrition-heading">Nutrition per serving</h3>
           <table class="nutrition-table">
@@ -172,9 +206,11 @@
           </table>
           <p class="nutrition-note">These are rough AI estimates guided by USDA FoodData Central reference data. Brands and portions can change the numbers, so use them as a guide—not medical advice.</p>
         </section>
+        </div>
         <p class="recipe-disclaimer">This recipe is AI-generated. Dietary labels and exclusions are preferences, not allergy controls or medical advice.</p>
         <button id="new-recipe" class="secondary-button" type="button">Make another recipe</button>
       </section>
+      </div>
       <footer class="page-footer">
         <p>Ken Pao · MM-621 · Forecast Meal</p>
         <a href="https://www.weather.gov/privacy" target="_blank" rel="noopener noreferrer">Weather service privacy</a>

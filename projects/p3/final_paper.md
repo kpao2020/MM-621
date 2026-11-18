@@ -8,34 +8,6 @@ title: Project 3 Final Paper
 ---
 
 
-**Forecast Meal — Proposed Three-Week Plan:**
-
-| Tracking Week | Deliverable | Status |
-|---|---|---|
-| Week 1 | Adapt the weather request flow to retrieve today's National Weather Service forecast for the six selected cities. Add the user-triggered location option with city fallback, and show the chosen city and forecast | Completed |
-| Week 2 | Replace open-ended meal requests with the confirmed dietary, ingredient-exclusion, and serving controls. Generate and validate one recipe, then let users select multiple ingredients for one batch of substitutions that updates quantities and affected steps. | Completed locally |
-| Week 3 | Display the AI-estimated per-serving nutrition table with p5.js category icons; complete the location notice, error handling, and local review. The user disabled the production and preview Worker domains; Turnstile and protected public recipe access are deferred until the next security phase. | Completed locally; public recipe access paused |
-
-
-## Success Criteria
-
-| Status | Criteria Description |
-|---|---|
-| - | The user can choose one of the six cities or explicitly enable device location, and the app identifies the location and today's forecast. |
-| - | The meal flow has no open-ended text box; it accepts only its supported meal controls and rejects unsupported request fields. |
-| - | With no preference selections, the app suggests one balanced meal with vegetables, a protein, and a grain or starch. |
-| - | The selected dietary pattern and ingredient exclusions are reflected in the recipe; choosing one to four servings updates the quantities. |
-| - | A user can select multiple ingredients and request one batch of substitutions per recipe. The result respects the chosen preferences and updates the relevant quantities, instructions, and nutrition estimates. |
-| - |  The nutrition table shows calories, protein, carbohydrates, total fat, fiber, and sodium per serving, with an icon for each category and the accuracy disclaimer. |
-| - |  The server validates the structured response and rejects malformed or unsupported model output. |
-| - |  Turnstile's challenge remains visible when required, disappears after successful verification, and leaves a visible “Verified” status. The challenge reappears if verification expires or fails. |
-| - |  p5.js displays a distinct, reusable icon for each nutrient category alongside the nutrition table. |
-| - |  The app is free for its intended class users, and the deployment avoids paid services and stops gracefully at verified free-tier limits. |
-| - |  The location notice accurately states how the location and forecast information are sent and used. |
-
----
-
-
 ## Developer Note
 
 - This project concept is original and owned by Ken Pao. AI assisted with research and drafting the proposal.
@@ -47,3 +19,11 @@ title: Project 3 Final Paper
 - I looked at two existing products before changing direction. Eat AI already advertises meals adapted to local weather; Mealime offers established meal planning, personalization, recipes, servings, grocery lists, and guided cooking. Forecast Meal is not a new commercial idea and does not try to compete feature-for-feature. I am keeping it as a small, no-charge class experiment that combines Project 2's local forecast data with one meal, preference and substitution controls, and a p5.js nutrition table with category icons. ([Eat AI](https://apps.apple.com/us/app/eat-ai-weather-meal-planner/id6767874649); [Mealime](https://www.mealime.com/))
 - I changed the planned result visual from a p5.js meal illustration to a per-serving nutrition table with category icons. The AI will estimate common nutrient values informed by USDA FoodData Central references, with a one-line disclaimer that the values may be inaccurate and are for reference only.
 - Started building prototype, fun but frustrated. Made some progress, but after replacing Cloudflare worker, found a hidden bug from Cloudflare Turnstile. That drove me back to square one. Removed turnstile completely for now since it is just a nice-to-have feature and will revisit once have more time, but at least that clear the error and prototype stage 1 is working.
+- Finished building a working prototype and passed tests successfully. 
+- Revisit turnstile one more time, experience a worsen behavior with error code 600010. AI is not able to help debug. 3-4 hours wasted. Enforeced a rule to not using turnstile anymore.
+- Removed turnstile 2nd time fix everything. Prototype is live on github page and working. 
+- Identified a recipe 502 blocking bug for validation to selected dietry preference, and if any AI-generated ingredient didn't pass that validation, Cloudflare worker will issue a 502 to not return the recipe to github pages and github page just display a red-highlight error message.
+- Redesign the recipe error handling and decided to allow any AI-generated recipe, with confirmed prompt to include user selected preferences so AI will generate a more appropriate and matching with best effort with a light-orange color highlight on ingredients that didn't satisfy any user selected preference. It also display a warning message so user clearly understand what that light-orange highlighted ingredient mean.
+- Tested live prototype and working.
+- I also added a final paper preference and a landing page, so it has a project frontend with Project title, name, date, instructions, description, and a separate about page to talk about design principle to match what applied based on Norman's DOET book and my journal entries.
+- Updated table format and status on this page for tracking purpose.

@@ -5,7 +5,7 @@
   
   Description: 
     Space Travel is a simple 2D game where the player controls a spaceship to collect stars, 
-    land on planets, while trying to avoid asteroids and the sun. 
+    land on planets, and collect the sun while avoiding asteroids.
     The game uses p5.js for rendering graphics and Matter.js for physics simulation.
 
     - p5.js      = drawing, images, user interface, mouse input
@@ -120,6 +120,8 @@ let EndButtonY;
 let gameState = "start";
 
 let score = 0;
+let consecutiveStarCount = 0;
+const STAR_STREAK_FOR_BONUS = 3;
 
 let selectedBackground;
 
@@ -241,6 +243,7 @@ function createGameWorld() {
   sunBody = null;
 
   score = 0;
+  consecutiveStarCount = 0;
   maxAsteroids = START_ASTEROIDS;
   healthLeft = SHIP_HEALTH;
 
@@ -267,8 +270,9 @@ function createGameWorld() {
   // Create 1 planet randomly between 5 to 15 seconds.
   nextPlanetSpawnTime = millis() + random(5000, 15001);
   
-  // Create 1-2 asteroid randomly between 1 to 3 seconds.
+  // Start normal asteroids after 1–3 seconds and the heavy asteroid after 5–10.
   nextAsteroidSpawnTime = millis() + random(1000, 3001);
+  nextHeavyAsteroidSpawnTime = millis() + random(5000, 10001);
 
   // Create 1 sun randomly between 2 to 5 seconds.
   nextSunSpawnTime = millis() + random(2000, 5001);
@@ -391,7 +395,7 @@ function handleCollision(a, b) {
       createExplosion(b, "r");
       hitAsteroid(b);
     } else if (b.label === "sun") {
-      createExplosion(b, "r");
+      createExplosion(b, "g");
       hitSun(b);
     }
 
@@ -442,6 +446,12 @@ function canScore(id) {
   }
 
   return false;
+}
+
+// Apply the active star-streak multiplier to any point reward.
+function awardPoints(points) {
+  const multiplier = consecutiveStarCount >= STAR_STREAK_FOR_BONUS ? 2 : 1;
+  score += points * multiplier;
 }
 
 // ============================================================
@@ -498,8 +508,9 @@ function drawStartPage() {
 
   text(
     "Move mouse to fly through space\n\n\
-    Earn points: stars, planets\n\
-    Health reduced: asteroids, sun",
+    Earn points: stars, planets, sun\n\
+    Sun restores 5 health; asteroids reduce health\n\
+    3 stars in a row doubles point rewards",
     width / 2,
     height * 0.65
   );

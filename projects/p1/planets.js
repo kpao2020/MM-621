@@ -62,7 +62,7 @@ function landOnPlanet(body) {
   // Prevent rapid score
   if (!canScore(body.gameId)) return;
 
-  score += PLANET_POINTS;   // update score
+  awardPoints(PLANET_POINTS);
 
   // Remove Planet
   removePlanet(body);

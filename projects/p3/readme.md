@@ -36,13 +36,13 @@ The user permanently rejected Turnstile for this project. The local frontend and
 
 The Worker uses the user-approved Workers AI model `@cf/meta/llama-3.1-8b-instruct-fp8-fast`. This model is locked by the user's strict rule: do not change or test another model unless the user reviews and explicitly approves that exact change.
 
-The local app now includes the NWS forecast/location flow, recipe generation, batch ingredient swaps, and a per-serving nutrition table with six p5.js icons. It offers six Bay Area cities or an explicit one-time device location. Once a forecast loads, choose no preference, balanced, meat eater, vegetarian, vegan, or pescatarian; select a preferred cuisine and exclusions from fixed lists; choose one to four servings; and request a single recipe. Select any ingredients you want to change, then request replacements together. One successful batch is allowed per recipe; a new recipe starts another. The page contains no free-text meal prompt.
+The app includes the NWS forecast/location flow, recipe generation, batch ingredient swaps, and a per-serving nutrition table with six p5.js icons. It offers six Bay Area cities or an explicit one-time device location. Once a forecast loads, choose no preference, balanced, meat eater, vegetarian, vegan, or pescatarian; select a preferred cuisine and exclusions from fixed lists; choose one to four servings; and request a single recipe. Select any ingredients you want to change, then request replacements together. One successful batch is allowed per recipe; a new recipe starts another. The page contains no free-text meal prompt.
 
 The Worker sends the selected dietary pattern, cuisine, exclusions, and serving count to AI. It displays a renderable recipe even when a preference check flags a possible mismatch, using a soft orange highlight and an explanation so the user can decide. It does not save requests or recipes. A swap request includes the existing recipe and selected ingredient indexes; the Worker merges returned replacements and revised steps and returns updated nutrition estimates. It applies the existing per-IP burst limit and does not use a database or shared daily recipe counter.
 
 The user reviewed the local app and reports that it works. Nutrition values are rough AI estimates informed by USDA FoodData Central reference data; the app does not calculate nutrients ingredient by ingredient through the USDA API. The table and icons are implemented locally.
 
-The published frontend still contains the former widget until the user publishes the local removal. The production Worker is configured for GitHub Pages; its route and latest deployed version are documented in the tracker.
+The user reports that they published the updated frontend to GitHub Pages and deployed the Worker, and that the app seems to be working. This status is user-reported; no independent live test or Worker version ID was recorded during closeout. The former Turnstile widget and secret have been deleted.
 
 The two Open Prices analysis documents preserve research from the earlier Basket Buddy experiment. The Forecast Meal app does not use the old price catalog or D1.
 

@@ -15,6 +15,11 @@
 - User directs the app to display a parseable recipe even when a selected-choice check flags it. Keep the user-selected values explicit in the AI prompt, show affected ingredients or estimates with a soft light-orange highlight and a short explanation, and leave the decision to the user. Do not turn semantic preference mismatches into a failed request.
 - Keep clear explanations for cases where the AI service returns no renderable response. The user chose a warm light-orange review tone instead of red.
 
+## 2026-11-15 — User-reported production deploy and closeout
+
+- User reports publishing the updated frontend to GitHub Pages and deploying the Worker; they say the app seems to be working. No independent end-to-end test or Worker version ID was recorded for this deploy. Treat the live status as user-reported.
+- Do not run additional tests or make more changes for today's closeout. Turnstile and CAPTCHA remain removed; the approved model and existing rate limiting/Gateway setup remain in place.
+
 
 ## 2026-11-14 — Finish remaining groups while user is away
 
@@ -151,3 +156,33 @@ Basket Buddy's revised concept uses local weather forecasts to suggest one simpl
 - A live meal response returned catalogSnapshot.ready=true and selected product price evidence from the saved catalog.
 - The sample contained only prices older than 30 days; the Worker labeled those records older as designed.
 - The mobile shell and documentation are being updated locally for the next Pages publish.
+
+
+2026-11-17: User approved a guided screen flow, a single main-ingredient selector with specific vegetables, ingredient avoidance controls, and a flexible 30/60-minute AI preference with estimated total time.
+
+
+2026-11-17: User requested separate location and forecast screens and a less scroll-heavy recipe. City selection uses an explicit continue button; successful device location advances automatically. Recipe uses Ingredients, Steps, and Nutrition tabs.
+
+
+2026-11-17: User preferred removing the cooking time dropdown; keep a soft 30-minute AI prompt and show estimated total prep plus cooking time in the Steps tab. Explain balanced meal roles and highlight possibly missing roles.
+
+
+2026-11-17: User requested required AI-estimated total prep and cooking time. Require a valid estimate on structured generated recipes and updated swaps; never invent a value when AI omits it.
+
+
+2026-11-17: User clarified that missing AI cooking time must not cause a retry. Keep requesting a structured estimate; show time unavailable if missing or invalid, including after swaps. This supersedes the earlier strict time-validation decision.
+
+
+2026-11-17: User approved a consistent top-left Back control and labeled gradient progress line, with a separate Change my choices action on the meal screen.
+
+
+2026-11-17: User disliked the meal-screen Change my choices layout; removed the redundant bottom action. The top Back control returns to preferences, and Make another recipe remains at the bottom.
+
+
+2026-11-17: Move the weather-and-bowl illustration to the first location screen; retain the shared brand header and compact forecast screen spacing.
+
+
+2026-11-17: User approved moving the welcome line to the location screen and replacing the forecast hero with a compact Today’s forecast / A look outside heading.
+
+
+2026-11-17: User clarified that the full “Today’s forecast. Tonight’s inspiration.” headline should move to the first screen together with the welcome line, rather than be removed.

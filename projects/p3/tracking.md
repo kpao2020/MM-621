@@ -1,20 +1,61 @@
 # Forecast Meal — Project Tracker
 
+---
 
-## Current status — November 15, 2026: recipe validation
+**Forecast Meal — Proposed Three-Week Plan:**
+
+| Status | Tracking Week | Deliverable |
+|---|---|---|
+| ✓ Complete | Week 1 | Adapt the weather request flow to retrieve today's National Weather Service forecast for the six selected cities. Add the user-triggered location option with city fallback, and show the chosen city and forecast. |
+| ✓ Complete | Week 2 | Replace open-ended meal requests with the confirmed dietary, ingredient-exclusion, and serving controls. Generate a recipe, flag possible preference mismatches for user review, and let users select multiple ingredients for one batch of substitutions that updates quantities and affected steps. |
+| ✓ Complete | Week 3 | Display the AI-estimated per-serving nutrition table with p5.js category icons; complete the location notice and error handling; publish the frontend and deploy the Worker. Turnstile and CAPTCHA were removed from scope. |
+
+Week 3's live status reflects the user's report that the deployed app seems to be working on published live github page.
+
+
+## Success Criteria
+
+| Status | Criteria Description |
+|---|---|
+| ✓ Complete | The user can choose one of the six cities or explicitly enable device location, and the app identifies the location and today's forecast. |
+| ✓ Complete | The meal flow has no open-ended text box; it accepts only its supported meal controls and rejects unsupported request fields. |
+| ✓ Complete | With “No preference” selected, the app can suggest a recipe without requiring vegetable, protein, and grain-or-starch roles. |
+| ✓ Complete | The app sends the selected dietary pattern, cuisine, exclusions, and servings to AI. It highlights possible ingredient mismatches in light orange color, so the user can decide; serving choices update quantities. |
+| ✓ Complete | A user can select multiple ingredients and request one batch of substitutions per recipe. The result updates the relevant quantities, instructions, and nutrition estimates, and flags possible preference mismatches for review. |
+| ✓ Complete | The nutrition table shows calories, protein, carbohydrates, total fat, fiber, and sodium per serving, with an icon for each category and the accuracy disclaimer. |
+| ✓ Complete | The Worker uses structured recipe output. Preference and nutrition-range mismatches are shown as review notes; an unusable response is displayed as text when available, and an AI service failure has a clear message. |
+| ✓ Complete | p5.js displays a distinct, reusable icon for each nutrient category alongside the nutrition table. |
+| ✓ Complete | Keep the app free for its intended class users and avoid paid services; confirm usage limits and billing behavior before expanding access. |
+| ✓ Complete | The location notice accurately states how the location and forecast information are sent and used. |
+
+Status key: ✓ Complete · ◐ In progress · ○ Backlog
+
+---
+
+
+## Current status — November 15, 2026: user reports production working
+
+- User reports that they published the frontend to GitHub Pages, deployed the Worker, and the app seems to be working. This is the user's report; no independent live request or recipe-generation test was run during closeout. No Worker version ID was provided.
+- Today's local changes pass selected choices to AI explicitly, show preference-check mismatches with light-orange notes/highlights, and display malformed AI text when available. AI-service failures without a response receive an explanatory 503 instead of a Worker-generated 502.
+- Turnstile and CAPTCHA remain removed permanently. The approved model remains `@cf/meta/llama-3.1-8b-instruct-fp8-fast`; keep the existing per-IP limiter and `forecast-meal` AI Gateway.
+- No further work is queued for today. End-to-end status is user-reported as working; no tests were run by the assistant.
+- Updated `final_paper.md` so both tracking tables use Status as the first column and consistent status symbols. Removed the obsolete Turnstile criterion and aligned the remaining criteria with the current no-preference and review-warning behavior. Free-tier cost/usage confirmation remains in progress.
+
+
+## Progress note — November 15, 2026: recipe validation diagnosis (superseded)
 
 - After the user reported a second recipe failure, read-only live Worker logs confirmed `response-validation`: the recipe failed the vegetable/protein/grain-or-starch check. The request reached the deployed Worker; this was not a route or Turnstile failure.
 - User approved removing this hard check for no-preference recipes. Local Worker prompt and validation now require those roles only when Balanced is explicitly selected. Other structure, dietary, exclusion, and nutrition checks remain.
 - This source change is local and not deployed. The user asked whether prompt changes can ensure successful AI output: they can reduce mismatches but cannot guarantee model compliance. An automatic bounded retry would add possible latency and inference usage and requires approval.
 
-## Current status — November 15, 2026: show AI output with review notes
+## Progress note — November 15, 2026: show AI output with review notes (deployed per user report below)
 
 - User requested that renderable AI recipes be shown even when preference checks detect a mismatch, with the affected ingredient/estimate highlighted and explained so the user can decide. User chose a soft light-orange highlight.
 - Updated the Worker prompt to pass the selected dietary pattern, cuisine, exclusions, and serving count as explicit labeled values. Changed semantic dietary/exclusion/meal-role and nutrition-range checks to return review warnings instead of rejecting a recipe. Changed AI-service failures from 502 to a clear 503 explanation when no renderable response exists.
-- Added frontend review notes and light-orange ingredient/nutrition highlights. A non-JSON or structurally invalid AI reply is displayed as text when available; a true service failure gets a clear 503 message. Updated the project requirements and README. Changes are local only; no tests, deployment, or GitHub publication were performed.
+- Added frontend review notes and light-orange ingredient/nutrition highlights. A non-JSON or structurally invalid AI reply is displayed as text when available; a true service failure gets a clear 503 message. Updated the project requirements and README. At this point in the log the changes were local; the user later reports publishing/deploying them.
 
 
-## Current status — November 15, 2026: removal
+## Progress note — November 15, 2026: Turnstile removal and Cloudflare cleanup
 
 - User permanently rejected Turnstile. Removed its frontend and Worker code locally; the published frontend requires the user's publication of these changes. Preserve the per-IP rate limiter and `forecast-meal` AI Gateway.
 - Deployed token-free Worker version `a3946317-ae41-4332-887d-f1abcf161506` with the GitHub Pages origin and workers.dev enabled. No test or frontend publication was performed; the published frontend still contains the old widget until updated.
@@ -233,3 +274,33 @@ The D1-backed flow is operational. The user reports that the implementation comm
 - Preserve the user's exact proposal section titles and wording, required section order, and intentional blank lines/separators. Modify body content only when requested. Do not rewrite, rename, or reorder headings. Leave the Developer note for the user to type manually.
 
 The former DATA-PIPELINE.md was removed during Forecast Meal cleanup; see open-prices-hayward-50mi-analysis.md for the historical snapshot analysis.
+
+
+2026-11-17: Guided flow, fixed ingredient and cooking-time choices, updated Worker prompt/schema, and visual styling implemented locally. Frontend and Worker need coordinated publishing; user review and end-to-end verification remain.
+
+
+2026-11-17: Split location and forecast into separate local screens; recipe now has keyboard-accessible tabs. Local review and coordinated publication remain.
+
+
+2026-11-17: Simplified balanced-meal warning and moved estimated total time to Steps; removed the time preference control locally.
+
+
+2026-11-17: Local Worker now requires estimated total time for generated recipes and re-estimates it for ingredient swaps. Deploy Worker for live site; end-to-end verification remains.
+
+
+2026-11-17: Missing cooking-time estimates now display as unavailable while the recipe or swap remains usable; Worker and frontend changes require coordinated publication.
+
+
+2026-11-17: Refined local flow navigation with top-left back controls, labeled animated progress, and reduced-motion support.
+
+
+2026-11-17: Removed redundant meal-screen Change my choices action locally.
+
+
+2026-11-17: Moved welcome illustration to location and tightened forecast spacing locally.
+
+
+2026-11-17: Updated welcome copy and compact forecast heading locally.
+
+
+2026-11-17: Restored full Forecast Meal headline on first screen locally.

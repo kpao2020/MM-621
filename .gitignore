@@ -39,3 +39,6 @@ projects/old_project1_sketch.js
 # Historical local Open Prices downloads and Python cache.
 projects/p3/open-prices-hayward-*.json*
 __pycache__/
+
+# Final paper files
+projects/p3/final_paper*.*
