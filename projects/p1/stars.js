@@ -52,7 +52,8 @@ function collectStar(body) {
   if (collectedObjects.has(id)) return;
 
   collectedObjects.add(id);
-  score += STAR_POINTS;
+  consecutiveStarCount++;
+  awardPoints(STAR_POINTS);
 
   // Remove star
   removeStar(body);

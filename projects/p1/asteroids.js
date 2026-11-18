@@ -3,11 +3,16 @@ const ASTEROID_DAMAGE = 10;     // Damage to spaceship's health when hit by an a
 
 // Game objects setting
 const ASTEROID_RADIUS = 25;     // Constant asteroid collision radius.
+const HEAVY_ASTEROID_MULTIPLIER = 3;
+const HEAVY_ASTEROID_DAMAGE_MULTIPLIER = 5;
 const ASTEROID_MIN_SPEED = 1;   // Min asteroid speed.
 const ASTEROID_MAX_SPEED = 8;   // Max asteroid speed.
+const HEAVY_ASTEROID_MIN_SPEED = 0.5;
+const HEAVY_ASTEROID_MAX_SPEED = 1;
 const START_ASTEROIDS = 2;      // Initial number of asteroids when game start.
 
 let nextAsteroidSpawnTime = 0;  // Time in millis when the next asteroid should spawn.
+let nextHeavyAsteroidSpawnTime = 0;
 let maxAsteroids;               // Max number of Asteroids on play screen
 
 // Asteroids images and matter body
@@ -38,25 +43,33 @@ function chooseAsteroidEntrySide(previousSide) {
 
 // Asteroid spawn function
 function updateAsteroidSpawns() {
-  // Start with 2 asteroids and incrase number of asteroids
-  // as player getting higher score
+  // Normal asteroids increase in number as the player's score rises.
   maxAsteroids = START_ASTEROIDS + Math.floor(score / 5);
-  // console.log(maxAsteroids);
+  const normalAsteroidCount = asteroidBodies.filter(
+    asteroid => !asteroid.isHeavy
+  ).length;
 
   if (
-    asteroidBodies.length < maxAsteroids && 
+    normalAsteroidCount < maxAsteroids &&
     millis() >= nextAsteroidSpawnTime         // check if it's time to spawn a new asteroid.
   ) {
-    let asteroidIndex = floor(random(0, 2));  // Randomly choose asteroid image 0 or 1.
     let side = floor(random(0,4));            // Randomly pick a entry side 0, 1, 2, or 3.
-    createAsteroid(asteroidIndex, side);
+    createAsteroid(0, side);
+  }
+
+  const heavyAsteroidIsActive = asteroidBodies.some(asteroid => asteroid.isHeavy);
+  if (!heavyAsteroidIsActive && millis() >= nextHeavyAsteroidSpawnTime) {
+    const side = floor(random(0, 4));
+    createAsteroid(1, side);
   }
 }
 
 // Create Asteroid
 function createAsteroid(id, entrySide) {
   const side = chooseAsteroidEntrySide(entrySide);
-  const margin = ASTEROID_RADIUS + 5; // avoid asteroid to spawn on screen boundary
+  const isHeavy = id === 1;
+  const radius = ASTEROID_RADIUS * (isHeavy ? HEAVY_ASTEROID_MULTIPLIER : 1);
+  const margin = radius + 5; // avoid asteroid to spawn on screen boundary
   
   let start;
   let travelDirection;
@@ -71,7 +84,7 @@ function createAsteroid(id, entrySide) {
     // Enter from left.
     start = {
       x: -margin,
-      y: random(ASTEROID_RADIUS, height - margin)
+      y: random(radius, height - margin)
     };
 
     travelDirection = travelAngle;
@@ -80,7 +93,7 @@ function createAsteroid(id, entrySide) {
     // Enter from right.
     start = {
       x: width + margin,
-      y: random(ASTEROID_RADIUS, height - margin)
+      y: random(radius, height - margin)
     };
 
     travelDirection = travelAngle + 180;
@@ -89,7 +102,7 @@ function createAsteroid(id, entrySide) {
     // Enter from top.
     start = {
       x: random(margin, width - margin),
-      y: ASTEROID_RADIUS
+      y: radius
     };
 
     travelDirection = travelAngle + 90;
@@ -109,7 +122,7 @@ function createAsteroid(id, entrySide) {
   const body = Bodies.circle(
     start.x,
     start.y,
-    ASTEROID_RADIUS,
+    radius,
     {
       label: "asteroid",
       frictionAir: 0,
@@ -123,13 +136,15 @@ function createAsteroid(id, entrySide) {
   body.entrySide = side;
   body.isOnScreen = false;
 
-  // Randomly pick 1 of the asteroid image.
-  body.asteroidIndex = floor(random(asteroidImgs.length));
+  // Asteroid image 2 is the larger, slower heavy asteroid.
+  body.asteroidIndex = id;
+  body.isHeavy = isHeavy;
+  body.asteroidDrawSize = 55 * (isHeavy ? HEAVY_ASTEROID_MULTIPLIER : 1);
 
-  // Randomly assign a speed to each asteroid.
+  // Assign a speed based on asteroid type.
   body.asteroidSpeed = random(
-    ASTEROID_MIN_SPEED,
-    ASTEROID_MAX_SPEED
+    isHeavy ? HEAVY_ASTEROID_MIN_SPEED : ASTEROID_MIN_SPEED,
+    isHeavy ? HEAVY_ASTEROID_MAX_SPEED : ASTEROID_MAX_SPEED
   );
 
   World.add(world, body);
@@ -211,14 +226,18 @@ function updateAsteroidBoundaries() {
 // ============================================================
 
 function hitAsteroid(body) {
+  consecutiveStarCount = 0;
+
   if (canScore(body.gameId)) {
-    // Prevent Health to go negative
-    healthLeft = max(0, healthLeft - ASTEROID_DAMAGE);
+    const damage = body.isHeavy
+      ? ASTEROID_DAMAGE * HEAVY_ASTEROID_DAMAGE_MULTIPLIER
+      : ASTEROID_DAMAGE;
+    healthLeft = max(0, healthLeft - damage);
     //console.log("health = "+healthLeft);
   }
 
   // Briefly stop the ship when hit.
-  shipScaredUntil = millis() + 600;
+  shipScaredUntil = millis() + (body.isHeavy ? 1000 : 600);
 
   // Remove Asteroid
   removeAsteroid(body);
@@ -238,8 +257,13 @@ function removeAsteroid(body) {
 
   collisionCooldown.delete(body.gameId);
 
-  // Schedule the next asteroid 0.5–2 seconds later.
-  nextAsteroidSpawnTime = millis() + random(500, 2001);
+  if (body.isHeavy) {
+    // Keep at most one heavy asteroid active and wait 5–10 seconds after it leaves play.
+    nextHeavyAsteroidSpawnTime = millis() + random(5000, 10001);
+  } else {
+    // Schedule the next normal asteroid 0.5–2 seconds later.
+    nextAsteroidSpawnTime = millis() + random(500, 2001);
+  }
 }
 
 // ============================================================
@@ -263,7 +287,7 @@ function drawAsteroids() {
       asteroidImgs[body.asteroidIndex],
       0,
       0,
-      55
+      body.asteroidDrawSize
     );
     pop();
   }

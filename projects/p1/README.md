@@ -35,7 +35,7 @@ title: Project 1 Readme
 ---
 
 ### Description:
-Space Travel is a simple 2D game where the player controls a spaceship to collect stars, land on planets, while trying to avoid asteroids and the sun. 
+Space Travel is a simple 2D game where the player controls a spaceship to collect stars, land on planets, and collect the sun while avoiding asteroids.
 
 The game uses p5.js for rendering graphics and Matter.js for physics simulation.
   - p5.js      = drawing, images, user interface, mouse input
@@ -68,8 +68,10 @@ The game uses p5.js for rendering graphics and Matter.js for physics simulation.
 - Players of all skill levels can immerse themselves in piloting a spaceship through a dark-themed space environment. 
 - Players interact with randomly generated objects for fun, engaging, and challenging gameplay. As they progress, the difficulty increases proportionally.
 - The game starts with a full health bar.
-- Collecting stars or landing on planets earns points.
-- Getting hit by an asteroid or crashing into the sun damages the spaceship's health.
+- Collecting stars, landing on planets, or collecting the sun earns points.
+- The sun restores 5 health. Normal asteroids can spawn in groups; only one slower, larger asteroid can be active at a time, and it deals greater damage.
+- After a large asteroid leaves play, another waits 5–10 seconds before spawning.
+- Collecting 3 consecutive stars doubles point rewards from stars, planets, and the sun until an asteroid hit resets the streak.
 - When the health bar is completely depleted, the game is over.
 
 ---
