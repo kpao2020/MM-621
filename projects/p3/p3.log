@@ -560,3 +560,30 @@ Work one item at a time. Stop after each item and get the user's confirmation be
 
 
 2026-11-17: Implemented the user-approved guided Forecast Meal redesign locally. Included vegetables in the main dropdown and retained the existing approved AI model. Testing not run per project instructions; local review and coordinated frontend/Worker deployment remain.
+
+
+2026-11-17: Refined guided flow to separate location from forecast and added recipe tabs. No tests run per project instructions.
+
+
+2026-11-17: Updated balanced warning and recipe time presentation. No tests run per project instructions.
+
+
+2026-11-17: Tightened AI time schema, validation and swap handling. No tests run per project instructions.
+
+
+2026-11-17: Changed missing AI time handling to a visible unavailable state, preserving single-call recipe and swap flows. No tests run per project instructions.
+
+
+2026-11-17: Updated back buttons and gradient progress line locally. No tests run per project instructions.
+
+
+2026-11-17: Simplified meal-screen actions after user feedback. No tests run per project instructions.
+
+
+2026-11-17: Moved illustration and reduced forecast screen spacing. No tests run per project instructions.
+
+
+2026-11-17: Moved welcome copy to location and simplified forecast heading. No tests run per project instructions.
+
+
+2026-11-17: Restored the full welcome headline after user clarification. No tests run per project instructions.

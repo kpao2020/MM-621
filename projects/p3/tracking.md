@@ -277,3 +277,30 @@ The former DATA-PIPELINE.md was removed during Forecast Meal cleanup; see open-p
 
 
 2026-11-17: Guided flow, fixed ingredient and cooking-time choices, updated Worker prompt/schema, and visual styling implemented locally. Frontend and Worker need coordinated publishing; user review and end-to-end verification remain.
+
+
+2026-11-17: Split location and forecast into separate local screens; recipe now has keyboard-accessible tabs. Local review and coordinated publication remain.
+
+
+2026-11-17: Simplified balanced-meal warning and moved estimated total time to Steps; removed the time preference control locally.
+
+
+2026-11-17: Local Worker now requires estimated total time for generated recipes and re-estimates it for ingredient swaps. Deploy Worker for live site; end-to-end verification remains.
+
+
+2026-11-17: Missing cooking-time estimates now display as unavailable while the recipe or swap remains usable; Worker and frontend changes require coordinated publication.
+
+
+2026-11-17: Refined local flow navigation with top-left back controls, labeled animated progress, and reduced-motion support.
+
+
+2026-11-17: Removed redundant meal-screen Change my choices action locally.
+
+
+2026-11-17: Moved welcome illustration to location and tightened forecast spacing locally.
+
+
+2026-11-17: Updated welcome copy and compact forecast heading locally.
+
+
+2026-11-17: Restored full Forecast Meal headline on first screen locally.

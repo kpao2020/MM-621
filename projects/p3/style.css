@@ -178,16 +178,16 @@ dd { margin: 3px 0 0; font-size: 12px; font-weight: 650; }
 /* Guided Forecast Meal flow */
 body { background: radial-gradient(ellipse at 12% 7%, #f8df9a80, transparent 35%), radial-gradient(ellipse at 90% 45%, #c7dfb47a, transparent 42%), #fbf7ef; }
 .page-shell { min-height: 100vh; }
-.flow-progress { display: flex; justify-content: space-between; gap: 4px; margin: 22px 0 10px; padding-bottom: 12px; border-bottom: 3px solid #dfe8d5; font-size: 10px; font-weight: 750; color: #788675; }
+.flow-progress { position: relative; display: flex; justify-content: space-between; gap: 4px; margin: 22px 0 10px; padding-bottom: 12px; border-bottom: 3px solid #dfe8d5; font-size: 10px; font-weight: 750; color: #788675; }
 .flow-progress span { position: relative; white-space: nowrap; }
 .flow-progress .active { color: #305b3a; }
-.flow-progress .active::after { position: absolute; content: ""; bottom: -15px; left: 0; right: 0; height: 3px; border-radius: 4px; background: linear-gradient(90deg, #e8b954, #7fac79); }
+.flow-progress::after { position: absolute; content: ""; bottom: -3px; left: 0; width: var(--progress, 20%); height: 3px; border-radius: 4px; background: linear-gradient(90deg, #e8b954, #7fac79); transition: width .35s ease; }
 .flow-screen { animation: screen-arrive .35s ease both; }
 .flow-screen > .flow-next { margin-top: 22px; }
 .ingredient-card, .recipe-request { margin-top: 30px; padding: 28px 22px; }
 .ingredient-card h2, .recipe-request h2 { font-size: clamp(25px, 6vw, 32px); line-height: 1.1; }
 .ingredient-card .flow-next { margin-top: 24px; }
-.flow-back { display: block; margin: 20px auto 0; }
+.flow-back { display: inline-flex; align-items: center; min-height: 44px; margin: 8px 0 0; padding: 8px 4px; }
 .exclusions-panel { background: #f7faf2; border: 1px solid #b7cbaa; border-radius: 12px; }
 .selected-exclusions { display: flex; flex-wrap: wrap; gap: 7px; margin: 8px 0; }
 .exclusion-chip, .recipe-pill { display: inline-block; border: 0; border-radius: 999px; padding: 7px 12px; background: #e4efd9; color: #31583a; font-size: 12px; font-weight: 700; }
@@ -195,4 +195,34 @@ body { background: radial-gradient(ellipse at 12% 7%, #f8df9a80, transparent 35%
 .hero-art { animation: art-float 5s ease-in-out infinite; }
 @keyframes screen-arrive { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes art-float { 50% { transform: translateY(-5px); } }
-@media (prefers-reduced-motion: reduce) { .flow-screen, .hero-art { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .flow-screen, .hero-art { animation: none; } .flow-progress::after { transition: none; } }
+
+/* Separate location, forecast, and recipe sections */
+[data-screen="0"] .request-card { margin-top: 32px; padding: 28px 22px; }
+.location-details { margin-top: 16px; }
+.location-details summary { cursor: pointer; color: #426749; font-size: 12px; font-weight: 700; }
+.location-details .location-notice { margin-top: 8px; }
+.recipe-tabs { display: flex; gap: 4px; padding: 4px; margin: 20px 0; border-radius: 14px; background: #e9efe3; }
+.recipe-tabs button { flex: 1; min-width: 0; min-height: 44px; padding: 8px 5px; border: 0; border-radius: 10px; background: transparent; color: #506652; font-size: 12px; font-weight: 700; cursor: pointer; }
+.recipe-tabs button[aria-selected="true"] { background: #fffef8; color: #285535; box-shadow: 0 2px 9px #304e3218; }
+.recipe-tabs button:focus-visible, [role="tabpanel"]:focus-visible { outline: 3px solid #9db77b; outline-offset: 2px; }
+@media (max-width: 380px) { .flow-progress { font-size: 9px; } }
+
+/* A small visual cue for the estimated preparation and cooking time. */
+.cooking-time { margin: 2px 0 14px; background: #fff1cf; color: #705526; }
+.recipe-review strong { color: #8b4a16; }
+
+/* A compact welcome illustration and forecast screen. */
+.welcome-art { margin-top: 8px; }
+[data-screen="0"] .request-card { margin-top: 8px; }
+[data-screen="1"] .hero { padding: 0 0 8px; }
+[data-screen="1"] .hero h1 { margin: 4px 0 0; font-size: clamp(22px, 5vw, 28px); }
+[data-screen="1"] .weather-section { padding-top: 8px; }
+[data-screen="1"] > .flow-next { margin-top: 14px; }
+
+.welcome-line { text-align: center; margin: 0 0 12px; }
+
+.welcome-copy { text-align: center; }
+.welcome-copy .welcome-line { margin-bottom: 4px; }
+.welcome-copy h1 { margin: 0 0 12px; font-size: clamp(23px, 6vw, 30px); line-height: 1.1; }
+.welcome-copy h1 span { color: var(--green); }

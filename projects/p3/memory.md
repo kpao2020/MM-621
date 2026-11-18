@@ -159,3 +159,30 @@ Basket Buddy's revised concept uses local weather forecasts to suggest one simpl
 
 
 2026-11-17: User approved a guided screen flow, a single main-ingredient selector with specific vegetables, ingredient avoidance controls, and a flexible 30/60-minute AI preference with estimated total time.
+
+
+2026-11-17: User requested separate location and forecast screens and a less scroll-heavy recipe. City selection uses an explicit continue button; successful device location advances automatically. Recipe uses Ingredients, Steps, and Nutrition tabs.
+
+
+2026-11-17: User preferred removing the cooking time dropdown; keep a soft 30-minute AI prompt and show estimated total prep plus cooking time in the Steps tab. Explain balanced meal roles and highlight possibly missing roles.
+
+
+2026-11-17: User requested required AI-estimated total prep and cooking time. Require a valid estimate on structured generated recipes and updated swaps; never invent a value when AI omits it.
+
+
+2026-11-17: User clarified that missing AI cooking time must not cause a retry. Keep requesting a structured estimate; show time unavailable if missing or invalid, including after swaps. This supersedes the earlier strict time-validation decision.
+
+
+2026-11-17: User approved a consistent top-left Back control and labeled gradient progress line, with a separate Change my choices action on the meal screen.
+
+
+2026-11-17: User disliked the meal-screen Change my choices layout; removed the redundant bottom action. The top Back control returns to preferences, and Make another recipe remains at the bottom.
+
+
+2026-11-17: Move the weather-and-bowl illustration to the first location screen; retain the shared brand header and compact forecast screen spacing.
+
+
+2026-11-17: User approved moving the welcome line to the location screen and replacing the forecast hero with a compact Today’s forecast / A look outside heading.
+
+
+2026-11-17: User clarified that the full “Today’s forecast. Tonight’s inspiration.” headline should move to the first screen together with the welcome line, rather than be removed.
