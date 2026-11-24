@@ -36,9 +36,9 @@ The user permanently rejected Turnstile for this project. The local frontend and
 
 The Worker uses the user-approved Workers AI model `@cf/google/gemma-4-26b-a4b-it`. This model is locked by the user's strict rule: do not change or test another model unless the user reviews and explicitly approves that exact change.
 
-The app includes the NWS forecast/location flow, recipe generation, batch ingredient swaps, and a per-serving nutrition table with six p5.js icons. It offers six Bay Area cities or an explicit one-time device location. Once a forecast loads, choose no preference, balanced, meat eater, vegetarian, vegan, or pescatarian; select a preferred cuisine and exclusions from fixed lists; choose one to four servings; and request a single recipe. Select any ingredients you want to change, then request replacements together. Two successful batches are allowed per recipe; a new recipe starts another. The page contains no free-text meal prompt.
+The app includes the NWS forecast/location flow, recipe generation, batch ingredient swaps, and a per-serving nutrition table with six p5.js icons. The recipe result also has a decorative p5.js dish illustration and small ingredient icons. It offers six Bay Area cities or an explicit one-time device location. Once a forecast loads, choose no preference, balanced, meat eater, vegetarian, vegan, or pescatarian; select a preferred cuisine and exclusions from fixed lists, including sugar; choose one to four servings; and request a single recipe. Select ingredients to change, then request replacements together. Two successful batches are allowed per recipe; a new recipe starts another. The page contains no free-text meal prompt.
 
-The Worker sends the selected dietary pattern, cuisine, exclusions, and serving count to AI. It displays a renderable recipe even when a preference check flags a possible mismatch, using a soft orange highlight and an explanation so the user can decide. It does not save requests or recipes. A swap request includes the existing recipe and selected ingredient indexes; the Worker merges returned replacements and revised steps and returns updated nutrition estimates. It applies the existing per-IP burst limit and does not use a database or shared daily recipe counter.
+The Worker uses the user-approved `@cf/google/gemma-4-26b-a4b-it` model. The user approved switching from the previous Llama model after recipe output and validation problems, for personal testing; an initial temporary Gemma test returned no usable recipe, so it should not be described as a successful test. The Worker sends the selected dietary pattern, cuisine, exclusions, and serving count to AI. It displays renderable recipes when checks flag a possible mismatch, with an orange highlight and explanation. A swap request includes the recipe and selected ingredient indexes; the Worker validates replacements and revised steps, with one retry if the model repeats an original ingredient, and returns updated nutrition estimates. Requests and recipes are not saved. The Worker applies a per-IP burst limit and does not use a database or shared daily recipe counter.
 
 The user reviewed the local app and reports that it works. Nutrition values are rough AI estimates informed by USDA FoodData Central reference data; the app does not calculate nutrients ingredient by ingredient through the USDA API. The table and icons are implemented locally.
 
@@ -83,14 +83,14 @@ See the [50-mile analysis](open-prices-hayward-50mi-analysis.md), [radius compar
 
 ## Planned technology
 
-- p5.js 2.3.3, HTML, CSS, and JavaScript for the mobile interface, recipe controls, nutrition table, and category icons. The local p5.js copy is at `../../lib/p5.min.js`.
+- p5.js 2.3.3, HTML, CSS, and JavaScript for the mobile interface, recipe controls, weather and dish illustrations, ingredient icons, and nutrition icons. The local p5.js copy is at `../../lib/p5.min.js`.
 - National Weather Service API for today's forecast at supported U.S. coordinates.
 - Browser Geolocation API for optional, user-authorized location, with manual city selection as an alternative.
 - Cloudflare Workers and Workers AI for the meal-only service, structured generation, and server-side validation.
 - GitHub Pages for the public class prototype.
 - USDA FoodData Central as the reference source for AI-estimated nutrient values.
 
-The Worker accepts only the fixed dietary pattern, preferred cuisine, allowlisted exclusions, serving count, and normalized forecast. It makes one bounded structured-generation request. Preference mismatches are shown as review warnings; the app does not guarantee that model output is medically or allergen safe.
+The Worker accepts fixed meal choices, allowlisted and custom ingredient exclusions, serving count, and a normalized forecast. Recipe and swap responses are bounded and validated; a repeated ingredient replacement can trigger one retry. Preference mismatches are shown as review warnings; the app does not guarantee that model output is medically or allergen safe.
 
 
 ## Privacy and service limits
@@ -143,8 +143,9 @@ Check the Worker URL and allowed production origin before publishing the updated
 ## Project files
 
 - [PROPOSAL.md](PROPOSAL.md): source of truth for Forecast Meal's rationale, research, scope, flow, privacy requirements, and plan.
-- `index.html`, `style.css`, `sketch.js`, `weather-api.js`, `recipe-api.js`, and `config.js`: active forecast/recipe interface, p5.js illustration, NWS client, supported meal controls, and public service configuration.
-- `worker/src/index.js`: recipe-only Worker route, structured response validation, and request limits.
+- `index.html`, `style.css`, `sketch.js`, `dish-illustration.js`, and `nutrient-icons.js`: accessible interface and p5.js weather, dish, ingredient, and nutrition drawings.
+- `weather-api.js`, `recipe-api.js`, and `config.js`: NWS forecast client, Worker request client, and local/public service configuration.
+- `worker/src/index.js`: recipe and swap routes, request and response validation, AI integration, and request limits.
 - [open-prices-hayward-50mi-analysis.md](open-prices-hayward-50mi-analysis.md) and [open-prices-radius-expansion-analysis-2026-11-10.md](open-prices-radius-expansion-analysis-2026-11-10.md): historical research cited in the proposal.
 - [requirements.md](requirements.md): current forecast requirements and remaining meal-service work.
 - [tracking.md](tracking.md) and [memory.md](memory.md): work status and confirmed decisions, including historical implementation notes.

@@ -15,6 +15,15 @@
   References:
     - p5.js: https://p5js.org/reference/
     - National Weather Service API: https://www.weather.gov/documentation/services-web-api
+    - Browser Geolocation API: https://developer.mozilla.org/en-US/docs/Web/API/Geolocation
+
+  Credits:
+    - p5.js for the forecast illustration and ingredient drawings.
+    - National Weather Service API for forecast data.
+    - OpenAI ChatGPT (Codex) for code assistance and optimization suggestions.
+
+  Code Origin:
+    - [ORIGINAL SKETCH + AI-ASSISTED REVISIONS]
 */
 
 let illustrationWeather = null;

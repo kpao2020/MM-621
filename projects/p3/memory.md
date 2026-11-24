@@ -1,5 +1,11 @@
 # Forecast Meal — Project Memory
 
+## 2026-11-24 — Current approved model and interface updates
+
+- Current approved Workers AI model: `@cf/google/gemma-4-26b-a4b-it`. The user approved switching from the prior Llama model after recipe output and validation problems, for the user's own testing. The first temporary Gemma test did not return a usable recipe; do not claim it succeeded.
+- Added a Sugar avoid choice with Worker validation and warning matching. Custom p5 ingredient icons distinguish soy sauce from oils; sugar is drawn as cubes. The recipe result also uses a decorative p5 dish illustration.
+- The notes below record earlier decisions and may be superseded by this current entry and later dated updates.
+
 ## 2026-11-15 — Security decision
 
 - User permanently rejected Turnstile for this project; do not propose or reintroduce it. User also decided against CAPTCHA. Preserve the per-IP limiter and `forecast-meal` AI Gateway routing. Deleted the widget and Worker secret in Cloudflare; no Turnstile widgets or Worker secrets remain according to Wrangler.
