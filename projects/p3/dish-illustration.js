@@ -1,4 +1,21 @@
-// A playful, decorative dish, not a picture of the generated recipe.
+/*
+  Project 3: Forecast Meal
+  Decorative recipe dish illustration.
+
+  Description:
+    - Uses a separate p5.js sketch to draw a bowl or plate for the recipe.
+    - Changes colors, noodles, and decorative pieces based on recipe details.
+    - Supports the user's reduced-motion setting.
+    - The drawing is decorative, not a picture of the generated recipe.
+
+  References:
+    - p5.js: https://p5js.org/reference/
+*/
+
+// ============================================================
+// DISH ILLUSTRATION
+// Create a separate p5 sketch inside the recipe result.
+// ============================================================
 document.addEventListener("DOMContentLoaded", () => {
   const container = document.getElementById("dish-illustration");
   if (!container || typeof window.p5 !== "function") return;
@@ -9,6 +26,11 @@ document.addEventListener("DOMContentLoaded", () => {
     let servings = 1;
     let ingredientColors = [];
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    // ============================================================
+    // UPDATE DISH FROM RECIPE
+    // Choose the dish style and colors from the generated ingredient names.
+    // ============================================================
     window.refreshDishIllustration = (recipe) => {
       seed = p.floor(p.random(1000000));
       isSoup = /\b(soup|broth|stew|ramen|pho)\b/i.test(`${recipe.name || ""} ${recipe.summary || ""}`);
@@ -24,19 +46,36 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       if (reduceMotion.matches) p.redraw();
     };
+
+    // ============================================================
+    // UPDATE SERVINGS
+    // Change the number of decorative pieces and redraw when motion is reduced.
+    // ============================================================
     window.setDishServings = (count) => {
       servings = p.constrain(Number(count) || 1, 1, 4);
       if (reduceMotion.matches) p.redraw();
     };
+
+    // ============================================================
+    // P5 SETUP
+    // Create the canvas and respect the reduced-motion setting.
+    // ============================================================
     p.setup = () => {
       p.createCanvas(240, 160);
       p.pixelDensity(1);
       p.frameRate(24);
       if (reduceMotion.matches) p.noLoop();
     };
+
+    // ============================================================
+    // DRAW DISH
+    // Use a fixed random seed so the ingredients stay in place between frames.
+    // ============================================================
     p.draw = () => {
       p.clear();
+      // Repeat the same random positions on each frame so the food does not jump.
       p.randomSeed(seed);
+      // Freeze the animation phase when the user prefers reduced motion.
       const phase = reduceMotion.matches ? 0 : p.frameCount * 0.025;
       const palette = ["#df795f", "#e3ad52", "#6f9d68", "#8a86ba"];
       p.noStroke();
@@ -53,6 +92,10 @@ document.addEventListener("DOMContentLoaded", () => {
         p.fill("#f8edcc"); p.ellipse(120, 75, 136, 96);
       }
 
+      // ============================================================
+      // NOODLES
+      // Draw moving curves only for recipes identified as noodle dishes.
+      // ============================================================
       p.noFill(); p.stroke("#e4ae53"); p.strokeWeight(4); p.strokeCap(p.ROUND);
       const gradient = p.drawingContext.createLinearGradient(65, 50, 165, 105);
       palette.forEach((color, index) => gradient.addColorStop(index / (palette.length - 1), color));
@@ -65,6 +108,11 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       p.noStroke();
+
+      // ============================================================
+      // INGREDIENT DETAILS
+      // Draw leaves and colorful pieces based on the recipe and serving count.
+      // ============================================================
       const leaf = (x, y, angle) => {
         p.push(); p.translate(x, y); p.rotate(angle);
         p.fill("#6f9d68"); p.ellipse(0, 0, 26, 13);

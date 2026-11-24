@@ -1,16 +1,28 @@
 /*
-  Project 3: Forecast Meal — National Weather Service forecast client.
-  Adapted from Project 2's weather requests with AI-assisted revisions.
-  References: https://www.weather.gov/documentation/services-web-api
-              https://developer.mozilla.org/en-US/docs/Web/API/Geolocation
+  Project 3: Forecast Meal
+  National Weather Service forecast requests.
 
-  Flow: coordinates -> NWS /points -> properties.forecast -> remaining today.
-  This module does not request device permission, log coordinates, save location,
-  contact the meal Worker, or use the old station-observation / sunrise APIs.
+  Description:
+    - Resolves a preset city or device coordinates to an NWS forecast grid.
+    - Loads and prepares the forecast periods remaining today.
+    - Supplies a limited weather summary for the recipe request.
+
+  Note:
+    - The page requests device permission; this file does not request it.
+    - Device coordinates are not saved or passed to the meal Worker.
+    - Adapted from Project 2's weather requests with AI-assisted revisions.
+
+  References:
+    - NOAA API: https://www.weather.gov/documentation/services-web-api
+    - Geolocation: https://developer.mozilla.org/en-US/docs/Web/API/Geolocation
 */
 (() => {
   "use strict";
 
+  // ============================================================
+  // PRESET LOCATIONS
+  // These cities provide forecasts without requesting device location.
+  // ============================================================
   const locations = Object.freeze([
     { id: "hayward", city: "Hayward", latitude: 37.6688, longitude: -122.0808 },
     { id: "oakland", city: "Oakland", latitude: 37.8044, longitude: -122.2712 },
@@ -23,6 +35,10 @@
   // Bounded cache for preset cities only. Device coordinates are never cached.
   const cityAreas = new Map();
 
+  // ============================================================
+  // FORECAST LOCAL DATE
+  // Use the forecast area time zone when comparing calendar dates.
+  // ============================================================
   function localDate(value, timeZone) {
     const parts = new Intl.DateTimeFormat("en-US", {
       timeZone, year: "numeric", month: "2-digit", day: "2-digit",
@@ -31,9 +47,14 @@
     return `${part("year")}-${part("month")}-${part("day")}`;
   }
 
+  // ============================================================
+  // CHECK FORECAST LINK
+  // Only accept the expected National Weather Service forecast URL.
+  // ============================================================
   function forecastUrl(value) {
     let url;
     try { url = new URL(value); } catch { throw new Error("NWS did not return a usable forecast link. Choose a city or try again."); }
+    // Accept only NWS grid forecast links, without credentials, query, or fragment.
     if (url.origin !== "https://api.weather.gov" || url.username || url.password ||
         !/^\/gridpoints\/[A-Z]{3}\/\d+,\d+\/forecast$/.test(url.pathname) || url.search || url.hash) {
       throw new Error("NWS did not return a supported forecast link. Choose a city or try again.");
@@ -41,6 +62,10 @@
     return url.href;
   }
 
+  // ============================================================
+  // REQUEST WEATHER DATA
+  // Fetch NWS data with cancellation, privacy options, and readable errors.
+  // ============================================================
   async function requestJson(url, signal, stage) {
     let response;
     try {
@@ -66,8 +91,13 @@
     catch { throw new Error("NWS returned unreadable forecast data. Please try again."); }
   }
 
+  // ============================================================
+  // RESOLVE FORECAST AREA
+  // Find the NWS grid for a preset city or the chosen device location.
+  // ============================================================
   async function resolveArea(location, signal) {
     const preset = locations.find((item) => item.id === location.id);
+    // Reuse preset-city grid details; device location lookups are not cached here.
     if (preset && cityAreas.has(preset.id)) return cityAreas.get(preset.id);
     const { latitude, longitude } = preset || location;
     if (!Number.isFinite(latitude) || !Number.isFinite(longitude) ||
@@ -93,6 +123,10 @@
     return area;
   }
 
+  // ============================================================
+  // PREPARE FORECAST
+  // Keep the forecast periods needed for the remainder of the local day.
+  // ============================================================
   function normalizeForecast(data, area, now = Date.now()) {
     const props = data?.properties;
     if (!Array.isArray(props?.periods)) throw new Error("NWS returned no forecast periods. Please try again.");
@@ -102,6 +136,7 @@
       const end = Date.parse(period?.endTime);
       // Include the overnight period after midnight and tonight after sunset.
       // Never present tomorrow's first period as today's forecast.
+      // Subtract one millisecond from the end because an end time is exclusive.
       return Number.isFinite(start) && Number.isFinite(end) && end > start && end > now &&
         localDate(start, area.timeZone) <= date && localDate(end - 1, area.timeZone) >= date;
     }).map((period) => {
@@ -116,6 +151,7 @@
         startTime: period.startTime,
         endTime: period.endTime,
         isDaytime: period.isDaytime === true,
+        // Convert Celsius to Fahrenheit before displaying and sending the temperature.
         temperatureF: Math.round(period.temperatureUnit === "C" ? period.temperature * 9 / 5 + 32 : period.temperature),
         shortForecast: period.shortForecast.slice(0, 240),
         detailedForecast: period.detailedForecast.slice(0, 2000),
@@ -138,6 +174,10 @@
     });
   }
 
+  // ============================================================
+  // LOAD AND REFRESH
+  // Load a new area or refresh an already resolved forecast grid.
+  // ============================================================
   async function loadForecast(location, { signal } = {}) {
     const area = await resolveArea(location, signal);
     return refreshForecast(area, { signal });
@@ -150,6 +190,10 @@
 
   // Explicit allowlist for the next meal-service step. No coordinates, grid URL,
   // place name, raw API response, or arbitrary user text belongs in the AI input.
+  // ============================================================
+  // WEATHER FOR RECIPE
+  // Send only the selected forecast fields needed by the recipe service.
+  // ============================================================
   function mealContext(forecast) {
     if (!forecast || localDate(Date.now(), forecast.timeZone) !== forecast.date ||
         Date.now() - Date.parse(forecast.fetchedAt) >= 20 * 60_000) {

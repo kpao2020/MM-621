@@ -366,3 +366,5 @@ The former DATA-PIPELINE.md was removed during Forecast Meal cleanup; see open-p
 - 2026-11-24: Redrew the sugar icon as sugar cubes and increased ingredient icon resolution. Awaiting review; no tests run per project instructions.
 
 - 2026-11-24: Added a golden p5 bottle for oils, distinct from the dark soy sauce bottle. Awaiting review; no tests run per project instructions.
+
+- 2026-11-24: Added section comments to Project 3 JavaScript files, following the style of Projects 1 and 2. Awaiting review; no tests run per project instructions.

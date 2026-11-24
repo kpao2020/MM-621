@@ -1,4 +1,21 @@
-// Browser-to-Worker recipe request. This payload never includes location coordinates.
+/*
+  Project 3: Forecast Meal
+  Browser-to-Worker recipe requests.
+
+  Description:
+    - Sends recipe generation and ingredient swap requests to the Worker.
+    - Handles timeouts, request errors, and incomplete recipe responses.
+    - Request data does not include device location coordinates.
+
+  References:
+    - Fetch API: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
+    - AbortController: https://developer.mozilla.org/en-US/docs/Web/API/AbortController
+*/
+
+// ============================================================
+// RECIPE SERVICE FUNCTIONS
+// Expose recipe generation and ingredient swaps to the main page.
+// ============================================================
 window.ForecastMealAPI = Object.freeze({
   async createRecipe(input) {
     return request("/api/recipe", input);
@@ -8,8 +25,16 @@ window.ForecastMealAPI = Object.freeze({
   },
 });
 
+// ============================================================
+// REQUEST TIMEOUT
+// Stop waiting after 45 seconds if the Worker does not respond.
+// ============================================================
 const RECIPE_REQUEST_TIMEOUT_MS = 45_000;
 
+// ============================================================
+// SEND RECIPE REQUEST
+// Send the selected choices and check the returned recipe before displaying it.
+// ============================================================
 async function request(path, input) {
     const workerUrl = String(window.FORECAST_MEAL_CONFIG?.workerUrl || "")
       .trim()
@@ -17,6 +42,7 @@ async function request(path, input) {
     if (!workerUrl) throw new Error("The recipe service is not configured yet.");
 
     const controller = new AbortController();
+    // Abort also stops the response body from waiting indefinitely after the deadline.
     const timeoutId = setTimeout(() => controller.abort(), RECIPE_REQUEST_TIMEOUT_MS);
     try {
       let response;
@@ -45,6 +71,7 @@ async function request(path, input) {
         throw new Error("The recipe service returned an unreadable response.");
       }
       if (!response.ok) throw new Error(typeof data?.error === "string" ? data.error : "The recipe could not be generated. Please try again.");
+      // Check fields used by the page before attempting to render a recipe.
       const nutrition = data?.recipe?.nutrition;
       const nutrientKeys = ["calories", "proteinG", "carbohydratesG", "fatG", "fiberG", "sodiumMg"];
       if (!data || typeof data !== "object" || !data.recipe || !Array.isArray(data.recipe.ingredients) || !Array.isArray(data.recipe.steps) ||
