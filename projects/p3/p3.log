@@ -587,3 +587,5 @@ Work one item at a time. Stop after each item and get the user's confirmation be
 
 
 2026-11-17: Restored the full welcome headline after user clarification. No tests run per project instructions.
+
+2026-11-18: Investigated a recipe connection error on another laptop. The live Worker health endpoint returned 200, and the GitHub Pages origin received a successful recipe CORS preflight; a null origin was rejected. The frontend displays the same generic message for network and browser-enforced CORS failures. The affected laptop's URL and browser/network error remain unknown; no deployment or code change was made.
