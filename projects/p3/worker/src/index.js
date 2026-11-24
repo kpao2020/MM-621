@@ -7,7 +7,7 @@ const ALLOWED_DIETS = new Set(["none", "balanced", "meat_eater", "vegetarian", "
 const ALLOWED_CUISINES = new Set(["none", "american", "chinese", "filipino", "french", "greek", "indian", "italian", "japanese", "korean", "mexican", "middle_eastern", "spanish", "thai", "vietnamese"]);
 const ALLOWED_EXCLUSIONS = new Set([
   "dairy", "eggs", "soy", "tree_nuts", "peanuts", "gluten", "mushrooms",
-  "tomatoes", "onions", "garlic", "bell_peppers", "cilantro", "beans",
+  "tomatoes", "onions", "garlic", "bell_peppers", "sugar", "cilantro", "beans",
   "fish", "shellfish", "beef", "pork", "poultry",
 ]);
 const DIET_LABELS = Object.freeze({
@@ -23,7 +23,7 @@ const CUISINE_LABELS = Object.freeze({
 const EXCLUSION_LABELS = Object.freeze({
   dairy: "dairy", eggs: "eggs", soy: "soy", tree_nuts: "tree nuts", peanuts: "peanuts",
   gluten: "wheat and gluten", mushrooms: "mushrooms", tomatoes: "tomatoes", onions: "onions",
-  garlic: "garlic", bell_peppers: "bell peppers", cilantro: "cilantro", beans: "beans and lentils",
+  garlic: "garlic", bell_peppers: "bell peppers", sugar: "sugar", cilantro: "cilantro", beans: "beans and lentils",
   fish: "fish", shellfish: "shellfish", beef: "beef", pork: "pork", poultry: "chicken and turkey",
 });
 const ALLOWED_UNITS = new Set([
@@ -42,6 +42,7 @@ const EXCLUDED_TERMS = Object.freeze({
   onions: ["onion", "shallot", "scallion", "leek"],
   garlic: ["garlic"],
   bell_peppers: ["bell pepper", "capsicum"],
+  sugar: ["sugar"],
   cilantro: ["cilantro", "coriander leaves"],
   beans: ["bean", "lentil", "chickpea", "pea protein"],
   fish: ["fish", "salmon", "tuna", "cod", "tilapia", "anchovy", "sardine", "trout", "mackerel", "halibut"],

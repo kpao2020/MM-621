@@ -7,12 +7,12 @@ const EXCLUSION_CHOICES = [
   ["dairy", "Dairy"], ["eggs", "Eggs"], ["soy", "Soy"], ["tree_nuts", "Tree nuts"],
   ["peanuts", "Peanuts"], ["gluten", "Wheat / gluten"], ["mushrooms", "Mushrooms"],
   ["tomatoes", "Tomatoes"], ["onions", "Onions"], ["garlic", "Garlic"],
-  ["bell_peppers", "Bell peppers"], ["cilantro", "Cilantro"], ["beans", "Beans and lentils"],
+  ["bell_peppers", "Bell peppers"], ["sugar", "Sugar"], ["cilantro", "Cilantro"], ["beans", "Beans and lentils"],
   ["fish", "Fish"], ["shellfish", "Shellfish"], ["beef", "Beef"], ["pork", "Pork"], ["poultry", "Chicken and turkey"],
 ];
 const EXCLUSION_ICONS = {
   dairy: "🥛", eggs: "🥚", soy: "🫘", tree_nuts: "🌰", peanuts: "🥜", gluten: "🌾",
-  mushrooms: "🍄", tomatoes: "🍅", onions: "🧅", garlic: "🧄", bell_peppers: "🫑",
+  mushrooms: "🍄", tomatoes: "🍅", onions: "🧅", garlic: "🧄", bell_peppers: "🫑", sugar: "sugar",
   cilantro: "🌿", beans: "🫘", fish: "🐟", shellfish: "🦐", beef: "🥩", pork: "🥩", poultry: "🍗",
 };
 
@@ -21,7 +21,7 @@ function ingredientIcon(name) {
     [/\b(broth|stock|bouillon)\b/i, "🍲"], [/\b(noodles?|pasta|spaghetti|linguine|ramen)\b/i, "🍜"],
     [/\bwater\b/i, "💧"], [/\b(soy sauce|tamari)\b/i, "sauce"], [/\b(sugar|sweetener)\b/i, "sugar"],
     [/\b(black pepper|white pepper|peppercorns?|ground pepper)\b/i, "pepper"],
-    [/\b(salt)\b/i, "🧂"], [/\b(oil|vinegar)\b/i, "sauce"],
+    [/\b(salt)\b/i, "🧂"], [/\boil\b/i, "oil"], [/\bvinegar\b/i, "sauce"],
     [/\b(onions?|shallots?)\b/i, "🧅"], [/\bgarlic\b/i, "🧄"], [/\b(tomatoes|tomato)\b/i, "🍅"],
     [/\b(mushrooms?|shiitake)\b/i, "🍄"], [/\b(bell peppers?|capsicum)\b/i, "🫑"],
     [/\b(chicken|turkey|poultry)\b/i, "🍗"], [/\b(beef|pork|steak)\b/i, "🥩"],
@@ -35,21 +35,70 @@ function ingredientIcon(name) {
   return icons.find(([pattern]) => pattern.test(name))?.[1] || "🫙";
 }
 
+const ingredientIconGraphics = new Map();
+
 function makeIngredientIcon(symbol) {
   const icon = document.createElement("span");
   icon.className = "ingredient-icon";
   icon.setAttribute("aria-hidden", "true");
-  const drawings = {
-    sauce: '<path fill="#784b33" d="M9 2h6v3l2 3v12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V8l2-3z"/><path fill="#f4e5bb" d="M8 11h8v6H8z"/><path fill="#4f3529" d="M9 2h6v2H9z"/>',
-    sugar: '<path fill="#e9ddc6" stroke="#8f806b" stroke-width="1.2" d="M5 9h14l-1 10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z"/><path fill="#fff" d="M7 8l3-4 3 3 2-2 3 3v2H7z"/><path stroke="#8f806b" stroke-width="1.2" d="M5 10h14"/>',
-    pepper: '<path fill="#72543c" d="M9 2h6l1 3-2 2 3 4-1 9a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2l-1-9 3-4-2-2z"/><path fill="#d6bc92" d="M8 11h8v3H8z"/><circle fill="#493527" cx="12" cy="12.5" r="1"/>',
-  };
-  if (drawings[symbol]) {
-    icon.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" focusable="false">${drawings[symbol]}</svg>`;
+  const fallback = { sauce: "🫙", oil: "🫙", sugar: "🍚", pepper: "🧂" };
+  if (fallback[symbol]) icon.dataset.p5Icon = symbol;
+  if (fallback[symbol] && illustrationReady) {
+    try {
+      if (!ingredientIconGraphics.has(symbol)) {
+        const art = createGraphics(20, 20);
+        art.pixelDensity(2);
+        art.scale(20 / 24);
+        drawIngredientIcon(art, symbol);
+        ingredientIconGraphics.set(symbol, art);
+      }
+      const canvas = document.createElement("canvas");
+      const source = ingredientIconGraphics.get(symbol).canvas;
+      canvas.width = source.width;
+      canvas.height = source.height;
+      canvas.style.width = "20px";
+      canvas.style.height = "20px";
+      canvas.getContext("2d").drawImage(source, 0, 0);
+      icon.append(canvas);
+    } catch {
+      icon.textContent = fallback[symbol];
+    }
   } else {
-    icon.textContent = symbol;
+    icon.textContent = fallback[symbol] || symbol;
   }
   return icon;
+}
+
+function drawIngredientIcon(p, symbol) {
+  p.strokeJoin(p.ROUND);
+  if (symbol === "sauce") {
+    p.noStroke(); p.fill("#784b33");
+    p.beginShape(); p.vertex(9, 2); p.vertex(15, 2); p.vertex(15, 5);
+    p.vertex(17, 8); p.vertex(17, 20); p.vertex(15, 22); p.vertex(9, 22);
+    p.vertex(7, 20); p.vertex(7, 8); p.vertex(9, 5); p.endShape(p.CLOSE);
+    p.fill("#f4e5bb"); p.rect(8, 11, 8, 6);
+    p.fill("#4f3529"); p.rect(9, 2, 6, 2);
+  } else if (symbol === "oil") {
+    p.stroke("#9a6d25"); p.strokeWeight(1); p.fill("#e8b953");
+    p.beginShape(); p.vertex(9, 3); p.vertex(15, 3); p.vertex(15, 6);
+    p.vertex(17, 9); p.vertex(17, 20); p.vertex(15, 22); p.vertex(9, 22);
+    p.vertex(7, 20); p.vertex(7, 9); p.vertex(9, 6); p.endShape(p.CLOSE);
+    p.noStroke(); p.fill("#fff0ba"); p.rect(8, 12, 8, 5);
+    p.fill("#86602b"); p.rect(9, 2, 6, 3, 1);
+  } else if (symbol === "sugar") {
+    p.stroke("#8f806b"); p.strokeWeight(1.3);
+    p.fill("#fffdf6"); p.rect(4, 10, 9, 9, 1.5);
+    p.fill("#f0e5d3"); p.rect(11, 12, 9, 9, 1.5);
+    p.fill("#fffdf6"); p.rect(8, 4, 9, 9, 1.5);
+  } else if (symbol === "pepper") {
+    p.noStroke(); p.fill("#72543c");
+    p.beginShape(); p.vertex(9, 2); p.vertex(15, 2); p.vertex(16, 5);
+    p.vertex(14, 7); p.vertex(17, 11); p.vertex(16, 20); p.vertex(14, 22);
+    p.vertex(10, 22); p.vertex(8, 20); p.vertex(7, 11); p.vertex(10, 7);
+    p.vertex(8, 5); p.endShape(p.CLOSE);
+    p.fill("#d6bc92"); p.rect(8, 11, 8, 3);
+    p.fill("#493527"); p.circle(12, 12.5, 2);
+  }
 }
 
 async function setup() {
@@ -67,6 +116,9 @@ async function setup() {
   pixelDensity(1);
   noLoop();
   illustrationReady = true;
+  document.querySelectorAll(".ingredient-icon[data-p5-icon]").forEach((icon) => {
+    icon.replaceWith(makeIngredientIcon(icon.dataset.p5Icon));
+  });
 }
 
 function draw() {
