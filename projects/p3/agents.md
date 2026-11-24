@@ -3,7 +3,7 @@
 ## Working rules
 
 - User permanently rejected Turnstile for Forecast Meal. Do not propose or reintroduce it.
-- **Strict model approval rule:** The only approved Forecast Meal Workers AI model is `@cf/meta/llama-3.1-8b-instruct-fp8-fast`. Never select, test, substitute, or deploy another model, and never change this model ID, unless the user first reviews and explicitly approves that exact change. Model choice is not an implementation detail. Do not use `@cf/meta/llama-3.3-70b-instruct-fp8-fast` again.
+- **Strict model approval rule:** The only approved Forecast Meal Workers AI model is `@cf/google/gemma-4-26b-a4b-it`. Never select, test, substitute, or deploy another model, and never change this model ID, unless the user first reviews and explicitly approves that exact change. Model choice is not an implementation detail. Do not use `@cf/meta/llama-3.3-70b-instruct-fp8-fast` again.
 - Work inside projects/p3; the repository-level P3 GitHub Actions workflow and root .gitignore entries for P3 downloads are in scope.
 - Work one task at a time. State the current step, complete it, and save progress before moving on.
 - Keep active review/troubleshooting items in p3.log and obtain the user's confirmation before moving to each next item. Preserve closed queues in p3.log as history.

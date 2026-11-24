@@ -589,3 +589,63 @@ Work one item at a time. Stop after each item and get the user's confirmation be
 2026-11-17: Restored the full welcome headline after user clarification. No tests run per project instructions.
 
 2026-11-18: Investigated a recipe connection error on another laptop. The live Worker health endpoint returned 200, and the GitHub Pages origin received a successful recipe CORS preflight; a null origin was rejected. The frontend displays the same generic message for network and browser-enforced CORS failures. The affected laptop's URL and browser/network error remain unknown; no deployment or code change was made.
+
+2026-11-23: Item 1: exclusion rows already wrap their checkbox in a label; increased row height to 44px and added a pointer cursor. Await user review. No tests run per project instructions.
+
+2026-11-23: Item 2: wrapped each selectable recipe ingredient row in its checkbox label, with a minimum 44px touch target. Await user review. No tests run per project instructions.
+
+2026-11-23: Item 3: added small decorative food icons to exclusions and recipe ingredients, with a generic icon for unmatched ingredients. Await user review. No tests run per project instructions.
+
+2026-11-23: Revised ingredient icons after user feedback: broth, noodles, water, sauces, sugar and pepper now have distinct icons; unmatched items use a jar. Await review. No tests run per project instructions.
+
+2026-11-23: User reported one 503 followed by a successful retry. Worker code can return 503 for rate limiter, AI call, parsing, or validation; exact displayed message and logs are needed to identify the cause.
+
+2026-11-23: Item 4: display onion quantities counted in pieces without the word piece, such as “1 onion.” Await review. No tests run per project instructions.
+
+2026-11-23: Expanded item 4 per user feedback: recipe and swap prompts prefer grams and milliliters, specify US measuring units and request sizes for pieces, cans and packages. Cup labels now say US cup. Await review; Worker changes are local. No tests run per project instructions.
+
+2026-11-23: User requested US units and abbreviations. Updated both AI prompts to prefer US cooking measures and display oz, lb, g, mL and L. Await review; Worker changes are local. No tests run per project instructions.
+
+2026-11-23: Added recipe prompt guidance to list ingredients in first-use order and group ingredients used together. Await review; Worker change is local. No tests run per project instructions.
+
+2026-11-23: Replaced US cup labels with cup and included the equivalent in fluid ounces (8 fl oz per cup) after user feedback. Await review. No tests run per project instructions.
+
+2026-11-23: Expanded recipe and swap prompts to specify fractional whole-ingredient amounts, sizes and preparation, including peeling onions. Await review; Worker change is local. No tests run per project instructions.
+
+2026-11-23: Display common quantities as fractions and ask the AI to specify packaged foods like noodles by weight in ounces. Await review; Worker changes are local. No tests run per project instructions.
+
+2026-11-23: Item 5: added a short custom exclusion field. Recipe requests are blocked if it contains text until item 6 connects it to the Worker and AI. Await review. No tests run per project instructions.
+
+2026-11-23: Clarified that multiple custom exclusions will use commas and that the field is not connected yet. Await review before item 6.
+
+2026-11-23: Connected comma-separated custom exclusions to recipe and swap requests, Worker validation, AI prompts and exact-term review warnings. Item 6 implemented with item 5 follow-up. Local Worker must run or be deployed with the page. No tests run per project instructions. Await review.
+
+2026-11-23: Item 8: allow two successful ingredient swap batches per recipe; failed attempts do not count. Updated requirements and README. Await review. No tests run per project instructions.
+
+2026-11-23: Item 9: added a decorative p5.js dish illustration to the recipe screen. Await user review. No tests run per project instructions.
+
+2026-11-23: Reworked the p5 dish illustration as a colorful overhead plate after user feedback. Await review. No tests run per project instructions.
+
+2026-11-23: Made the decorative p5 dish vary for each generated recipe, with animated gradient lines and reduced-motion support. Await review. No tests run per project instructions.
+
+2026-11-23: Changed decorative dish illustration to show a bowl and broth when the recipe name or summary identifies soup, broth, stew, ramen or pho. Await review. No tests run per project instructions.
+
+2026-11-23: Ran exactly one approved Gemma 4 26B test using a temporary Worker and sample request. HTTP 200 contained a response-format warning and an empty raw response; no usable recipe. The production model was not changed.
+
+2026-11-23: User approved switching the production Worker to Gemma 4 26B for their own testing after the single local test returned no usable recipe.
+
+2026-11-23: Deployed forecast-meal-api with user-approved Gemma 4 26B; version bb4d44c4-a0f0-4916-8c83-100a206b9063. Awaiting user testing.
+
+2026-11-23: Disabled Gemma thinking mode for recipe and swap calls following Cloudflare guidance; empty replies now show a retry error. Awaiting user verification.
+
+2026-11-23: Deployed Gemma thinking-mode and empty-response changes, Worker version ee9fad8f-40bd-48b2-aceb-386b5065158f. Syntax check passed; no additional AI test request. Await user verification.
+
+2026-11-23: Added recipe loading messages that change every five seconds through 30 seconds, stopping when the request ends. Await review. No tests run per project instructions.
+
+2026-11-23: Updated dish art to reflect soup/noodles and ingredient colors, with more decorative pieces as servings increase; swap changes refresh it. Await review. No tests run per project instructions.
+
+2026-11-23: Added up to five recent dish names held in page memory to recipe requests, with Worker validation and instructions to avoid repeats. Reload clears the history. Await review; Worker and frontend changes are local. No tests run per project instructions.
+
+2026-11-23: User reported three swap 503s with Invalid substitution value. Clarified replacement name, amount and unit requirements in the prompt and split validation errors into non-sensitive reasons. Await local retry and review; no tests run per project instructions.
+
+2026-11-23: User log identified swap failure as AI repeating the original ingredient. Added one automatic retry for that specific validation failure. Await user review; local Worker only. No tests run per project instructions.
