@@ -304,3 +304,57 @@ The former DATA-PIPELINE.md was removed during Forecast Meal cleanup; see open-p
 
 
 2026-11-17: Restored full Forecast Meal headline on first screen locally.
+
+- 2026-11-23: Enlarged exclusion option rows to 44px; the existing labels make the entire row select the checkbox. Awaiting review of item 1.
+
+- 2026-11-23: Made selectable ingredient swap rows full-row checkbox labels. Awaiting review of item 2.
+
+- 2026-11-23: Added decorative icons to exclusion and recipe ingredient rows. Awaiting review of item 3.
+
+- 2026-11-23: Revised ingredient icons for broth, noodles, water, sauces, sugar and pepper after feedback. Awaiting review.
+
+- 2026-11-23: Clarified onion quantities by omitting the piece unit in the ingredient display. Awaiting review of item 4.
+
+- 2026-11-23: Updated recipe and swap quantity instructions and labeled US cups in the interface. Awaiting review of item 4.
+
+- 2026-11-23: Changed quantity instructions to prefer US cooking measures and shortened unit labels. Awaiting review of item 4.
+
+- 2026-11-23: Added first-use ingredient ordering to recipe instructions. Awaiting review.
+
+- 2026-11-23: Made cup quantities clearer by displaying fluid-ounce equivalents. Awaiting review.
+
+- 2026-11-23: Clarified AI instructions for ingredient fractions, size and preparation, including peeling onions. Awaiting review.
+
+- 2026-11-23: Display common fractions and request ounces for packaged foods. Awaiting review.
+
+- 2026-11-23: Added custom exclusion input; connecting it to recipe generation remains item 6. Awaiting review of item 5.
+
+- 2026-11-23: Connected custom ingredient exclusions to recipe and swap requests and review warnings. Awaiting review of items 5 and 6.
+
+- 2026-11-23: Increased ingredient swaps to two successful batches per recipe. Awaiting review of item 8.
+
+- 2026-11-23: Added a playful p5.js dish illustration to the recipe screen. Awaiting review of item 9.
+
+- 2026-11-23: Revised the dish illustration after user feedback. Awaiting review.
+
+- 2026-11-23: Made dish illustration vary per recipe with animated gradient lines. Awaiting review.
+
+- 2026-11-23: Added a bowl and broth variation for soup recipes. Awaiting review.
+
+- 2026-11-23: One temporary Gemma test produced no usable recipe; production model unchanged. Awaiting user decision.
+
+- 2026-11-23: User approved switching the Worker model to Gemma 4 26B for user testing.
+
+- 2026-11-23: Deployed Gemma 4 26B Worker for user testing.
+
+- 2026-11-23: Updated Gemma integration to disable thinking mode and handle empty responses. Awaiting user verification.
+
+- 2026-11-23: Added changing recipe loading messages for longer AI requests. Awaiting review.
+
+- 2026-11-23: Made dish art vary with recipe ingredients and serving count. Awaiting review.
+
+- 2026-11-23: Added session-only recent dish names to recipe requests to reduce repetition. Awaiting review.
+
+- 2026-11-23: Clarified swap requirements and made invalid replacement logs distinguish name, amount and unit failures. Awaiting review.
+
+- 2026-11-23: Added one automatic swap retry when the AI repeats the original ingredient. Awaiting review.

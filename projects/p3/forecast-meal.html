@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="../../lib/p5.min.js" defer></script>
     <script src="nutrient-icons.js" defer></script>
+    <script src="dish-illustration.js" defer></script>
     <script src="config.js" defer></script>
     <script src="weather-api.js" defer></script>
     <script src="recipe-api.js" defer></script>
@@ -137,6 +138,9 @@
             <fieldset class="exclusions-fieldset">
               <legend>Choose ingredients</legend>
               <div id="exclusion-options" class="exclusion-grid"></div>
+              <label class="custom-exclusion-label" for="custom-exclusion">Other ingredients to avoid</label>
+              <input id="custom-exclusion" class="custom-exclusion-input" type="text" maxlength="120" placeholder="e.g. olives, celery" aria-describedby="custom-exclusion-note">
+              <p id="custom-exclusion-note" class="fieldset-hint">Separate ingredients with commas. They apply when you find your meal.</p>
             </fieldset>
           </details>
           <div id="selected-exclusions" class="selected-exclusions" aria-label="Selected ingredients to avoid"></div>
@@ -151,6 +155,7 @@
       <div class="flow-screen" data-screen="4" hidden>
         <button class="text-button flow-back" type="button" data-go="3" aria-label="Back to preferences">← Back</button>
       <section id="recipe-result" class="recipe-result" aria-labelledby="recipe-title" hidden>
+        <div id="dish-illustration" class="dish-illustration" aria-hidden="true"></div>
         <div class="recipe-heading">
           <p class="eyebrow">Your forecast meal</p>
           <h2 id="recipe-title" tabindex="-1"></h2>

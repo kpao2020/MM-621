@@ -10,6 +10,47 @@ const EXCLUSION_CHOICES = [
   ["bell_peppers", "Bell peppers"], ["cilantro", "Cilantro"], ["beans", "Beans and lentils"],
   ["fish", "Fish"], ["shellfish", "Shellfish"], ["beef", "Beef"], ["pork", "Pork"], ["poultry", "Chicken and turkey"],
 ];
+const EXCLUSION_ICONS = {
+  dairy: "🥛", eggs: "🥚", soy: "🫘", tree_nuts: "🌰", peanuts: "🥜", gluten: "🌾",
+  mushrooms: "🍄", tomatoes: "🍅", onions: "🧅", garlic: "🧄", bell_peppers: "🫑",
+  cilantro: "🌿", beans: "🫘", fish: "🐟", shellfish: "🦐", beef: "🥩", pork: "🥩", poultry: "🍗",
+};
+
+function ingredientIcon(name) {
+  const icons = [
+    [/\b(broth|stock|bouillon)\b/i, "🍲"], [/\b(noodles?|pasta|spaghetti|linguine|ramen)\b/i, "🍜"],
+    [/\bwater\b/i, "💧"], [/\b(soy sauce|tamari)\b/i, "sauce"], [/\b(sugar|sweetener)\b/i, "sugar"],
+    [/\b(black pepper|white pepper|peppercorns?|ground pepper)\b/i, "pepper"],
+    [/\b(salt)\b/i, "🧂"], [/\b(oil|vinegar)\b/i, "sauce"],
+    [/\b(onions?|shallots?)\b/i, "🧅"], [/\bgarlic\b/i, "🧄"], [/\b(tomatoes|tomato)\b/i, "🍅"],
+    [/\b(mushrooms?|shiitake)\b/i, "🍄"], [/\b(bell peppers?|capsicum)\b/i, "🫑"],
+    [/\b(chicken|turkey|poultry)\b/i, "🍗"], [/\b(beef|pork|steak)\b/i, "🥩"],
+    [/\b(shrimp|prawns?)\b/i, "🦐"], [/\b(fish|salmon|tuna|cod)\b/i, "🐟"],
+    [/\beggs?\b/i, "🥚"], [/\b(milk|cream|yogurt)\b/i, "🥛"], [/\bcheese\b/i, "🧀"],
+    [/\b(beans?|lentils?|chickpeas?)\b/i, "🫘"], [/\b(peanuts?)\b/i, "🥜"],
+    [/\brice\b/i, "🍚"], [/\b(wheat|flour)\b/i, "🌾"], [/\b(carrots?)\b/i, "🥕"],
+    [/\b(potatoes|potato)\b/i, "🥔"], [/\b(broccoli)\b/i, "🥦"], [/\b(lemon|lime)\b/i, "🍋"],
+    [/\b(spinach|lettuce|cabbage|kale)\b/i, "🥬"], [/\b(cilantro|parsley|basil|herbs?)\b/i, "🌿"],
+  ];
+  return icons.find(([pattern]) => pattern.test(name))?.[1] || "🫙";
+}
+
+function makeIngredientIcon(symbol) {
+  const icon = document.createElement("span");
+  icon.className = "ingredient-icon";
+  icon.setAttribute("aria-hidden", "true");
+  const drawings = {
+    sauce: '<path fill="#784b33" d="M9 2h6v3l2 3v12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V8l2-3z"/><path fill="#f4e5bb" d="M8 11h8v6H8z"/><path fill="#4f3529" d="M9 2h6v2H9z"/>',
+    sugar: '<path fill="#e9ddc6" stroke="#8f806b" stroke-width="1.2" d="M5 9h14l-1 10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z"/><path fill="#fff" d="M7 8l3-4 3 3 2-2 3 3v2H7z"/><path stroke="#8f806b" stroke-width="1.2" d="M5 10h14"/>',
+    pepper: '<path fill="#72543c" d="M9 2h6l1 3-2 2 3 4-1 9a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2l-1-9 3-4-2-2z"/><path fill="#d6bc92" d="M8 11h8v3H8z"/><circle fill="#493527" cx="12" cy="12.5" r="1"/>',
+  };
+  if (drawings[symbol]) {
+    icon.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" focusable="false">${drawings[symbol]}</svg>`;
+  } else {
+    icon.textContent = symbol;
+  }
+  return icon;
+}
 
 async function setup() {
   if (document.readyState === "loading") {
@@ -114,8 +155,9 @@ function initializeForecastApp() {
   let recipeBusy = false;
   let renderedRecipe = null;
   let recipeRequestId = 0;
+  const recentDishNames = [];
   let swapBusy = false;
-  let swapUsed = false;
+  let swapCount = 0;
   let swapRequestId = 0;
   const selectedSwapIndexes = new Set();
 
@@ -133,7 +175,7 @@ function initializeForecastApp() {
     ++swapRequestId;
     recipeBusy = false;
     swapBusy = false;
-    swapUsed = false;
+    swapCount = 0;
     selectedSwapIndexes.clear();
     renderedRecipe = null;
     recipeForm.removeAttribute("aria-busy");
@@ -446,7 +488,10 @@ function initializeForecastApp() {
     updateConflict();
     updateGenerateButton();
   });
-  resultServings.addEventListener("change", renderRecipeIngredients);
+  resultServings.addEventListener("change", () => {
+    renderRecipeIngredients();
+    window.setDishServings?.(resultServings.value);
+  });
   swapButton.addEventListener("click", requestSwaps);
   document.getElementById("new-recipe").addEventListener("click", () => {
     clearRecipe();
@@ -484,17 +529,25 @@ function initializeForecastApp() {
       input.value = value;
       const text = document.createElement("span");
       text.textContent = label;
-      wrapper.append(input, text);
+      wrapper.append(input, makeIngredientIcon(EXCLUSION_ICONS[value]), text);
       container.append(wrapper);
     }
   }
 
   function formatAmount(amount) {
+    const whole = Math.floor(amount);
+    const fraction = amount - whole;
+    const commonFractions = [[1 / 8, "⅛"], [1 / 4, "¼"], [1 / 3, "⅓"], [1 / 2, "½"], [2 / 3, "⅔"], [3 / 4, "¾"], [7 / 8, "⅞"]];
+    const match = commonFractions.find(([value]) => Math.abs(fraction - value) < 0.001);
+    if (match) return `${whole || ""}${match[1]}`;
     return new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(amount);
   }
 
   function displayUnit(unit, amount) {
     if (unit === "to taste" || unit === "tsp" || unit === "tbsp") return unit;
+    if (unit === "cup") return amount === 1 ? "cup" : "cups";
+    const abbreviations = { ounce: "oz", pound: "lb", gram: "g", milliliter: "mL", liter: "L" };
+    if (abbreviations[unit]) return abbreviations[unit];
     if (amount === 1) return unit;
     const plurals = {
       cup: "cups", ounce: "ounces", pound: "pounds", gram: "grams",
@@ -511,9 +564,11 @@ function initializeForecastApp() {
     list.replaceChildren();
     for (const [index, ingredient] of renderedRecipe.ingredients.entries()) {
       const item = document.createElement("li");
-      item.className = swapUsed ? "recipe-ingredient-row" : "recipe-ingredient-row swap-available";
+      item.className = swapCount >= 2 ? "recipe-ingredient-row" : "recipe-ingredient-row swap-available";
       if (ingredient.warnings?.length) item.classList.add("ingredient-needs-review");
-      if (!swapUsed) {
+      const row = swapCount >= 2 ? item : document.createElement("label");
+      if (swapCount < 2) item.append(row);
+      if (swapCount < 2) {
         const select = document.createElement("input");
         select.type = "checkbox";
         select.className = "swap-checkbox";
@@ -526,21 +581,23 @@ function initializeForecastApp() {
           swapStatus.hidden = true;
           updateSwapControls();
         });
-        item.append(select);
+        row.append(select);
       }
       const amount = ingredient.unit === "to taste"
         ? ingredient.amount
         : ingredient.amount * targetServings / renderedRecipe.servings;
       const quantity = document.createElement("span");
       quantity.className = "ingredient-quantity";
-      quantity.textContent = `${formatAmount(amount)} ${displayUnit(ingredient.unit, amount)}`;
+      const onionCount = ingredient.unit === "piece" && /\bonions?\b/i.test(ingredient.name);
+      quantity.textContent = onionCount ? formatAmount(amount) : `${formatAmount(amount)} ${displayUnit(ingredient.unit, amount)}`;
+      if (ingredient.unit === "cup") quantity.textContent += ` (${formatAmount(amount * 8)} fl oz)`;
       const name = document.createElement("span");
       name.className = "ingredient-name";
       const noteMatch = ingredient.name.match(/^(.*?)\s*(\([^()]*\))\s*$/);
       name.textContent = noteMatch ? noteMatch[1] : ingredient.name;
       const details = document.createElement("div");
       details.className = "ingredient-details";
-      details.append(quantity, name);
+      details.append(makeIngredientIcon(ingredientIcon(ingredient.name)), quantity, name);
       if (noteMatch) {
         const note = document.createElement("span");
         note.className = "ingredient-note";
@@ -553,16 +610,19 @@ function initializeForecastApp() {
         warning.textContent = ingredient.warnings.join(" ");
         details.append(warning);
       }
-      item.append(details);
+      row.append(details);
       list.append(item);
     }
     updateSwapControls();
   }
 
   function updateSwapControls() {
-    swapIntro.hidden = swapUsed;
-    swapButton.hidden = swapUsed;
-    if (swapUsed) return;
+    swapIntro.hidden = swapCount >= 2;
+    swapButton.hidden = swapCount >= 2;
+    if (swapCount >= 2) return;
+    swapIntro.textContent = swapCount === 0
+      ? "Choose the ingredients you’d like to change. We’ll update them all at once. You can make two changes per recipe."
+      : "Choose ingredients for your second and final change.";
     const selectedCount = selectedSwapIndexes.size;
     swapButton.disabled = busy || recipeBusy || swapBusy || !activeForecast;
     swapButton.textContent = swapBusy
@@ -621,7 +681,7 @@ function initializeForecastApp() {
   }
 
   async function requestSwaps() {
-    if (!renderedRecipe || recipeBusy || swapBusy || busy || !activeForecast) return;
+    if (!renderedRecipe || swapCount >= 2 || recipeBusy || swapBusy || busy || !activeForecast) return;
     if (selectedSwapIndexes.size === 0) {
       showStatus(swapStatus, "Choose one or more ingredients above first.", "hint");
       recipeResult.querySelector(".swap-checkbox")?.focus();
@@ -650,7 +710,9 @@ function initializeForecastApp() {
       });
       if (requestId !== swapRequestId || renderedRecipe !== recipeBeingUpdated) return;
       renderedRecipe = data.recipe;
-      swapUsed = true;
+      window.refreshDishIllustration?.(renderedRecipe);
+      window.setDishServings?.(resultServings.value);
+      swapCount += 1;
       selectedSwapIndexes.clear();
       renderRecipeIngredients();
       renderRecipeSteps();
@@ -662,7 +724,7 @@ function initializeForecastApp() {
       document.getElementById("recipe-on-hand").hidden = true;
       showStatus(swapStatus, renderedRecipe.validationWarnings?.length
         ? "Ingredient update generated. Review the highlighted details against your choices."
-        : "Ingredient swap complete! Want another change? Start a new recipe below.", renderedRecipe.validationWarnings?.length ? "review" : "success");
+        : swapCount < 2 ? "Ingredient swap complete! You can make one more change." : "Ingredient swap complete! Start a new recipe for another change.", renderedRecipe.validationWarnings?.length ? "review" : "success");
     } catch (error) {
       if (requestId === swapRequestId) showStatus(swapStatus, error.message || "Could not update those ingredients. Please try again.", "error");
     } finally {
@@ -675,6 +737,7 @@ function initializeForecastApp() {
 
   function renderRecipe(recipe, forecast) {
     renderedRecipe = recipe;
+    window.refreshDishIllustration?.(recipe);
     const rawOutput = document.getElementById("recipe-raw-output");
     const hasRawOutput = typeof recipe.rawResponse === "string";
     document.querySelector(".recipe-tabs").hidden = hasRawOutput;
@@ -716,6 +779,7 @@ function initializeForecastApp() {
       dietaryPattern: document.getElementById("dietary-pattern").value,
       cuisine: document.getElementById("preferred-cuisine").value,
       excludedIngredients: [...recipeForm.querySelectorAll('input[name="excludedIngredients"]:checked')].map((input) => input.value),
+      customExclusions: [...new Set(document.getElementById("custom-exclusion").value.split(",").map((value) => value.trim().toLowerCase()).filter(Boolean))],
       servings: Number(servingsSelect.value),
       forecast,
     };
@@ -725,8 +789,17 @@ function initializeForecastApp() {
     event.preventDefault();
     if (busy || recipeBusy) return;
     if (updateConflict()) { conflict.focus(); return; }
+    const customExclusions = document.getElementById("custom-exclusion").value.split(",").map((value) => value.trim()).filter(Boolean);
+    if (customExclusions.length > 10 || customExclusions.some((value) => value.length > 40 || !/^[\p{L}\p{N} '\-]+$/u.test(value))) {
+      showStatus(recipeStatus, "Enter up to 10 ingredient names, separated by commas. Use letters, numbers, spaces, apostrophes or hyphens.", "error");
+      document.getElementById("custom-exclusion").focus();
+      return;
+    }
     let input;
-    try { input = collectRecipeRequest(); }
+    try {
+      input = collectRecipeRequest();
+      input.previousDishes = [...recentDishNames];
+    }
     catch {
       showStatus(recipeStatus, "Today's forecast needs to refresh before you request a recipe.", "error");
       return;
@@ -735,7 +808,7 @@ function initializeForecastApp() {
     const requestId = ++recipeRequestId;
     ++swapRequestId;
     swapBusy = false;
-    swapUsed = false;
+    swapCount = 0;
     selectedSwapIndexes.clear();
     swapStatus.hidden = true;
     const requestForecast = activeForecast;
@@ -743,16 +816,41 @@ function initializeForecastApp() {
     generateButton.disabled = true;
     recipeForm.setAttribute("aria-busy", "true");
     recipeResult.hidden = true;
-    showStatus(recipeStatus, "Pairing one simple recipe with today's forecast…", "loading");
+    const loadingMessages = [
+      "Finding a meal for today’s forecast…",
+      "Gathering some meal inspiration…",
+      "Cooking up an idea for you…",
+      "A little more time in the kitchen…",
+      "Your meal idea is still on its way…",
+      "Thanks for waiting—we’re still working on it…",
+      "This is taking longer than usual. Please hang tight…",
+    ];
+    let loadingMessageIndex = 0;
+    showStatus(recipeStatus, loadingMessages[loadingMessageIndex], "loading");
+    const loadingTimer = setInterval(() => {
+      if (requestId !== recipeRequestId || loadingMessageIndex >= loadingMessages.length - 1) {
+        clearInterval(loadingTimer);
+        return;
+      }
+      showStatus(recipeStatus, loadingMessages[++loadingMessageIndex], "loading");
+    }, 5_000);
     updateGenerateButton();
     try {
       const data = await window.ForecastMealAPI.createRecipe(input);
       if (requestId !== recipeRequestId || requestForecast !== activeForecast) return;
+      if (!data.recipe.rawResponse && typeof data.recipe.name === "string" && data.recipe.name.trim()) {
+        const dish = data.recipe.name.trim().slice(0, 100);
+        const existing = recentDishNames.findIndex((name) => name.toLowerCase() === dish.toLowerCase());
+        if (existing !== -1) recentDishNames.splice(existing, 1);
+        recentDishNames.push(dish);
+        if (recentDishNames.length > 5) recentDishNames.shift();
+      }
       renderRecipe(data.recipe, requestForecast);
       showScreen(4);
     } catch (error) {
       if (requestId === recipeRequestId) showStatus(recipeStatus, error.message || "The recipe could not be generated. Please try again.", "error");
     } finally {
+      clearInterval(loadingTimer);
       if (requestId === recipeRequestId) {
         recipeBusy = false;
         recipeForm.removeAttribute("aria-busy");

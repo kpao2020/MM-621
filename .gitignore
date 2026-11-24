@@ -42,3 +42,6 @@ __pycache__/
 
 # Final paper files
 projects/p3/final_paper*.*
+
+# Log file
+projects/p3/p3.log
