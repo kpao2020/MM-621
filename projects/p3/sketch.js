@@ -1,27 +1,52 @@
-/* Forecast Meal — main p5.js entry point and accessible forecast controls.
-   HTML handles interaction and data; p5 draws a small weather-and-bowl illustration.
-   No coordinate persistence, location logging, or legacy meal/price requests. */
+/*
+  Name: Ken Pao
+  Class: MM-621
+  Project 3: Forecast Meal
+
+  Description:
+    - Main p5.js sketch and controls for the weather and recipe experience.
+    - Draws the forecast illustration and custom ingredient icons.
+    - Manages location selection, forecast display, recipe choices, and swaps.
+
+  Note:
+    - HTML controls provide the interactive form and accessible status messages.
+    - Device coordinates are not saved or sent to the recipe service.
+
+  References:
+    - p5.js: https://p5js.org/reference/
+    - National Weather Service API: https://www.weather.gov/documentation/services-web-api
+*/
+
 let illustrationWeather = null;
 let illustrationReady = false;
+
+// ============================================================
+// INGREDIENT AVOID CHOICES
+// These options are shared with the recipe request and its controls.
+// ============================================================
 const EXCLUSION_CHOICES = [
   ["dairy", "Dairy"], ["eggs", "Eggs"], ["soy", "Soy"], ["tree_nuts", "Tree nuts"],
   ["peanuts", "Peanuts"], ["gluten", "Wheat / gluten"], ["mushrooms", "Mushrooms"],
   ["tomatoes", "Tomatoes"], ["onions", "Onions"], ["garlic", "Garlic"],
-  ["bell_peppers", "Bell peppers"], ["cilantro", "Cilantro"], ["beans", "Beans and lentils"],
+  ["bell_peppers", "Bell peppers"], ["sugar", "Sugar"], ["cilantro", "Cilantro"], ["beans", "Beans and lentils"],
   ["fish", "Fish"], ["shellfish", "Shellfish"], ["beef", "Beef"], ["pork", "Pork"], ["poultry", "Chicken and turkey"],
 ];
 const EXCLUSION_ICONS = {
   dairy: "🥛", eggs: "🥚", soy: "🫘", tree_nuts: "🌰", peanuts: "🥜", gluten: "🌾",
-  mushrooms: "🍄", tomatoes: "🍅", onions: "🧅", garlic: "🧄", bell_peppers: "🫑",
+  mushrooms: "🍄", tomatoes: "🍅", onions: "🧅", garlic: "🧄", bell_peppers: "🫑", sugar: "sugar",
   cilantro: "🌿", beans: "🫘", fish: "🐟", shellfish: "🦐", beef: "🥩", pork: "🥩", poultry: "🍗",
 };
 
+// ============================================================
+// CHOOSE INGREDIENT ICON
+// Match common ingredient names to an emoji or a custom p5 drawing.
+// ============================================================
 function ingredientIcon(name) {
   const icons = [
     [/\b(broth|stock|bouillon)\b/i, "🍲"], [/\b(noodles?|pasta|spaghetti|linguine|ramen)\b/i, "🍜"],
     [/\bwater\b/i, "💧"], [/\b(soy sauce|tamari)\b/i, "sauce"], [/\b(sugar|sweetener)\b/i, "sugar"],
     [/\b(black pepper|white pepper|peppercorns?|ground pepper)\b/i, "pepper"],
-    [/\b(salt)\b/i, "🧂"], [/\b(oil|vinegar)\b/i, "sauce"],
+    [/\b(salt)\b/i, "🧂"], [/\boil\b/i, "oil"], [/\bvinegar\b/i, "sauce"],
     [/\b(onions?|shallots?)\b/i, "🧅"], [/\bgarlic\b/i, "🧄"], [/\b(tomatoes|tomato)\b/i, "🍅"],
     [/\b(mushrooms?|shiitake)\b/i, "🍄"], [/\b(bell peppers?|capsicum)\b/i, "🫑"],
     [/\b(chicken|turkey|poultry)\b/i, "🍗"], [/\b(beef|pork|steak)\b/i, "🥩"],
@@ -35,23 +60,89 @@ function ingredientIcon(name) {
   return icons.find(([pattern]) => pattern.test(name))?.[1] || "🫙";
 }
 
+// ============================================================
+// P5 INGREDIENT ICON CACHE
+// Draw each custom icon once and reuse it when the ingredient list changes.
+// ============================================================
+const ingredientIconGraphics = new Map();
+
+// ============================================================
+// CREATE INGREDIENT ICON
+// Use a p5 drawing when available and an emoji fallback otherwise.
+// ============================================================
 function makeIngredientIcon(symbol) {
   const icon = document.createElement("span");
   icon.className = "ingredient-icon";
   icon.setAttribute("aria-hidden", "true");
-  const drawings = {
-    sauce: '<path fill="#784b33" d="M9 2h6v3l2 3v12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V8l2-3z"/><path fill="#f4e5bb" d="M8 11h8v6H8z"/><path fill="#4f3529" d="M9 2h6v2H9z"/>',
-    sugar: '<path fill="#e9ddc6" stroke="#8f806b" stroke-width="1.2" d="M5 9h14l-1 10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z"/><path fill="#fff" d="M7 8l3-4 3 3 2-2 3 3v2H7z"/><path stroke="#8f806b" stroke-width="1.2" d="M5 10h14"/>',
-    pepper: '<path fill="#72543c" d="M9 2h6l1 3-2 2 3 4-1 9a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2l-1-9 3-4-2-2z"/><path fill="#d6bc92" d="M8 11h8v3H8z"/><circle fill="#493527" cx="12" cy="12.5" r="1"/>',
-  };
-  if (drawings[symbol]) {
-    icon.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" focusable="false">${drawings[symbol]}</svg>`;
+  const fallback = { sauce: "🫙", oil: "🫙", sugar: "🍚", pepper: "🧂" };
+  if (fallback[symbol]) icon.dataset.p5Icon = symbol;
+  if (fallback[symbol] && illustrationReady) {
+    try {
+      if (!ingredientIconGraphics.has(symbol)) {
+        const art = createGraphics(20, 20);
+        art.pixelDensity(2);
+        art.scale(20 / 24);
+        drawIngredientIcon(art, symbol);
+        ingredientIconGraphics.set(symbol, art);
+      }
+      const canvas = document.createElement("canvas");
+      // Copy the cached p5 drawing at its full resolution into each visible icon.
+      const source = ingredientIconGraphics.get(symbol).canvas;
+      canvas.width = source.width;
+      canvas.height = source.height;
+      canvas.style.width = "20px";
+      canvas.style.height = "20px";
+      canvas.getContext("2d").drawImage(source, 0, 0);
+      icon.append(canvas);
+    } catch {
+      icon.textContent = fallback[symbol];
+    }
   } else {
-    icon.textContent = symbol;
+    icon.textContent = fallback[symbol] || symbol;
   }
   return icon;
 }
 
+// ============================================================
+// DRAW CUSTOM INGREDIENT ICONS
+// Draw sauce, oil, sugar, and black pepper with p5 shapes.
+// ============================================================
+function drawIngredientIcon(p, symbol) {
+  p.strokeJoin(p.ROUND);
+  if (symbol === "sauce") {
+    p.noStroke(); p.fill("#784b33");
+    p.beginShape(); p.vertex(9, 2); p.vertex(15, 2); p.vertex(15, 5);
+    p.vertex(17, 8); p.vertex(17, 20); p.vertex(15, 22); p.vertex(9, 22);
+    p.vertex(7, 20); p.vertex(7, 8); p.vertex(9, 5); p.endShape(p.CLOSE);
+    p.fill("#f4e5bb"); p.rect(8, 11, 8, 6);
+    p.fill("#4f3529"); p.rect(9, 2, 6, 2);
+  } else if (symbol === "oil") {
+    p.stroke("#9a6d25"); p.strokeWeight(1); p.fill("#e8b953");
+    p.beginShape(); p.vertex(9, 3); p.vertex(15, 3); p.vertex(15, 6);
+    p.vertex(17, 9); p.vertex(17, 20); p.vertex(15, 22); p.vertex(9, 22);
+    p.vertex(7, 20); p.vertex(7, 9); p.vertex(9, 6); p.endShape(p.CLOSE);
+    p.noStroke(); p.fill("#fff0ba"); p.rect(8, 12, 8, 5);
+    p.fill("#86602b"); p.rect(9, 2, 6, 3, 1);
+  } else if (symbol === "sugar") {
+    p.stroke("#8f806b"); p.strokeWeight(1.3);
+    p.fill("#fffdf6"); p.rect(4, 10, 9, 9, 1.5);
+    p.fill("#f0e5d3"); p.rect(11, 12, 9, 9, 1.5);
+    p.fill("#fffdf6"); p.rect(8, 4, 9, 9, 1.5);
+  } else if (symbol === "pepper") {
+    p.noStroke(); p.fill("#72543c");
+    p.beginShape(); p.vertex(9, 2); p.vertex(15, 2); p.vertex(16, 5);
+    p.vertex(14, 7); p.vertex(17, 11); p.vertex(16, 20); p.vertex(14, 22);
+    p.vertex(10, 22); p.vertex(8, 20); p.vertex(7, 11); p.vertex(10, 7);
+    p.vertex(8, 5); p.endShape(p.CLOSE);
+    p.fill("#d6bc92"); p.rect(8, 11, 8, 3);
+    p.fill("#493527"); p.circle(12, 12.5, 2);
+  }
+}
+
+// ============================================================
+// P5 SETUP
+// Attach the forecast illustration and refresh icons created before p5 was ready.
+// ============================================================
 async function setup() {
   if (document.readyState === "loading") {
     await new Promise((resolve) => document.addEventListener("DOMContentLoaded", resolve, { once: true }));
@@ -67,8 +158,16 @@ async function setup() {
   pixelDensity(1);
   noLoop();
   illustrationReady = true;
+  // Replace fallback icons if the form was built before p5 setup finished.
+  document.querySelectorAll(".ingredient-icon[data-p5-icon]").forEach((icon) => {
+    icon.replaceWith(makeIngredientIcon(icon.dataset.p5Icon));
+  });
 }
 
+// ============================================================
+// DRAW FORECAST ILLUSTRATION
+// Change the weather artwork to reflect the current forecast.
+// ============================================================
 function draw() {
   clear();
   noStroke();
@@ -123,6 +222,10 @@ if (document.readyState === "loading") {
   startForecastApp();
 }
 
+// ============================================================
+// FORECAST AND RECIPE CONTROLS
+// Connect the page controls and keep the current app state together.
+// ============================================================
 function initializeForecastApp() {
   window.ForecastMealNutrientIcons?.mount();
   const service = window.ForecastWeather;
@@ -145,6 +248,11 @@ function initializeForecastApp() {
   let recipeControls = [...recipeForm.querySelectorAll("select, input")];
   const servingsSelect = document.getElementById("recipe-servings");
   const resultServings = document.getElementById("result-servings");
+
+  // ============================================================
+  // APP STATE
+  // Track active requests, the forecast, the current recipe, and selected swaps.
+  // ============================================================
   let operation = 0;
   let controller = null;
   let activeArea = null; // Forecast grid metadata only; never raw coordinates.
@@ -161,6 +269,10 @@ function initializeForecastApp() {
   let swapRequestId = 0;
   const selectedSwapIndexes = new Set();
 
+  // ============================================================
+  // RECIPE CONTROL STATE
+  // Enable recipe generation only when the forecast and controls are ready.
+  // ============================================================
   function updateGenerateButton() {
     let hasFreshForecast = false;
     try { hasFreshForecast = Boolean(activeForecast && service.mealContext(activeForecast)); }
@@ -170,6 +282,10 @@ function initializeForecastApp() {
     for (const control of recipeControls) control.disabled = busy || recipeBusy;
   }
 
+  // ============================================================
+  // CLEAR RECIPE
+  // Reset the recipe display and ignore responses from older requests.
+  // ============================================================
   function clearRecipe() {
     ++recipeRequestId;
     ++swapRequestId;
@@ -184,12 +300,20 @@ function initializeForecastApp() {
     swapStatus.hidden = true;
   }
 
+  // ============================================================
+  // STATUS MESSAGES
+  // Show loading, success, and error information in the page.
+  // ============================================================
   function showStatus(element, text, kind) {
     element.textContent = text;
     element.className = `status-message status-${kind}`;
     element.hidden = false;
   }
 
+  // ============================================================
+  // FORECAST ART AND ICONS
+  // Update the p5 drawing and choose an emoji for each forecast period.
+  // ============================================================
   function updateIllustration(period) {
     illustrationWeather = period;
     if (illustrationReady) redraw();
@@ -208,7 +332,12 @@ function initializeForecastApp() {
     return "🌡️";
   }
 
+  // ============================================================
+  // WEATHER REQUEST STATE
+  // Cancel the previous request and prepare the page for the new forecast.
+  // ============================================================
   function begin(message, { preserveRecipe = false } = {}) {
+    // A new operation ID makes earlier asynchronous responses obsolete.
     const id = ++operation;
     clearTimeout(locationDeadline);
     controller?.abort();
@@ -244,6 +373,10 @@ function initializeForecastApp() {
     return { id, signal: controller.signal, controller, preserveRecipe };
   }
 
+  // ============================================================
+  // FINISH WEATHER REQUEST
+  // Restore controls only when the response belongs to the current request.
+  // ============================================================
   function finish(id) {
     if (id !== operation) return;
     busy = false;
@@ -256,6 +389,10 @@ function initializeForecastApp() {
     updateSwapControls();
   }
 
+  // ============================================================
+  // DISPLAY FORECAST
+  // Build forecast cards and update the selected location and source link.
+  // ============================================================
   function render({ area, forecast }) {
     activeArea = area;
     activeForecast = forecast;
@@ -333,6 +470,10 @@ function initializeForecastApp() {
     updateGenerateButton();
   }
 
+  // ============================================================
+  // FETCH FORECAST
+  // Load or refresh the NWS forecast and handle cancellation and errors.
+  // ============================================================
   async function fetchForecast(request, location, area = null) {
     // A single deadline covers the point lookup, forecast fetch, and response body.
     const timeout = setTimeout(() => request.controller.abort(), 20_000);
@@ -340,6 +481,7 @@ function initializeForecastApp() {
       const response = area
         ? await service.refreshForecast(area, { signal: request.signal })
         : await service.loadForecast(location, { signal: request.signal });
+      // Ignore a response if a newer location or refresh request has started.
       if (request.id !== operation) return;
       render(response);
       if (location && response.area.source === "device" && !document.querySelector('[data-screen="0"]').hidden) showScreen(1);
@@ -356,6 +498,10 @@ function initializeForecastApp() {
     }
   }
 
+  // ============================================================
+  // SELECT LOCATION
+  // Load a preset city or request a one-time device location when selected.
+  // ============================================================
   function selectCity() {
     const location = service.locations.find((city) => city.id === citySelect.value);
     if (!location) return;
@@ -365,6 +511,10 @@ function initializeForecastApp() {
     fetchForecast(request, location);
   }
 
+  // ============================================================
+  // DEVICE LOCATION
+  // Ask the browser for a location only after the user selects the button.
+  // ============================================================
   function useDeviceLocation() {
     activeArea = null;
     const request = begin("Waiting for device location… You can choose a city at any time.");
@@ -423,6 +573,11 @@ function initializeForecastApp() {
   recipeControls = [...recipeForm.querySelectorAll("select, input")];
   const mainIngredient = document.getElementById("main-ingredient");
   const conflict = document.getElementById("choice-conflict");
+
+  // ============================================================
+  // SCREEN NAVIGATION
+  // Show one step at a time and update progress and focus.
+  // ============================================================
   function showScreen(index) {
     document.querySelectorAll("[data-screen]").forEach((screen) => { screen.hidden = Number(screen.dataset.screen) !== index; });
     document.querySelectorAll("[data-progress]").forEach((item) => {
@@ -436,6 +591,11 @@ function initializeForecastApp() {
     window.scrollTo({ top: 0, behavior: "auto" });
     heading?.focus({ preventScroll: true });
   }
+
+  // ============================================================
+  // CHECK CHOICE CONFLICTS
+  // Warn when the main ingredient conflicts with an eating style or exclusion.
+  // ============================================================
   function updateConflict() {
     const diet = document.getElementById("dietary-pattern").value;
     const ingredient = mainIngredient.value;
@@ -449,6 +609,11 @@ function initializeForecastApp() {
   document.querySelectorAll("[data-go]").forEach((button) => button.addEventListener("click", () => showScreen(Number(button.dataset.go))));
   mainIngredient.addEventListener("change", updateConflict);
   showScreen(0);
+
+  // ============================================================
+  // RECIPE TABS
+  // Support clicking and keyboard navigation between recipe sections.
+  // ============================================================
   const recipeTabs = [...document.querySelectorAll('[role="tab"]')];
   function selectRecipeTab(tab, focus = false) {
     recipeTabs.forEach((button) => {
@@ -507,6 +672,10 @@ function initializeForecastApp() {
     } else selectCity();
   });
 
+  // ============================================================
+  // FORECAST REFRESH
+  // Refresh a forecast when it is stale or its current period has ended.
+  // ============================================================
   function refreshWhenDue() {
     if (document.hidden || busy || locating || !activeForecast || !activeArea) return;
     const now = Date.now();
@@ -518,6 +687,10 @@ function initializeForecastApp() {
     }
   }
 
+  // ============================================================
+  // BUILD AVOID OPTIONS
+  // Create the ingredient checkboxes and their icons from the choice list.
+  // ============================================================
   function buildExclusionOptions() {
     const container = document.getElementById("exclusion-options");
     for (const [value, label] of EXCLUSION_CHOICES) {
@@ -534,6 +707,10 @@ function initializeForecastApp() {
     }
   }
 
+  // ============================================================
+  // FORMAT INGREDIENT AMOUNTS
+  // Display familiar fractions and readable units in the recipe.
+  // ============================================================
   function formatAmount(amount) {
     const whole = Math.floor(amount);
     const fraction = amount - whole;
@@ -557,6 +734,10 @@ function initializeForecastApp() {
     return plurals[unit] || unit;
   }
 
+  // ============================================================
+  // DISPLAY INGREDIENTS
+  // Scale quantities for the serving count and prepare swap selections.
+  // ============================================================
   function renderRecipeIngredients() {
     if (!renderedRecipe) return;
     const targetServings = Number(resultServings.value);
@@ -583,6 +764,7 @@ function initializeForecastApp() {
         });
         row.append(select);
       }
+      // Scale numeric amounts by servings; leave "to taste" amounts unchanged.
       const amount = ingredient.unit === "to taste"
         ? ingredient.amount
         : ingredient.amount * targetServings / renderedRecipe.servings;
@@ -616,6 +798,10 @@ function initializeForecastApp() {
     updateSwapControls();
   }
 
+  // ============================================================
+  // SWAP CONTROL STATE
+  // Show the available swap action and its remaining changes.
+  // ============================================================
   function updateSwapControls() {
     swapIntro.hidden = swapCount >= 2;
     swapButton.hidden = swapCount >= 2;
@@ -635,6 +821,10 @@ function initializeForecastApp() {
     }
   }
 
+  // ============================================================
+  // DISPLAY RECIPE STEPS
+  // Build the cooking instructions from the current recipe.
+  // ============================================================
   function renderRecipeSteps() {
     if (!renderedRecipe) return;
     const stepList = document.getElementById("recipe-steps");
@@ -646,6 +836,10 @@ function initializeForecastApp() {
     }
   }
 
+  // ============================================================
+  // DISPLAY NUTRITION
+  // Show the estimated nutrients and highlight values needing review.
+  // ============================================================
   function renderNutrition(nutrition) {
     const whole = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
     const decimal = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
@@ -662,6 +856,10 @@ function initializeForecastApp() {
     }
   }
 
+  // ============================================================
+  // DISPLAY REVIEW NOTES
+  // Explain any preference or nutrition checks returned with the recipe.
+  // ============================================================
   function renderRecipeReview(recipe) {
     recipeReviewList.replaceChildren();
     const warnings = recipe.validationWarnings || [];
@@ -680,6 +878,10 @@ function initializeForecastApp() {
     recipeReview.hidden = recipeReviewList.childElementCount === 0;
   }
 
+  // ============================================================
+  // REQUEST INGREDIENT SWAPS
+  // Send selected ingredients and update the recipe after a successful response.
+  // ============================================================
   async function requestSwaps() {
     if (!renderedRecipe || swapCount >= 2 || recipeBusy || swapBusy || busy || !activeForecast) return;
     if (selectedSwapIndexes.size === 0) {
@@ -735,6 +937,10 @@ function initializeForecastApp() {
     }
   }
 
+  // ============================================================
+  // DISPLAY RECIPE
+  // Update the title, ingredients, steps, nutrition, and decorative dish.
+  // ============================================================
   function renderRecipe(recipe, forecast) {
     renderedRecipe = recipe;
     window.refreshDishIllustration?.(recipe);
@@ -771,6 +977,10 @@ function initializeForecastApp() {
       : "Your recipe is ready. Ingredient quantities scale with the serving choice below.", recipe.validationWarnings?.length ? "review" : "success");
   }
 
+  // ============================================================
+  // COLLECT RECIPE CHOICES
+  // Build the request from the selected controls and current forecast.
+  // ============================================================
   function collectRecipeRequest() {
     const forecast = service.mealContext(activeForecast);
     return {
@@ -785,6 +995,10 @@ function initializeForecastApp() {
     };
   }
 
+  // ============================================================
+  // REQUEST RECIPE
+  // Validate the choices, show progress, and display the returned recipe.
+  // ============================================================
   async function requestRecipe(event) {
     event.preventDefault();
     if (busy || recipeBusy) return;
@@ -805,6 +1019,7 @@ function initializeForecastApp() {
       return;
     }
 
+    // Use a request ID so an older recipe response cannot replace a newer one.
     const requestId = ++recipeRequestId;
     ++swapRequestId;
     swapBusy = false;

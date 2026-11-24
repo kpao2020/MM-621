@@ -1,8 +1,25 @@
-// Small, reusable p5.js drawings for the nutrition table.
+/*
+  Project 3: Forecast Meal
+  Nutrition table icons.
+
+  Description:
+    - Creates small p5.js drawings for the nutrition table.
+    - Uses a separate icon for calories, protein, carbohydrates, fat, fiber, and sodium.
+    - Draws each supported icon once when the table is initialized.
+
+  References:
+    - p5.js: https://p5js.org/reference/
+*/
+
+// ============================================================
+// MOUNT NUTRIENT ICONS
+// Create one small p5 canvas for each supported nutrition table icon.
+// ============================================================
 window.ForecastMealNutrientIcons = Object.freeze({
   mount(root = document) {
     if (typeof window.p5 !== "function") return;
     root.querySelectorAll("[data-nutrient-icon]").forEach((container) => {
+      // Do not create another canvas when this icon has already been mounted.
       if (container.dataset.iconMounted === "true") return;
       const kind = container.dataset.nutrientIcon;
       if (!["calories", "protein", "carbohydrates", "fat", "fiber", "sodium"].includes(kind)) return;
@@ -23,6 +40,10 @@ window.ForecastMealNutrientIcons = Object.freeze({
   },
 });
 
+// ============================================================
+// DRAW NUTRIENT ICON
+// Use a different shape and color for each nutrient.
+// ============================================================
 function drawNutrientIcon(p, kind) {
   const colors = {
     calories: ["#e8b64f", "#fff3cf"],

@@ -358,3 +358,13 @@ The former DATA-PIPELINE.md was removed during Forecast Meal cleanup; see open-p
 - 2026-11-23: Clarified swap requirements and made invalid replacement logs distinguish name, amount and unit failures. Awaiting review.
 
 - 2026-11-23: Added one automatic swap retry when the AI repeats the original ingredient. Awaiting review.
+
+- 2026-11-24: Replaced three ingredient SVG icons with cached p5 drawings and used p5 math helpers in the dish illustration. Awaiting review; no tests run per project instructions.
+
+- 2026-11-24: Added sugar to the ingredient avoidance choices and Worker validation. Local changes await review; no tests run per project instructions.
+
+- 2026-11-24: Redrew the sugar icon as sugar cubes and increased ingredient icon resolution. Awaiting review; no tests run per project instructions.
+
+- 2026-11-24: Added a golden p5 bottle for oils, distinct from the dark soy sauce bottle. Awaiting review; no tests run per project instructions.
+
+- 2026-11-24: Added section comments to Project 3 JavaScript files, following the style of Projects 1 and 2. Awaiting review; no tests run per project instructions.
