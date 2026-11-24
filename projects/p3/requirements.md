@@ -2,11 +2,11 @@
 
 Status: forecast, recipe, batch ingredient swaps, per-serving nutrition estimates, and p5.js nutrient icons are implemented. User reports that the updated frontend is published and the Worker is deployed; they say the app seems to be working. No independent end-to-end verification was run at closeout. Turnstile and CAPTCHA were permanently rejected and removed. The Worker retains its per-IP limiter and AI Gateway routing. See tracking.md for deployment status. The proposal remains unchanged.
 
-## Strict AI model approval rule
+## Approved AI model
 
-- Use only `@cf/meta/llama-3.1-8b-instruct-fp8-fast` for Forecast Meal.
-- Do not change, replace, test, or deploy another model unless the user first reviews and explicitly approves that exact model change. Never choose a model on the user's behalf.
-- The earlier 70B model choice was not approved and is superseded. Do not use `@cf/meta/llama-3.3-70b-instruct-fp8-fast` again.
+- The current approved Workers AI model is `@cf/google/gemma-4-26b-a4b-it`.
+- The user explicitly approved switching to this model for testing after the prior Llama-based implementation encountered recipe output and validation problems. A single temporary Gemma test returned no usable recipe, so the user authorized the production switch for their own evaluation. Do not describe that test as a successful recipe test.
+- Do not change, test, substitute, or deploy another model unless the user reviews and explicitly approves that exact model change.
 
 ## Forecast and location — implemented
 

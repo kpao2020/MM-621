@@ -5,6 +5,13 @@
   Description:
     - Selects the local Worker for a local preview.
     - Selects the deployed Worker for the public website.
+
+  Credits:
+    - Cloudflare Workers for hosting the recipe service.
+    - OpenAI ChatGPT (Codex) for code assistance and revisions.
+
+  Code Origin:
+    - [ORIGINAL PROJECT CONFIGURATION + AI-ASSISTED REVISIONS]
 */
 
 // ============================================================

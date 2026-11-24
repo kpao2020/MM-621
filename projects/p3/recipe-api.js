@@ -10,6 +10,15 @@
   References:
     - Fetch API: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
     - AbortController: https://developer.mozilla.org/en-US/docs/Web/API/AbortController
+    - Cloudflare Workers: https://developers.cloudflare.com/workers/
+
+  Credits:
+    - Browser Fetch API and AbortController for recipe-service requests and timeouts.
+    - Cloudflare Workers for the recipe and ingredient-swap service.
+    - OpenAI ChatGPT (Codex) for code assistance and optimization suggestions.
+
+  Code Origin:
+    - [ORIGINAL API INTEGRATION + AI-ASSISTED REVISIONS]
 */
 
 // ============================================================

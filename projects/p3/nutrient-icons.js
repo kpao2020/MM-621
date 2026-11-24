@@ -9,6 +9,14 @@
 
   References:
     - p5.js: https://p5js.org/reference/
+    - OpenAI ChatGPT (Codex) for code assistance and optimization suggestions.
+
+  Credits:
+    - p5.js for drawing the original nutrition icons.
+    - OpenAI ChatGPT (Codex) for code assistance and revisions.
+
+  Code Origin:
+    - [ORIGINAL P5.JS ICONS + AI-ASSISTED REVISIONS]
 */
 
 // ============================================================

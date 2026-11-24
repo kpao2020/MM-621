@@ -13,6 +13,16 @@
   References:
     - Cloudflare Workers: https://developers.cloudflare.com/workers/
     - Workers AI: https://developers.cloudflare.com/workers-ai/
+    - Google Gemma 4 26B model: @cf/google/gemma-4-26b-a4b-it
+    - OpenAI ChatGPT (Codex) for code assistance and optimization suggestions.
+
+  Credits:
+    - Cloudflare Workers and Workers AI for hosting and running recipe requests.
+    - Google Gemma 4 26B for generated recipe and ingredient-swap suggestions.
+    - OpenAI ChatGPT (Codex) for code assistance and revisions.
+
+  Code Origin:
+    - [ORIGINAL WORKER + AI-ASSISTED REVISIONS]
 */
 
 // ============================================================

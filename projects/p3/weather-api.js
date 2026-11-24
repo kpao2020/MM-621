@@ -15,6 +15,16 @@
   References:
     - NOAA API: https://www.weather.gov/documentation/services-web-api
     - Geolocation: https://developer.mozilla.org/en-US/docs/Web/API/Geolocation
+    - OpenAI ChatGPT (Codex) for code assistance and optimization suggestions.
+
+  Credits:
+    - National Weather Service API for forecast data.
+    - Browser Geolocation API for user-authorized device location.
+    - Project 2 weather request code as the starting point for this component.
+    - OpenAI ChatGPT (Codex) for code assistance and revisions.
+
+  Code Origin:
+    - [ADAPTED FROM PROJECT 2 + AI-ASSISTED REVISIONS]
 */
 (() => {
   "use strict";

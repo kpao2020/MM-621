@@ -368,3 +368,10 @@ The former DATA-PIPELINE.md was removed during Forecast Meal cleanup; see open-p
 - 2026-11-24: Added a golden p5 bottle for oils, distinct from the dark soy sauce bottle. Awaiting review; no tests run per project instructions.
 
 - 2026-11-24: Added section comments to Project 3 JavaScript files, following the style of Projects 1 and 2. Awaiting review; no tests run per project instructions.
+# Current status — 2026-11-24
+
+- Forecast, recipe generation, batch ingredient swaps, nutrition estimates, and p5.js illustrations/icons are implemented in the local project. Sugar is available as an ingredient exclusion.
+- The Worker uses the user-approved `@cf/google/gemma-4-26b-a4b-it`. The user approved switching from the prior Llama model after recipe output and validation problems; the initial temporary Gemma test returned no usable recipe. The user later reported deploying the Worker and frontend and that the app appears to work; this was not independently verified here.
+- Recent documentation and p5 icon/comment updates are local changes awaiting user review. The final paper PDF is to be refreshed from its Markdown draft.
+- Reflection paper formatting has been updated to require Chicago Notes and Bibliography style, three or more captioned figures, and a consistent professional layout. The PDF now includes URI link annotations for Acrobat compatibility.
+
