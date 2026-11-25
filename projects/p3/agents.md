@@ -10,7 +10,7 @@
 - Keep active review/troubleshooting items in p3.log and obtain the user's confirmation before moving to each next item. Preserve closed queues in p3.log as history.
 - During active work, send a concise progress/status update at least every two minutes.
 - Record confirmed decisions in memory.md and status changes in tracking.md. Ask only when a missing decision blocks implementation.
-- For PROPOSAL.md, preserve the user's exact section titles and wording, section order, required sections, and deliberate blank-line/separator formatting. Edit body context only when asked; never rename, rewrite, reorder, or normalize headings. Leave the Developer note for the user to type manually.
+- PROPOSAL.md is reference-only. Never edit, rewrite, reformat, or otherwise modify the proposal; consult it only for reference.
 - Keep credentials out of source, docs, logs, screenshots, and Git history. The user enters secrets directly in Cloudflare/GitHub settings.
 - Follow PROPOSAL.md and confirmed user decisions for Forecast Meal. Six preset cities and explicit, one-time device location are authorized; never request permission automatically or infer location from IP.
 - Forecasts use NWS points -> properties.forecast, not station observations. Respect the forecast time zone and remaining periods today. Keep device coordinates out of persistence, application logs, and AI inputs.

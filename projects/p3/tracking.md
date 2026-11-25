@@ -375,3 +375,7 @@ The former DATA-PIPELINE.md was removed during Forecast Meal cleanup; see open-p
 - Recent documentation and p5 icon/comment updates are local changes awaiting user review. The final paper PDF is to be refreshed from its Markdown draft.
 - Reflection paper formatting has been updated to require Chicago Notes and Bibliography style, three or more captioned figures, and a consistent professional layout. The PDF now includes URI link annotations for Acrobat compatibility.
 
+
+- 2026-11-25: User confirmed the proposal is reference-only and approved revisions to the reflection Markdown and final PDF.
+
+- 2026-11-25: Revising reflection layout and explanations; acknowledgments and notes are supplemental and bibliography remains separate.

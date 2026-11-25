@@ -192,3 +192,7 @@ Basket Buddy's revised concept uses local weather forecasts to suggest one simpl
 
 
 2026-11-17: User clarified that the full “Today’s forecast. Tonight’s inspiration.” headline should move to the first screen together with the welcome line, rather than be removed.
+
+- 2026-11-25: The user directed that PROPOSAL.md is reference-only and must never be edited. Update the final paper Markdown and PDF separately.
+
+- 2026-11-25: User clarified Special Thanks and endnotes do not count toward the 2–4 reflection pages; a little over four reflection pages is acceptable. Turnstile troubleshooting took many hours over days; the Chrome challenge remained unresolved and appeared vendor-specific, without a confirmed cause.
